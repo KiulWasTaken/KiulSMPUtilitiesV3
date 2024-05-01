@@ -1,0 +1,164 @@
+package kiul.kiulsmputilitiesv3.accessories;
+
+import kiul.kiulsmputilitiesv3.C;
+import kiul.kiulsmputilitiesv3.InventoryToBase64;
+import kiul.kiulsmputilitiesv3.advancements.AdvancementEnum;
+import kiul.kiulsmputilitiesv3.advancements.AdvancementMethods;
+import kiul.kiulsmputilitiesv3.config.AccessoryData;
+import net.md_5.bungee.api.ChatMessageType;
+import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.tags.CustomItemTagContainer;
+import org.bukkit.inventory.meta.tags.ItemTagType;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
+
+import java.io.IOException;
+import java.util.concurrent.TimeUnit;
+
+public class AccessoryMethods {
+
+    public static void giveAccessory (Player p,String identifier) {
+        for (AccessoryItemEnum item : AccessoryItemEnum.values()) {
+            if (item.getLocalName().equals(identifier)) {
+                p.getInventory().setItemInMainHand(item.getAccessory());
+                return;
+            }
+        }
+    }
+
+
+
+    public static void equipAccessory (Player p) {
+        if (AccessoryData.get().getLong(p.getUniqueId() + ".accessory.cooldown") < System.currentTimeMillis()) {
+            if (AccessoryData.get().get(p.getUniqueId() + ".accessory.identifier") == null) {
+                if (p.getInventory().getItemInMainHand().getType() != Material.AIR) {
+                    for (AccessoryItemEnum item : AccessoryItemEnum.values()) {
+                        if (item.getLocalName().equalsIgnoreCase(p.getInventory().getItemInMainHand().getItemMeta().getLocalizedName())) {
+                            AccessoryData.get().set(p.getUniqueId() + ".accessory.identifier", item.getLocalName());
+                            AccessoryData.get().set(p.getUniqueId() + ".accessory.item", InventoryToBase64.itemStackToBase64(p.getInventory().getItemInMainHand()));
+                            AccessoryData.get().set(p.getUniqueId() + ".accessory.range", item.getRange());
+                            AccessoryData.get().set(p.getUniqueId() + ".accessory.tracking-multiplier", item.getTrackingMultiplier());
+                            AccessoryData.save();
+                            ItemStack itemStack = p.getInventory().getItemInMainHand();
+                            NamespacedKey key = new NamespacedKey(C.plugin, ChatColor.stripColor(itemStack.getItemMeta().getLore().get(itemStack.getItemMeta().getLore().size()-1)));
+                            ItemMeta itemMeta = itemStack.getItemMeta();
+                            CustomItemTagContainer tagContainer = itemMeta.getCustomTagContainer();
+                            double foundValue = tagContainer.getCustomTag(key, ItemTagType.DOUBLE);
+                            if (item.getAttribute() != null) {
+                                p.getAttribute(item.getAttribute()).addModifier(new AttributeModifier(item.getAttribute().name(),(foundValue/100), AttributeModifier.Operation.ADD_NUMBER));
+                            }
+                            instantiateTrackingSignalTask(p);
+                            AdvancementMethods.grantAdvancement(p, AdvancementEnum.ACTIVATE_ACCESSORY.getIdentifier());
+                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(p.getInventory().getItemInMainHand().getItemMeta().getDisplayName() + ChatColor.GRAY + " - " + ChatColor.GREEN + "ACTIVE"));
+                            p.getInventory().getItemInMainHand().setAmount(0);
+                            p.playSound(p, Sound.BLOCK_ANVIL_LAND, 0.1f, 2f);
+
+                            return;
+                        }
+                    }
+                }
+            } else {
+                if (p.getInventory().getItemInMainHand().getType() == Material.AIR) {
+                    for (AccessoryItemEnum accessoryItemEnum : AccessoryItemEnum.values()) {
+                        if (accessoryItemEnum.getLocalName().equalsIgnoreCase(getActiveAccessoryIdentifier(p))) {
+                            if (accessoryItemEnum.getAttribute() != null) {
+                                for (AttributeModifier attributeModifiers : p.getAttribute(accessoryItemEnum.getAttribute()).getModifiers()) {
+                                    p.getAttribute(accessoryItemEnum.getAttribute()).removeModifier(attributeModifiers);
+                                }
+                            }
+                        }
+                    }
+                    try {
+                        p.getInventory().setItemInMainHand(InventoryToBase64.itemStackFromBase64(AccessoryData.get().getString(p.getUniqueId() + ".accessory.item")));
+                    } catch (IOException err) {
+                        err.printStackTrace();
+                    }
+                    AccessoryData.get().set(p.getUniqueId() + ".accessory.identifier", null);
+                    AccessoryData.get().set(p.getUniqueId() + ".accessory.item", null);
+                    AccessoryData.get().set(p.getUniqueId() + ".accessory.cooldown", System.currentTimeMillis()+C.accessoryCooldownTimeMinutes*1000*60);
+                    AccessoryData.save();
+
+                    p.playSound(p, Sound.BLOCK_ANVIL_LAND, 0.1f, 2f);
+                    p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(p.getInventory().getItemInMainHand().getItemMeta().getDisplayName() + ChatColor.GRAY + " - " + ChatColor.RED + "DISABLED"));
+                }
+            }
+        } else {
+            long cooldownTime = AccessoryData.get().getLong(p.getUniqueId() + ".accessory.cooldown");
+            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Accessory Cooldown"+ ChatColor.GRAY + " - " + ChatColor.RED + ChatColor.UNDERLINE + String.format("%02d : %02d",
+                    TimeUnit.MILLISECONDS.toMinutes(cooldownTime - System.currentTimeMillis()),
+                    TimeUnit.MILLISECONDS.toSeconds(cooldownTime - System.currentTimeMillis()) -
+                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(cooldownTime - System.currentTimeMillis())))));
+        }
+    }
+
+    public static String getActiveAccessoryIdentifier (Player p) {
+        try {
+            if (InventoryToBase64.itemStackFromBase64(AccessoryData.get().getString(p.getUniqueId() + ".accessory.item")) != null) {
+                return InventoryToBase64.itemStackFromBase64(AccessoryData.get().getString(p.getUniqueId() + ".accessory.item")).getItemMeta().getLocalizedName();
+            }
+        } catch (IOException err) {
+            err.printStackTrace();
+        }
+    return "none";}
+
+    public static Double getActiveAccessoryModifier (Player p) {
+        try {
+            if (InventoryToBase64.itemStackFromBase64(AccessoryData.get().getString(p.getUniqueId() + ".accessory.item")) != null) {
+                ItemStack itemStack = InventoryToBase64.itemStackFromBase64(AccessoryData.get().getString(p.getUniqueId() + ".accessory.item"));
+                NamespacedKey key = new NamespacedKey(C.plugin, ChatColor.stripColor(itemStack.getItemMeta().getLore().get(itemStack.getItemMeta().getLore().size()-1)));
+                ItemMeta itemMeta = itemStack.getItemMeta();
+                CustomItemTagContainer tagContainer = itemMeta.getCustomTagContainer();
+
+                if(tagContainer.hasCustomTag(key , ItemTagType.DOUBLE)) {
+                    double foundValue = tagContainer.getCustomTag(key, ItemTagType.DOUBLE);
+                    return foundValue;
+                }
+            }
+        } catch (IOException err) {
+            err.printStackTrace();
+        }
+        return 0.0;}
+
+    public static void instantiateTrackingSignalTask(Player p) {
+
+        int range = AccessoryData.get().getInt(p.getUniqueId() + ".accessory.range");
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (p.isOnline() && AccessoryData.get().get(p.getUniqueId()+".accessory.identifier") != null) {
+                    for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                        if (onlinePlayer != p && AccessoryData.get().getBoolean(onlinePlayer.getUniqueId()+".sounds")) {
+                            if (onlinePlayer.getWorld() == p.getWorld()) {
+
+                                int trackingMultiplier = AccessoryData.get().getInt(onlinePlayer.getUniqueId() + ".accessory.tracking-multiplier");
+                                double distance = p.getLocation().distance(onlinePlayer.getLocation());
+
+                                if (distance < range * trackingMultiplier) {
+//                                Location soundDirection = onlinePlayer.getEyeLocation().add((onlinePlayer.getEyeLocation().getDirection().subtract(p.getEyeLocation().getDirection())).multiply(12 * (distance / range)).toLocation(onlinePlayer.getWorld()));
+                                    Location initialLocation = onlinePlayer.getLocation();
+                                    Location targetLocation = p.getLocation();
+
+                                    // Calculate the direction from initial player to target player
+                                    Vector direction = targetLocation.toVector().subtract(initialLocation.toVector()).normalize();
+
+                                    // Move three blocks in the calculated direction
+                                    Location soundDirection = initialLocation.add(direction.multiply(12 * (distance / range)));
+                                    onlinePlayer.playSound(soundDirection, Sound.ENTITY_WARDEN_HEARTBEAT, (float) (0.7 + (range / distance) / 10), 1f);
+                                }
+                            }
+                        }
+                    }
+                } else {
+                    cancel();
+                }
+            }
+        }.runTaskTimer(C.plugin,0,80);
+    }
+}
