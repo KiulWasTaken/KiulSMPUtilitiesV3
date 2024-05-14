@@ -14,6 +14,7 @@ import org.bukkit.event.player.PlayerRiptideEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 
 import static kiul.kiulsmputilitiesv3.combattag.FightMethods.fastPearlThrow;
@@ -35,45 +36,47 @@ public class FightLogicListeners implements Listener {
                 boolean p2inFight = C.fightManager.playerIsInFight(p2);
                 Fight p1Fight = C.fightManager.findFightForMember(p1);
                 Fight p2Fight = C.fightManager.findFightForMember(p2);
+                if (p1Fight != null && p1Fight.getParticipants().contains(p2.getUniqueId())) {return;}
+                if (p2Fight != null && p2Fight.getParticipants().contains(p1.getUniqueId())) {return;}
 
-                if (!p1inFight && !p2inFight) {
-                    ArrayList<UUID> participants = new ArrayList<>();
-                    participants.add(p1.getUniqueId());
-                    participants.add(p2.getUniqueId());
-                    Fight newFight = C.fightManager.createFight(participants);
-                    FightMethods.startDistanceCheck(p1,newFight);
-                    FightMethods.startDistanceCheck(p2,newFight);
-                    return;
-                }
-
-                if (p1inFight ^ p2inFight) {
-                    if (p1inFight) {
-                        p1Fight.addParticipant(p2);
-                        FightMethods.startDistanceCheck(p2,p1Fight);
+                    if (!p1inFight && !p2inFight) {
+                        ArrayList<UUID> participants = new ArrayList<>();
+                        participants.add(p1.getUniqueId());
+                        participants.add(p2.getUniqueId());
+                        Fight newFight = C.fightManager.createFight(participants);
+                        FightMethods.startDistanceCheck(p1, newFight);
+                        FightMethods.startDistanceCheck(p2, newFight);
                         return;
                     }
-                    if (p2inFight) {
-                        p2Fight.addParticipant(p1);
-                        FightMethods.startDistanceCheck(p1,p2Fight);
-                        return;
-                    }
-                }
 
-                if (p1inFight && p2inFight) {
-                    if (p1Fight.getDuration() > p2Fight.getDuration()) {
-                        for (UUID p2FightUUIDs : p2Fight.getParticipants()) {
-                            p1Fight.addParticipant(Bukkit.getPlayer(p2FightUUIDs));
-                            FightMethods.startDistanceCheck(Bukkit.getPlayer(p2FightUUIDs),p1Fight);
+                    if (p1inFight ^ p2inFight) {
+                        if (p1inFight) {
+                            p1Fight.addParticipant(p2);
+                            FightMethods.startDistanceCheck(p2, p1Fight);
+                            return;
                         }
-                        C.fightManager.disbandFight(p2Fight);
-                    } else {
-                        for (UUID p1FightUUIDs : p1Fight.getParticipants()) {
-                            p2Fight.addParticipant(Bukkit.getPlayer(p1FightUUIDs));
-                            FightMethods.startDistanceCheck(Bukkit.getPlayer(p1FightUUIDs),p2Fight);
+                        if (p2inFight) {
+                            p2Fight.addParticipant(p1);
+                            FightMethods.startDistanceCheck(p1, p2Fight);
+                            return;
                         }
-                        C.fightManager.disbandFight(p1Fight);
                     }
-                }
+
+                    if (p1inFight && p2inFight) {
+                        if (p1Fight.getDuration() > p2Fight.getDuration()) {
+                            for (UUID p2FightUUIDs : p2Fight.getParticipants()) {
+                                p1Fight.addParticipant(Bukkit.getPlayer(p2FightUUIDs));
+                                FightMethods.startDistanceCheck(Bukkit.getPlayer(p2FightUUIDs), p1Fight);
+                            }
+                            C.fightManager.disbandFight(p2Fight);
+                        } else {
+                            for (UUID p1FightUUIDs : p1Fight.getParticipants()) {
+                                p2Fight.addParticipant(Bukkit.getPlayer(p1FightUUIDs));
+                                FightMethods.startDistanceCheck(Bukkit.getPlayer(p1FightUUIDs), p2Fight);
+                            }
+                            C.fightManager.disbandFight(p1Fight);
+                        }
+                    }
             }
         }
     }
@@ -96,31 +99,27 @@ public class FightLogicListeners implements Listener {
     @EventHandler
     public void pearlSlowDown (ProjectileLaunchEvent e) {
         if (e.getEntity() instanceof EnderPearl && e.getEntity().getShooter() instanceof Player p) {
+            Bukkit.broadcastMessage("event called");
             if (C.fightManager.playerIsInFight(p)) {
+                Bukkit.broadcastMessage("playerIsInFight");
                 if (lastPearlThrow.get(p.getUniqueId()) == null) {
                     lastPearlThrow.put(p.getUniqueId(), System.currentTimeMillis());
                     fastPearlThrow.put(p.getUniqueId(), 0);
-                } else {
+                }
+
                     if ((System.currentTimeMillis() - lastPearlThrow.get(p.getUniqueId())) < 3000) {
                         fastPearlThrow.put(p.getUniqueId(), fastPearlThrow.get(p.getUniqueId()) + 1);
+                        Bukkit.broadcastMessage(fastPearlThrow.get(p.getUniqueId()) + "");
                         int cooldown = (int)(2*(C.fightManager.findFightForMember(p).getDuration() / 1000 / 60 / 1)) * fastPearlThrow.get(p.getUniqueId());
                         if (cooldown > 60) {
                             cooldown = 60;
                         }
                         p.setCooldown(Material.ENDER_PEARL,(10 + cooldown));
-                        new BukkitRunnable() {
-                            int amtThrown = fastPearlThrow.get(p.getUniqueId());
-
-                            @Override
-                            public void run() {
-                                if (fastPearlThrow.get(p.getUniqueId()) == amtThrown) {
-                                    lastPearlThrow.remove(p.getUniqueId());
-                                    fastPearlThrow.remove(p.getUniqueId());
-                                }
-                            }
-                        }.runTaskLater(C.plugin, cooldown+60);
+                    } else {
+                        lastPearlThrow.put(p.getUniqueId(), null);
+                        fastPearlThrow.put(p.getUniqueId(), 0);
                     }
-                }
+                lastPearlThrow.put(p.getUniqueId(), System.currentTimeMillis());
             }
         }
     }
@@ -151,7 +150,7 @@ public class FightLogicListeners implements Listener {
     public void damagedRocketCoolDown (EntityDamageByEntityEvent e) {
         if (e.getDamager() instanceof Player && e.getEntity() instanceof Player damaged) {
             if (C.fightManager.playerIsInFight(damaged)) {
-                if (damaged.getInventory().contains(Material.ELYTRA)) {
+                if (damaged.getInventory().contains(Material.ELYTRA) || damaged.getInventory().getChestplate().getType() == Material.ELYTRA) {
                     int cooldown = damaged.getCooldown(Material.FIREWORK_ROCKET) + 200;
                     if (cooldown > 1200) {
                         cooldown = 1200;

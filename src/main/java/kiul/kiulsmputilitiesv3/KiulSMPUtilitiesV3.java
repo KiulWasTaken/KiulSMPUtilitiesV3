@@ -8,6 +8,7 @@ import kiul.kiulsmputilitiesv3.claims.ClaimListeners;
 import kiul.kiulsmputilitiesv3.claims.ClaimMethods;
 import kiul.kiulsmputilitiesv3.combatlog.LogoutListeners;
 import kiul.kiulsmputilitiesv3.combatlog.MovementListeners;
+import kiul.kiulsmputilitiesv3.combattag.FightLogicListeners;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.config.ClaimData;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
@@ -32,6 +33,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
 
 
         // Listeners
+        getServer().getPluginManager().registerEvents(new FightLogicListeners(),this);
         getServer().getPluginManager().registerEvents(new LogoutListeners(),this);
         getServer().getPluginManager().registerEvents(new MovementListeners(),this);
         getServer().getPluginManager().registerEvents(new AccessoryListeners(),this);

@@ -51,14 +51,16 @@ public class InventoryToBase64 {
     }
     public static ItemStack itemStackFromBase64(String data) throws IOException {
         try {
-            ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(data));
-            BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
-            ItemStack itemStack = (ItemStack) dataInput.readObject();
-            return itemStack;
+            if (data != null) {
+                ByteArrayInputStream inputStream = new ByteArrayInputStream(Base64Coder.decodeLines(data));
+                BukkitObjectInputStream dataInput = new BukkitObjectInputStream(inputStream);
+                ItemStack itemStack = (ItemStack) dataInput.readObject();
+                return itemStack;
+            }
         } catch (ClassNotFoundException e) {
             throw new IOException("Unable to decode class type.", e);
         }
-    }
+    return null;}
 
     public static String itemStackArrayToBase64(ItemStack[] items) throws IllegalStateException {
         try {
