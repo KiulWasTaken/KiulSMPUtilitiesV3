@@ -11,7 +11,6 @@ import kiul.kiulsmputilitiesv3.combatlog.MovementListeners;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.config.ClaimData;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
-import kiul.kiulsmputilitiesv3.config.TestData;
 import kiul.kiulsmputilitiesv3.crates.CrateListeners;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
@@ -71,13 +70,9 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         PersistentData.setup();
         AccessoryData.setup();
         ClaimData.setup();
-        TestData.setup();
 
         // Plugin Methods
         ClaimMethods.initializeClaims();
-        TestData.get().set("works",true);
-        TestData.save();
-        Bukkit.broadcastMessage(TestData.get().getBoolean("works") + "");
 
 
     }

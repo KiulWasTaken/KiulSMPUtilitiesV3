@@ -2,6 +2,7 @@ package kiul.kiulsmputilitiesv3;
 
 import kiul.kiulsmputilitiesv3.claims.ClaimMethods;
 import kiul.kiulsmputilitiesv3.claims.Region;
+import kiul.kiulsmputilitiesv3.combattag.FightManager;
 import net.md_5.bungee.api.ChatMessageType;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
@@ -34,6 +35,7 @@ public class C {
 
     /* static lists */
 
+    public static FightManager fightManager = new FightManager();
     public static ArrayList<Player> loggingOut = new ArrayList<>();
     public static ArrayList<Player> logoutTimer = new ArrayList<>();
 

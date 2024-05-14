@@ -9,6 +9,7 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.entity.EntityCombustEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDeathEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
@@ -167,6 +168,12 @@ public class LogoutListeners implements Listener {
         if (NPCOwner.get(e.getEntity()) != null) {
             e.getDrops().clear();
             e.setDroppedExp(0);
+        }
+    }
+    @EventHandler
+    public void preventNPCCombust (EntityCombustEvent e) {
+        if (NPCOwner.get(e.getEntity()) != null) {
+            e.setCancelled(true);
         }
     }
 
