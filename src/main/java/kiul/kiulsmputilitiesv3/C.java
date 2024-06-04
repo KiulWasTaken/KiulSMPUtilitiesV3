@@ -1,25 +1,29 @@
 package kiul.kiulsmputilitiesv3;
 
-import kiul.kiulsmputilitiesv3.claims.ClaimMethods;
-import kiul.kiulsmputilitiesv3.claims.Region;
+import com.google.j2objc.annotations.Property;
 import kiul.kiulsmputilitiesv3.combattag.FightManager;
-import net.md_5.bungee.api.ChatMessageType;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.Plugin;
+import org.bukkit.profile.PlayerProfile;
+import org.bukkit.profile.PlayerTextures;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
-import java.awt.*;
 import java.awt.Color;
+import java.lang.reflect.InvocationTargetException;
+import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.text.DecimalFormat;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.UUID;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -32,6 +36,7 @@ public class C {
     public static boolean restarting = false;
     public static DecimalFormat twoPointDecimal = new DecimalFormat("#.##");
     public static int claimCoreRange = 32;
+    public static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yy");
 
     /* static lists */
 
@@ -65,8 +70,23 @@ public class C {
         }
         return net.md_5.bungee.api.ChatColor.WHITE;}
 
-    public static ItemStack createItemStack (String itemName, Material material, int amount, String[] lore, Enchantment enchantment, Integer enchantLvl, String localizedName) {
+
+    public static ItemStack getHeadFromURL(URL value) {
+        ItemStack head = new ItemStack(Material.PLAYER_HEAD, 1, (short)3);
+        SkullMeta meta = (SkullMeta) head.getItemMeta();
+        PlayerProfile profile = Bukkit.createPlayerProfile(UUID.randomUUID());
+        profile.getTextures().setSkin(value);
+        meta.setOwnerProfile(profile);
+        head.setItemMeta(meta);
+
+        return head;
+    }
+
+    public static ItemStack createItemStack (String itemName, Material material, int amount, String[] lore, Enchantment enchantment, Integer enchantLvl, String localizedName,URL URL) {
         ItemStack i = new ItemStack(material);
+        if (material == Material.PLAYER_HEAD) {
+            i = C.getHeadFromURL(URL);
+        }
         ItemMeta iM = i.getItemMeta();
         List<String> adjustedLore = new ArrayList<>();
         for (String oldLore : lore) {
@@ -76,11 +96,13 @@ public class C {
         if (localizedName != null) {
             iM.setLocalizedName(localizedName);
         }
+
         i.setAmount(amount);
         iM.setDisplayName(C.t(itemName));
         if (enchantment != null) {
             iM.addEnchant(enchantment, enchantLvl, true);
         }
+
         i.setItemMeta(iM);
         return i;
     }
@@ -95,6 +117,14 @@ public class C {
             }
         }
         return teamName;
+    }
+
+    public static URL getURL (String URL) {
+        URL url = null;
+        try {
+            url = new URL(URL);
+        } catch (MalformedURLException err) {err.printStackTrace();}
+        return url;
     }
     public static Team getPlayerTeam (Player p ) {
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();

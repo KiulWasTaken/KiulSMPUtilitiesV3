@@ -110,11 +110,18 @@ public class FightLogicListeners implements Listener {
                     if ((System.currentTimeMillis() - lastPearlThrow.get(p.getUniqueId())) < 3000) {
                         fastPearlThrow.put(p.getUniqueId(), fastPearlThrow.get(p.getUniqueId()) + 1);
                         Bukkit.broadcastMessage(fastPearlThrow.get(p.getUniqueId()) + "");
-                        int cooldown = (int)(2*(C.fightManager.findFightForMember(p).getDuration() / 1000 / 60 / 1)) * fastPearlThrow.get(p.getUniqueId());
-                        if (cooldown > 60) {
-                            cooldown = 60;
-                        }
-                        p.setCooldown(Material.ENDER_PEARL,(10 + cooldown));
+
+                        new BukkitRunnable() {
+                            int cooldown = (int)(2*(C.fightManager.findFightForMember(p).getDuration() / 1000 / 60 / 1)) * fastPearlThrow.get(p.getUniqueId());
+
+                            @Override
+                            public void run() {
+                                if (cooldown > 60) {
+                                    cooldown = 60;
+                                }
+                                p.setCooldown(Material.ENDER_PEARL,(20 + cooldown));
+                            }
+                        }.runTaskLater(C.plugin,0);
                     } else {
                         lastPearlThrow.put(p.getUniqueId(), null);
                         fastPearlThrow.put(p.getUniqueId(), 0);
