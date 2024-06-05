@@ -10,18 +10,14 @@ import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.config.ClaimData;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
 import kiul.kiulsmputilitiesv3.crates.CrateListeners;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemCraft;
+import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemPickupAfterDeath;
+import kiul.kiulsmputilitiesv3.potions.PotionListeners;
+import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapelessRecipe;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
-
-import java.util.ArrayList;
-import java.util.List;
 
 public final class KiulSMPUtilitiesV3 extends JavaPlugin {
 
@@ -39,6 +35,9 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CrateListeners(),this);
         getServer().getPluginManager().registerEvents(new GluttonyAccessory(),this);
         getServer().getPluginManager().registerEvents(new NimbleAccessory(),this);
+        getServer().getPluginManager().registerEvents(new PotionListeners(),this);
+        getServer().getPluginManager().registerEvents(new ItemCraft(),this);
+        getServer().getPluginManager().registerEvents(new ItemPickupAfterDeath(),this);
 
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
@@ -65,6 +64,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
                 recipeChoice = new RecipeChoice.ExactChoice(IngredientItemEnum.Opal.getIngredient());
             }
 
+
             sr.addIngredient(recipeChoice);
             Bukkit.addRecipe(sr);
         }
@@ -76,6 +76,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getCommand("logout").setExecutor(new Commands());
         getCommand("accessory").setExecutor(new Commands());
         getCommand("give-accessory").setExecutor(new Commands());
+        getCommand("give-ingredient").setExecutor(new Commands());
         getCommand("toggle-sounds").setExecutor(new Commands());
         getCommand("test-crate").setExecutor(new Commands());
         getCommand("populate-crate").setExecutor(new Commands());
@@ -88,7 +89,11 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
 
         // Plugin Methods
         ClaimMethods.initializeClaims();
-
+        new BrewingRecipe(Material.WHITE_WOOL, (inventory, item, ingredient) -> {//Some lambda magic
+            if (item.getType() == Material.GLASS_BOTTLE) {
+                item.setType(Material.RED_WOOL);
+            }
+        });
 
     }
 

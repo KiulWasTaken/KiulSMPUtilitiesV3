@@ -16,6 +16,7 @@ import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -26,6 +27,7 @@ import java.io.IOException;
 import java.util.UUID;
 
 import static kiul.kiulsmputilitiesv3.accessories.AccessoryMethods.getActiveAccessoryIdentifier;
+import static kiul.kiulsmputilitiesv3.accessories.AccessoryMethods.trackingSignalTask;
 
 public class AccessoryListeners implements Listener {
 
@@ -39,11 +41,22 @@ public class AccessoryListeners implements Listener {
         AccessoryData.get().addDefault(uuid+".accessory.range",0);
         AccessoryData.get().addDefault(uuid+".accessory.tracking-multiplier",1.0);
         AccessoryData.get().addDefault(uuid+".accessory.cooldown",null);
-        AccessoryData.get().addDefault(uuid+".sounds",true);
+        AccessoryData.get().addDefault(uuid+".sounds.teammates",false);
+        AccessoryData.get().addDefault(uuid+".sounds.enemies",true);
+        AccessoryData.get().addDefault(uuid+".sounds.self",true);
+        AccessoryData.get().addDefault(uuid+".sounds.all",true);
         AccessoryData.save();
 
         if (AccessoryData.get().get(uuid+".accessory.identifier") != null) {
             AccessoryMethods.instantiateTrackingSignalTask(p);
+        }
+    }
+
+    @EventHandler
+    public void cancelTaskOnQuit (PlayerQuitEvent e) {
+        if (trackingSignalTask.containsKey(e.getPlayer())) {
+            trackingSignalTask.get(e.getPlayer()).cancel();
+            trackingSignalTask.remove(e.getPlayer());
         }
     }
 

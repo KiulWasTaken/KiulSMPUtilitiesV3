@@ -16,12 +16,16 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.tags.CustomItemTagContainer;
 import org.bukkit.inventory.meta.tags.ItemTagType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
+import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
 public class AccessoryMethods {
+    public static HashMap<Player,BukkitTask> trackingSignalTask = new HashMap<>();
 
     public static void giveAccessory (Player p,String identifier) {
         for (AccessoryItemEnum item : AccessoryItemEnum.values()) {
@@ -31,7 +35,14 @@ public class AccessoryMethods {
             }
         }
     }
-
+    public static void giveIngredient (Player p,String identifier) {
+        for (IngredientItemEnum item : IngredientItemEnum.values()) {
+            if (item.getLocalName().equals(identifier)) {
+                p.getInventory().setItemInMainHand(item.getIngredient());
+                return;
+            }
+        }
+    }
 
 
     public static void equipAccessory (Player p) {
@@ -129,16 +140,39 @@ public class AccessoryMethods {
 
         int range = AccessoryData.get().getInt(p.getUniqueId() + ".accessory.range");
 
-        new BukkitRunnable() {
+        final BukkitTask runnable = new BukkitRunnable() {
+
             @Override
             public void run() {
                 if (p.isOnline() && AccessoryData.get().get(p.getUniqueId()+".accessory.identifier") != null) {
                     for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                        if (onlinePlayer != p && AccessoryData.get().getBoolean(onlinePlayer.getUniqueId()+".sounds")) {
+                        Team onlinePlayerTeam = C.getPlayerTeam(onlinePlayer);
+                        Team pTeam = C.getPlayerTeam(p);
+                        boolean isMe = onlinePlayer.equals(p);
+                        if (AccessoryData.get().getBoolean(onlinePlayer.getUniqueId()+".sounds.self")) {
+                            isMe = false;
+                        }
+                        if (!isMe && AccessoryData.get().getBoolean(onlinePlayer.getUniqueId()+".sounds.all")) {
+                            if (pTeam != null) {
+                                if (onlinePlayerTeam != null) {
+                                    if (C.getPlayerTeam(onlinePlayer) == C.getPlayerTeam(p)) {
+                                        if (AccessoryData.get().getBoolean(onlinePlayer.getUniqueId() + ".sounds.teammates")) {
+                                            return;
+                                        }
+                                    }
+                                }
+                                if (C.getPlayerTeam(p) != C.getPlayerTeam(onlinePlayer)) {
+                                    if (AccessoryData.get().getBoolean(onlinePlayer.getUniqueId()+".sounds.enemies")) {
+                                        return;
+                                    }
+                                }
+                            }
                             if (onlinePlayer.getWorld() == p.getWorld()) {
 
                                 int trackingMultiplier = AccessoryData.get().getInt(onlinePlayer.getUniqueId() + ".accessory.tracking-multiplier");
-                                double distance = p.getLocation().distance(onlinePlayer.getLocation());
+                                Location pLocation = new Location(p.getWorld(),p.getLocation().getX(),0,p.getLocation().getZ());
+                                Location onlinePlayerLocation = new Location(onlinePlayer.getWorld(),onlinePlayer.getLocation().getX(),0,onlinePlayer.getLocation().getZ());
+                                double distance = pLocation.distance(onlinePlayerLocation);
 
                                 if (distance < range * trackingMultiplier) {
 //                                Location soundDirection = onlinePlayer.getEyeLocation().add((onlinePlayer.getEyeLocation().getDirection().subtract(p.getEyeLocation().getDirection())).multiply(12 * (distance / range)).toLocation(onlinePlayer.getWorld()));
@@ -160,5 +194,6 @@ public class AccessoryMethods {
                 }
             }
         }.runTaskTimer(C.plugin,0,80);
+        trackingSignalTask.put(p,runnable);
     }
 }

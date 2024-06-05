@@ -88,15 +88,48 @@ public class Commands implements TabExecutor {
             case "give-accessory":
                 AccessoryMethods.giveAccessory(p,args[0]);
                 break;
+            case "give-ingredient":
+                AccessoryMethods.giveIngredient(p,args[0]);
+                break;
             case "accessory":
                 AccessoryMethods.equipAccessory(p);
                 break;
             case "toggle-sounds":
-                AccessoryData.get().set(p.getUniqueId()+".sounds",!AccessoryData.get().getBoolean(p.getUniqueId()+".sounds"));
-                if (AccessoryData.get().getBoolean(p.getUniqueId()+".sounds")) {
+                AccessoryData.get().set(p.getUniqueId()+".sounds.all",!AccessoryData.get().getBoolean(p.getUniqueId()+".sounds"));
+                if (AccessoryData.get().getBoolean(p.getUniqueId()+".sounds.all")) {
                     p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
                 } else {
                     p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Tracking Sounds " + ChatColor.RED + "DISABLED"));
+                }
+                switch (args[0]) {
+                    case "teammates":
+                        if (AccessoryData.get().getBoolean(p.getUniqueId()+".sounds.teammates")) {
+                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Teammate Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
+                        } else {
+                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Teammate Tracking Sounds " + ChatColor.RED + "DISABLED"));
+                        }
+                        break;
+                    case "enemies":
+                        if (AccessoryData.get().getBoolean(p.getUniqueId()+".sounds.enemies")) {
+                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Enemy Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
+                        } else {
+                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Enemy Tracking Sounds " + ChatColor.RED + "DISABLED"));
+                        }
+                        break;
+                    case "all":
+                        if (AccessoryData.get().getBoolean(p.getUniqueId()+".sounds.all")) {
+                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
+                        } else {
+                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Tracking Sounds " + ChatColor.RED + "DISABLED"));
+                        }
+                        break;
+                    case "self":
+                        if (AccessoryData.get().getBoolean(p.getUniqueId()+".sounds.self")) {
+                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "All Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
+                        } else {
+                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "All Tracking Sounds " + ChatColor.RED + "DISABLED"));
+                        }
+                        break;
                 }
                 break;
             case "test-crate":
@@ -127,6 +160,12 @@ public class Commands implements TabExecutor {
                 return argsList;
             case "translate":
                 argsList.add("[TEXT-TO-TRANSLATE]");
+                return argsList;
+            case "toggle-sounds":
+                argsList.add("all");
+                argsList.add("enemies");
+                argsList.add("teammates");
+                argsList.add("self");
                 return argsList;
         }
         return null;
