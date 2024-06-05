@@ -6,11 +6,13 @@ import kiul.kiulsmputilitiesv3.advancements.AdvancementEnum;
 import kiul.kiulsmputilitiesv3.advancements.AdvancementMethods;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
@@ -92,6 +94,15 @@ public class AccessoryListeners implements Listener {
                         }
                     }
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    public void preventPlacement (BlockPlaceEvent e) {
+        if (e.getBlock().getType().equals(Material.PLAYER_HEAD)) {
+            if (e.getItemInHand().getItemMeta().hasLocalizedName()) {
+                e.setCancelled(true);
             }
         }
     }

@@ -10,6 +10,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.CraftItemEvent;
+import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.SmithItemEvent;
 import org.bukkit.inventory.ItemStack;
 
@@ -39,10 +40,10 @@ public class ItemCraft implements Listener {
     }
 
     @EventHandler
-    public void combineDate (Anvil e) {
-        if (ItemMethods.historyItems.contains(e.getInventory().getRecipe().getResult().getType())) {
+    public void combineDate (PrepareAnvilEvent e) {
+        if (ItemMethods.historyItems.contains(e.getInventory().getItem(3))) {
             LocalDate currentDate = LocalDate.now();
-            ItemMethods.addLore(e.getInventory().getResult(),ChatColor.GRAY + "↑ - " + ((Player)e.getView().getPlayer()).getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
+            ItemMethods.addLore(e.getInventory().getItem(3),ChatColor.GRAY + "↑ - " + ((Player)e.getView().getPlayer()).getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
         }
     }
 }

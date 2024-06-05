@@ -1,9 +1,6 @@
 package kiul.kiulsmputilitiesv3;
 
-import kiul.kiulsmputilitiesv3.accessories.AccessoryItemEnum;
-import kiul.kiulsmputilitiesv3.accessories.AccessoryListeners;
-import kiul.kiulsmputilitiesv3.accessories.GluttonyAccessory;
-import kiul.kiulsmputilitiesv3.accessories.NimbleAccessory;
+import kiul.kiulsmputilitiesv3.accessories.*;
 import kiul.kiulsmputilitiesv3.claims.ClaimListeners;
 import kiul.kiulsmputilitiesv3.claims.ClaimMethods;
 import kiul.kiulsmputilitiesv3.combatlog.LogoutListeners;
@@ -18,6 +15,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.RecipeChoice;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -44,15 +42,30 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
 
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
+            ItemStack is = new ItemStack(accessoryItem.getAccessory());
 
-            ItemStack is = new ItemStack(Material.PAPER);
-            ItemMeta im = is.getItemMeta();
-            im.setLocalizedName(accessoryItem.getLocalName());
-            im.setDisplayName(ChatColor.YELLOW+"???");
-            is.setItemMeta(im);
             ShapelessRecipe sr = new ShapelessRecipe(new NamespacedKey(C.plugin,accessoryItem.getLocalName()),is);
-            sr.addIngredient(1, accessoryItem.getMaterial());
-            sr.addIngredient(1, Material.NETHERITE_SCRAP);
+
+            RecipeChoice recipeChoice = new RecipeChoice.ExactChoice(IngredientItemEnum.Ruby.getIngredient());
+            if (accessoryItem.getLocalName().contains("base")) {
+
+            } else {
+                sr.addIngredient(new RecipeChoice.ExactChoice(accessoryItem.getAccessory()));
+            }
+            if (accessoryItem.getLocalName().contains("ruby")) {
+                recipeChoice = new RecipeChoice.ExactChoice(IngredientItemEnum.Ruby.getIngredient());
+            }
+            if (accessoryItem.getLocalName().contains("tanzanite")) {
+                recipeChoice = new RecipeChoice.ExactChoice(IngredientItemEnum.Tanzanite.getIngredient());
+            }
+            if (accessoryItem.getLocalName().contains("peridot")) {
+                recipeChoice = new RecipeChoice.ExactChoice(IngredientItemEnum.Peridot.getIngredient());
+            }
+            if (accessoryItem.getLocalName().contains("opal")) {
+                recipeChoice = new RecipeChoice.ExactChoice(IngredientItemEnum.Opal.getIngredient());
+            }
+
+            sr.addIngredient(recipeChoice);
             Bukkit.addRecipe(sr);
         }
 
