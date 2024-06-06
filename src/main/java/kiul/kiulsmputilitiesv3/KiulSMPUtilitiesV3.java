@@ -33,8 +33,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new AccessoryListeners(),this);
         getServer().getPluginManager().registerEvents(new ClaimListeners(),this);
         getServer().getPluginManager().registerEvents(new CrateListeners(),this);
-        getServer().getPluginManager().registerEvents(new GluttonyAccessory(),this);
-        getServer().getPluginManager().registerEvents(new NimbleAccessory(),this);
+        getServer().getPluginManager().registerEvents(new RingAccessory(),this);
         getServer().getPluginManager().registerEvents(new PotionListeners(),this);
         getServer().getPluginManager().registerEvents(new ItemCraft(),this);
         getServer().getPluginManager().registerEvents(new ItemPickupAfterDeath(),this);
@@ -89,11 +88,6 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
 
         // Plugin Methods
         ClaimMethods.initializeClaims();
-        new BrewingRecipe(Material.WHITE_WOOL, (inventory, item, ingredient) -> {//Some lambda magic
-            if (item.getType() == Material.GLASS_BOTTLE) {
-                item.setType(Material.RED_WOOL);
-            }
-        });
 
     }
 

@@ -43,22 +43,4 @@ public class PotionListeners implements Listener {
         }.runTaskLater(C.plugin, 1);
         ((Player) e.getWhoClicked()).updateInventory();//And we update the inventory
     }
-
-    @EventHandler(priority = EventPriority.NORMAL)
-    public void PotionListener(Brew e) {
-
-
-
-        if (e.getClickedInventory() == null)
-            return;
-        if (e.getClickedInventory().getType() != InventoryType.BREWING)
-            return;
-        if (((BrewerInventory) e.getInventory()).getIngredient() == null)
-            return;
-        BrewingRecipe recipe = BrewingRecipe.getRecipe((BrewerInventory) e.getClickedInventory());
-        if (recipe == null)
-            return;
-        recipe.startBrewing((BrewerInventory) e.getClickedInventory());
-
-    }
 }

@@ -47,7 +47,7 @@ public class C {
     /* Configurable */
     public static int blockRegenTimeSeconds = 90;
     public static int npcDespawnTimeSeconds = 90;
-    public static int accessoryCooldownTimeMinutes = 1;
+    public static int accessoryCooldownTimeMinutes = 0;
 
     /* Global Utility Methods */
     private static final Pattern HEX_PATTERN = Pattern.compile("&#(\\w{5}[0-9a-fA-F])");
