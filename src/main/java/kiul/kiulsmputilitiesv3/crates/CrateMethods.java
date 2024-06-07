@@ -18,7 +18,6 @@ import org.bukkit.scoreboard.Team;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
-import static kiul.kiulsmputilitiesv3.crates.SmallCrates.populateCrate;
 
 
 public class CrateMethods {
@@ -37,8 +36,8 @@ public class CrateMethods {
 
     public static Location returnCrateLocation (World world) {
         Random random = new Random();
-        int x = random.nextInt(-5900,5900);
-        int z = random.nextInt(-5900,5900);
+        int x = random.nextInt((int)-(world.getWorldBorder().getSize()/2),(int)(world.getWorldBorder().getSize()/2));
+        int z = random.nextInt((int)-(world.getWorldBorder().getSize()/2),(int)(world.getWorldBorder().getSize()/2));
         int y = world.getHighestBlockYAt(x,z);
         return new Location(world,x,y,z);
     }
@@ -171,13 +170,6 @@ public class CrateMethods {
         return null;}
 
 
-    public static int getRandomTime() {
-        Random random = new Random();
-        int lowerBound = C.plugin.getConfig().getInt("supplydrops.spawnfreq.lower") * 20 * 60 * 60; //8 hours
-        int upperBound = C.plugin.getConfig().getInt("supplydrops.spawnfreq.upper") * 20 * 60 * 60; //12 hours
-        int randomTime = random.nextInt(upperBound - lowerBound) + lowerBound;
-        return randomTime;
-    }
     public static CrateTypeEnum getCrate(String identifier) {
         for (CrateTypeEnum crateTypeEnum : CrateTypeEnum.values()) {
             if (crateTypeEnum.getIdentifier().equalsIgnoreCase(identifier)) {
@@ -201,8 +193,7 @@ public class CrateMethods {
 
 
 
-    public static void createCrate(World world) {
-        String type = "end";
+    public static void createCrate(World world, String type) {
 
 
         CrateTypeEnum crateType = getCrate(type);
@@ -221,16 +212,28 @@ public class CrateMethods {
 
         new BukkitRunnable() {
             ArmorStand nameplate = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0.5,2,0.5),EntityType.ARMOR_STAND);
+            long timeUntilSpawn = crateSpawnTime-System.currentTimeMillis();
+            int tick = 0;
             @Override
             public void run() {
 
                 if (System.currentTimeMillis() < crateSpawnTime) {
+                    tick++;
                     nameplate.setInvulnerable(true);
                     nameplate.setVisible(false);
                     nameplate.setGravity(false);
                     nameplate.setCustomNameVisible(true);
                     nameplate.setPersistent(true);
                     nameplate.setMarker(true);
+
+                    if (crateSpawnTime-System.currentTimeMillis() < 5*1000*60 || tick >= 15) {
+                        tick = 0;
+                        int[] timestamps = C.splitTimestamp(crateSpawnTime);
+                        Bukkit.broadcastMessage("");
+                        Bukkit.broadcastMessage(C.eventPrefix + crateType.getDisplayName() + ChatColor.WHITE + " container will arrive at " + x + " " + y + " " + z + " in " + ChatColor.RED + String.format("%02d:%02d:%02d",timestamps[0],timestamps[1],timestamps[2]));
+                        Bukkit.broadcastMessage("");
+                    }
+
                     nameplate.setCustomName(String.format("%02d : %02d",
                             TimeUnit.MILLISECONDS.toMinutes(crateSpawnTime - System.currentTimeMillis()),
                             TimeUnit.MILLISECONDS.toSeconds(crateSpawnTime - System.currentTimeMillis()) -
@@ -285,6 +288,7 @@ public class CrateMethods {
                                                 TimeUnit.MILLISECONDS.toSeconds(unlockTime- System.currentTimeMillis()) -
                                                         TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(unlockTime - System.currentTimeMillis()))
                                         ));
+
                                         if (System.currentTimeMillis() >= unlockTime) {
                                             Bukkit.broadcastMessage(crate.toString());
                                             populateCrate(crateType,crate,null);
@@ -463,25 +467,93 @@ public class CrateMethods {
                     }
                 }
         }.runTaskTimer(C.plugin,100,20);
+    }
+
+    public static void populateCrate (CrateTypeEnum crateType, ArmorStand crate, Player p) {
+        Random random = new Random();
+        ArrayList<ItemStack> crateInventory = new ArrayList<>();
+        //crateType.getRolls()
+        for (int i = 0; i < crateType.getLootTableRolls(); i++) {
+            ItemStack item = CrateMethods.getLootTableItem(crateType.getLootTable(), crateType);
+            crateInventory.add(item);
+            i = i + CrateMethods.getRollConsumption(item, crateType);
+            LootTableEnum lootTable = CrateMethods.getLootTable(item, crateType.getIdentifier());
+            if (lootTable != null) {
+                int amount = random.nextInt(lootTable.getMinStackSize(), lootTable.getMaxStackSize() + 1);
+
+
+                item.setAmount(amount);
+            }
+            if (item.getMaxStackSize() == 1) {
+                item.setAmount(1);
+            }
+        }
+
+
+        // Shuffling the contents
+        Collections.shuffle(crateInventory);
+        Inventory trueCrateInventory = Bukkit.createInventory(null,27,"Crate");
+        for (ItemStack itemStack : crateInventory) {
+            int randomSlot;
+
+            do {
+                randomSlot = random.nextInt(trueCrateInventory.getSize());
+
+                if (trueCrateInventory.getItem(randomSlot) == null) {
+                    trueCrateInventory.setItem(randomSlot, itemStack);
+                    break;
+                }
+            } while (trueCrateInventory.getItem(randomSlot) != itemStack); // avoid infinite loop
+        }
+
+        if (p != null) {
+            p.openInventory(trueCrateInventory);
+            return;
+        }
+        Bukkit.broadcastMessage(crate.toString());
+        Bukkit.broadcastMessage(crateInventory.toString());
+        Bukkit.broadcastMessage(trueCrateInventory.toString());
+        crateInventoryMap.put(crate,trueCrateInventory);
+    }
+
+    public static void startRandomCrates(World world) {
         new BukkitRunnable() {
             @Override
             public void run() {
                 if (!C.restarting) {
-                    if (crateSpawnTime > System.currentTimeMillis()) {
+                    if (Math.random() < 0.016 && Bukkit.getOnlinePlayers().size() > 10) {
+                        double[] chance = {0.3, 0.6, 0.85, 0.9, 1};
+                        int event = Arrays.binarySearch(chance, Math.random());
+                        if (event < 0) event = -event - 1;
+                        switch (event) {
+                            case 0:
+                                createCrate(world, "gold");
 
-                        for (Player onlinePlayers : Bukkit.getOnlinePlayers()) {
-                            onlinePlayers.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.getLastColors(crateType.getDisplayName())+ChatColor.stripColor(crateType.getDisplayName()) + ChatColor.GRAY + " - " + ChatColor.RED + ChatColor.UNDERLINE + String.format("%02d : %02d",
-                                    TimeUnit.MILLISECONDS.toMinutes(crateSpawnTime - System.currentTimeMillis()),
-                                    TimeUnit.MILLISECONDS.toSeconds(crateSpawnTime - System.currentTimeMillis()) -
-                                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(crateSpawnTime - System.currentTimeMillis())))));
+                                break;
+                            case 1:
+                                createCrate(world, "exp");
+                                // event 1
+                                break;
+                            case 2:
+                                createCrate(world, "end");
+                                // event 2
+                                break;
+                            case 3:
+                                createCrate(world, "nether");
+                                // event 3
+                                break;
+                            case 4:
+                                // blackbox
+                                createCrate(world, "nether");
+                                // event 4
+                                break;
                         }
+                        cancel();
                     }
                 } else {
                     cancel();
                 }
             }
-        }.runTaskTimer(C.plugin,0,1200);
+        }.runTaskTimer(C.plugin,3600,1200);
     }
-
-
 }

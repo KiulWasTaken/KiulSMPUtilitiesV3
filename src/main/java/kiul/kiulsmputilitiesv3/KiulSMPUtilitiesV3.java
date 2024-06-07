@@ -10,9 +10,10 @@ import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.config.ClaimData;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
 import kiul.kiulsmputilitiesv3.crates.CrateListeners;
+import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemCraft;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemPickupAfterDeath;
-import kiul.kiulsmputilitiesv3.potions.PotionListeners;
+import kiul.kiulsmputilitiesv3.potions.*;
 import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
@@ -31,7 +32,6 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new LogoutListeners(),this);
         getServer().getPluginManager().registerEvents(new MovementListeners(),this);
         getServer().getPluginManager().registerEvents(new AccessoryListeners(),this);
-        getServer().getPluginManager().registerEvents(new ClaimListeners(),this);
         getServer().getPluginManager().registerEvents(new CrateListeners(),this);
         getServer().getPluginManager().registerEvents(new RingAccessory(),this);
         getServer().getPluginManager().registerEvents(new PotionListeners(),this);
@@ -88,7 +88,12 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
 
         // Plugin Methods
         ClaimMethods.initializeClaims();
-
+        CrateMethods.startRandomCrates(getServer().getWorld("world"));
+        new BrewingRecipe(Material.GLOW_BERRIES, new CustomHastePotion());
+        new BrewingRecipe(Material.NETHERITE_SCRAP, new CustomPurityPotion());
+        new BrewingRecipe(Material.GUNPOWDER, new CustomPotionUpgrade());
+        new BrewingRecipe(Material.GLOWSTONE_DUST, new CustomPotionUpgrade());
+        new BrewingRecipe(Material.REDSTONE, new CustomPotionUpgrade());
     }
 
     @Override

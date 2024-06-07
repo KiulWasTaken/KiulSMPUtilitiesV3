@@ -136,13 +136,13 @@ public class LogoutListeners implements Listener {
                             if (((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta() != null) {
                                 if (((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName() != null) {
                                     if (((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName().length() > 0) {
-                                        Bukkit.broadcastMessage(entityteamName + Bukkit.getOfflinePlayer(NPCOwner.get(e.getEntity())).getName() + " was slain by " + damagerteamName + ((Player) e.getDamager()).getDisplayName() + " using " + ChatColor.AQUA + "[" + ChatColor.RESET + ((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName() + ChatColor.AQUA + "]" + ChatColor.RESET);
+                                        Bukkit.broadcastMessage(entityteamName + ChatColor.RESET  + Bukkit.getOfflinePlayer(NPCOwner.get(e.getEntity())).getName() + " was slain by " + damagerteamName + ChatColor.RESET  + ((Player) e.getDamager()).getDisplayName() + " using " + ChatColor.AQUA + "[" + ChatColor.RESET + ((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName() + ChatColor.AQUA + "]" + ChatColor.RESET);
                                         return;
                                     }
                                 }
                             }
                         }
-                        Bukkit.broadcastMessage(entityteamName + Bukkit.getOfflinePlayer(NPCOwner.get(e.getEntity())).getName() + " was slain by " + damagerteamName + ((Player) e.getDamager()).getDisplayName());
+                        Bukkit.broadcastMessage(entityteamName + ChatColor.RESET + Bukkit.getOfflinePlayer(NPCOwner.get(e.getEntity())).getName() + " was slain by " + damagerteamName + ChatColor.RESET  + ((Player) e.getDamager()).getDisplayName());
                     }
                 }
             }

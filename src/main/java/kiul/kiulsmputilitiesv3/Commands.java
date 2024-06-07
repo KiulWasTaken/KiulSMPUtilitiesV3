@@ -1,16 +1,11 @@
 package kiul.kiulsmputilitiesv3;
 
 import kiul.kiulsmputilitiesv3.accessories.AccessoryMethods;
-import kiul.kiulsmputilitiesv3.claims.ClaimMethods;
-import kiul.kiulsmputilitiesv3.claims.Region;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
-import kiul.kiulsmputilitiesv3.config.PersistentData;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.crates.CrateTypeEnum;
-import kiul.kiulsmputilitiesv3.crates.SmallCrates;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -18,14 +13,10 @@ import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 import java.util.concurrent.TimeUnit;
 
 public class Commands implements TabExecutor {
@@ -133,11 +124,11 @@ public class Commands implements TabExecutor {
                 }
                 break;
             case "test-crate":
-                CrateMethods.createCrate(p.getWorld());
+                CrateMethods.createCrate(p.getWorld(),"end");
                 break;
             case "populate-crate":
                 CrateTypeEnum crateType = CrateMethods.getCrate(args[0]);
-                SmallCrates.populateCrate(crateType,null,p);
+                CrateMethods.populateCrate(crateType,null,p);
                 break;
             case "translate":
                 p.sendMessage(C.t(args[0]));

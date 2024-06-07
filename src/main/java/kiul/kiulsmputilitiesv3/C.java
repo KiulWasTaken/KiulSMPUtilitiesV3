@@ -2,6 +2,7 @@ package kiul.kiulsmputilitiesv3;
 
 import com.google.j2objc.annotations.Property;
 import kiul.kiulsmputilitiesv3.combattag.FightManager;
+import kiul.kiulsmputilitiesv3.potions.BrewingRecipe;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -40,6 +41,7 @@ public class C {
 
     /* static lists */
 
+    public static ArrayList<BrewingRecipe> brewingRecipes = new ArrayList<>();
     public static FightManager fightManager = new FightManager();
     public static ArrayList<Player> loggingOut = new ArrayList<>();
     public static ArrayList<Player> logoutTimer = new ArrayList<>();
@@ -59,6 +61,13 @@ public class C {
         }
 
         return ChatColor.translateAlternateColorCodes('&', matcher.appendTail(buffer).toString());
+    }
+    public static int[] splitTimestamp(long futureTimestamp) {
+        long millisecondsRemaining = futureTimestamp - System.currentTimeMillis();
+        long hours = millisecondsRemaining / 3600000;
+        long minutes = (millisecondsRemaining % 3600000) / 60000;
+        long seconds = ((millisecondsRemaining % 3600000) % 60000) / 1000;
+        return new int[]{(int)hours, (int)minutes, (int)seconds};
     }
     public static net.md_5.bungee.api.ChatColor returnT(String textToTranslate) {
         Matcher matcher = HEX_PATTERN.matcher(textToTranslate);
