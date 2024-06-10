@@ -1,5 +1,6 @@
 package kiul.kiulsmputilitiesv3.potions;
 
+import kiul.kiulsmputilitiesv3.C;
 import org.bukkit.Material;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
@@ -26,7 +27,9 @@ public class PotionListeners implements Listener {
         if (inv == null || inv.getType() != InventoryType.BREWING) {
             return;
         }
-
+        if (C.brewingTasks.containsKey(inv)) {
+            C.brewingTasks.get(inv).cancel();
+        }
         if (!(event.getClick() == ClickType.LEFT || event.getClick() == ClickType.RIGHT)) {
             return;
         }

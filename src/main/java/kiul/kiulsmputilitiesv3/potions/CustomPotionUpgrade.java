@@ -1,7 +1,10 @@
 package kiul.kiulsmputilitiesv3.potions;
 
+import io.papermc.paper.event.player.AsyncChatCommandDecorateEvent;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.inventory.BrewerInventory;
@@ -37,9 +40,12 @@ public class CustomPotionUpgrade extends BrewAction {
                         duration = 4800;
                         potionMeta.lore().clear();
                         potionMeta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
-                        List<Component> lore = new ArrayList<>();
-                        lore.add(Component.text("Purity (4:00)").color(NamedTextColor.BLUE));
-                        potionMeta.lore();
+                        List<String> lore = new ArrayList<>();
+                        lore.add(ChatColor.RESET+""+ChatColor.BLUE+"Purity (4:00)");
+                        lore.add("");
+                        lore.add(ChatColor.RESET+""+ChatColor.DARK_PURPLE+"When Applied:");
+                        lore.add(ChatColor.RESET+""+ChatColor.BLUE+"Immunity to negative potion effects");
+                        potionMeta.setLore(lore);
                     }
                     potionMeta.clearCustomEffects();
                     potionMeta.addCustomEffect(new PotionEffect(customEffectType,duration,0,false,true),true);
@@ -59,7 +65,7 @@ public class CustomPotionUpgrade extends BrewAction {
 
             case GUNPOWDER:
                 item.setType(Material.SPLASH_POTION);
-                break;
+                return;
         }
 
         item.setItemMeta(potionMeta);

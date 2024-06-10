@@ -120,11 +120,4 @@ public class AccessoryListeners implements Listener {
             }
         }
     }
-    @EventHandler
-    public void preventWearing (InventoryClickEvent e) {
-        if (!e.getCurrentItem().getType().equals(Material.PLAYER_HEAD)) {return;}
-        if (!e.getCurrentItem().getItemMeta().hasLocalizedName()) {return;}
-        if (e.getClick().isShiftClick()) {e.setCancelled(true);}
-        if (e.getSlotType().equals(InventoryType.SlotType.ARMOR) && e.getCursor().equals(e.getCurrentItem())) {e.setCancelled(true);}
-    }
 }

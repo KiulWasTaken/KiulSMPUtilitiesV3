@@ -6,12 +6,14 @@ import kiul.kiulsmputilitiesv3.potions.BrewingRecipe;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
@@ -23,6 +25,7 @@ import java.net.URL;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.UUID;
 import java.util.regex.Matcher;
@@ -38,11 +41,13 @@ public class C {
     public static DecimalFormat twoPointDecimal = new DecimalFormat("#.##");
     public static int claimCoreRange = 32;
     public static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yy");
+    public static FightManager fightManager = new FightManager();
 
     /* static lists */
 
     public static ArrayList<BrewingRecipe> brewingRecipes = new ArrayList<>();
-    public static FightManager fightManager = new FightManager();
+
+    public static HashMap<BrewerInventory, BukkitTask> brewingTasks = new HashMap<>();
     public static ArrayList<Player> loggingOut = new ArrayList<>();
     public static ArrayList<Player> logoutTimer = new ArrayList<>();
 

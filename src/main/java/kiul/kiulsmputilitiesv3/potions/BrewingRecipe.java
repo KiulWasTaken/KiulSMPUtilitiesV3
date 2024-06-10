@@ -6,6 +6,7 @@ import org.bukkit.block.BrewingStand;
 import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 public class BrewingRecipe {
 
@@ -129,7 +130,8 @@ public class BrewingRecipe {
             this.stand = inventory.getHolder();
             this.before = inventory.getContents();
             this.current = time;
-            runTaskTimer(C.plugin, 0L, 1L);
+            BukkitTask task = runTaskTimer(C.plugin, 0L, 1L);
+            C.brewingTasks.put(inventory,task);
         }
         @Override
         public void run() {
@@ -179,14 +181,12 @@ public class BrewingRecipe {
                 }
                 // Set the fuel level
                 stand.setFuelLevel(stand.getFuelLevel() - recipe.fuelCharge);
+                C.brewingTasks.remove(inventory);
                 cancel();
                 return;
             }
             // If a player drags an item, fuel, or any contents, reset it
-            if (searchChanged(before, inventory.getContents(), perfect)) {
-                cancel();
-                return;
-            }
+
             // Decrement, set the brewing time, and update the stand
             current--;
             stand.setBrewingTime(current);
@@ -194,6 +194,7 @@ public class BrewingRecipe {
         }
         // Check if any slots were changed
         public boolean searchChanged(ItemStack[] before, ItemStack[] after, boolean mode) {
+
             for (int i = 0; i < before.length; i++) {
                 if ((before[i] != null && after[i] == null) || (before[i] == null && after[i] != null)) {
                     return false;

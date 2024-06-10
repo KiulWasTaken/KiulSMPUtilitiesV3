@@ -3,6 +3,9 @@ package kiul.kiulsmputilitiesv3.potions;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
+import org.bukkit.ChatColor;
 import org.bukkit.Color;
 import org.bukkit.Material;
 import org.bukkit.inventory.BrewerInventory;
@@ -28,12 +31,15 @@ public class CustomPurityPotion extends BrewAction {
             return;
         }
         potionMeta.setColor(Color.WHITE);
-        potionMeta.displayName(Component.text("Potion of Purity").color(NamedTextColor.AQUA));
+        potionMeta.setDisplayName(ChatColor.RESET+"Potion of Purity");
         potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.LUCK,20,0,false,false),true);
         potionMeta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
-        List<Component> lore = new ArrayList<>();
-        lore.add(Component.text("Instant Purity").color(NamedTextColor.BLUE));
-        potionMeta.lore(lore);
+        List<String> lore = new ArrayList<>();
+        lore.add(ChatColor.RESET+""+ChatColor.BLUE+"Instant Purity");
+        lore.add("");
+        lore.add(ChatColor.RESET+""+ChatColor.DARK_PURPLE+"When Applied:");
+        lore.add(ChatColor.RESET+""+ChatColor.BLUE+"Immunity to negative potion effects");
+        potionMeta.setLore(lore);
         item.setItemMeta(potionMeta);
 
     }
