@@ -148,17 +148,18 @@ public class PotionListeners implements Listener {
 
     @EventHandler
     public void instantPurity (EntityPotionEffectEvent e) {
+        if (e.getNewEffect() != null) {
+            if (e.getEntity() instanceof Player p) {
+                if (p.hasPotionEffect(PotionEffectType.LUCK) && debuffTypes.contains(e.getNewEffect().getType())) {
+                    e.setCancelled(true);
+                    return;
+                }
 
-        if (e.getEntity() instanceof Player p) {
-            if (p.hasPotionEffect(PotionEffectType.LUCK) && debuffTypes.contains(e.getNewEffect().getType())) {
-                e.setCancelled(true);
-                return;
-            }
-
-            if (e.getNewEffect().getType().equals(PotionEffectType.LUCK)) {
-                for (PotionEffect potionEffects : p.getActivePotionEffects()) {
-                    if (debuffTypes.contains(potionEffects.getType())) {
-                        p.removePotionEffect(potionEffects.getType());
+                if (e.getNewEffect().getType().equals(PotionEffectType.LUCK) && e.getNewEffect().getAmplifier() > 0) {
+                    for (PotionEffect potionEffects : p.getActivePotionEffects()) {
+                        if (debuffTypes.contains(potionEffects.getType())) {
+                            p.removePotionEffect(potionEffects.getType());
+                        }
                     }
                 }
             }

@@ -135,6 +135,11 @@ public class BrewingRecipe {
         }
         @Override
         public void run() {
+            if (stand == null) {
+                cancel();
+                return;
+            }
+
             if (current == 0) {
                 // Set ingredient to 1 less than the current. Otherwise set to air
                 if (inventory.getIngredient().getAmount() > 1) {

@@ -32,14 +32,15 @@ public class CustomPurityPotion extends BrewAction {
         }
         potionMeta.setColor(Color.WHITE);
         potionMeta.setDisplayName(ChatColor.RESET+"Potion of Purity");
-        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.LUCK,20,0,false,false),true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.LUCK,1800,0,false,true),true);
         potionMeta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
         List<String> lore = new ArrayList<>();
-        lore.add(ChatColor.RESET+""+ChatColor.BLUE+"Instant Purity");
+        lore.add(ChatColor.RESET+""+ChatColor.BLUE+"Purity (01:30)");
         lore.add("");
         lore.add(ChatColor.RESET+""+ChatColor.DARK_PURPLE+"When Applied:");
         lore.add(ChatColor.RESET+""+ChatColor.BLUE+"Immunity to negative potion effects");
         potionMeta.setLore(lore);
+
         item.setItemMeta(potionMeta);
 
     }

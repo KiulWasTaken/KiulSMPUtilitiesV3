@@ -38,26 +38,29 @@ public class CustomPotionUpgrade extends BrewAction {
                     int duration = 9600;
                     if (customEffectType.equals(PotionEffectType.LUCK)) {
                         duration = 4800;
-                        potionMeta.lore().clear();
-                        potionMeta.addItemFlags(ItemFlag.HIDE_ITEM_SPECIFICS);
-                        List<String> lore = new ArrayList<>();
-                        lore.add(ChatColor.RESET+""+ChatColor.BLUE+"Purity (4:00)");
-                        lore.add("");
-                        lore.add(ChatColor.RESET+""+ChatColor.DARK_PURPLE+"When Applied:");
-                        lore.add(ChatColor.RESET+""+ChatColor.BLUE+"Immunity to negative potion effects");
-                        potionMeta.setLore(lore);
                     }
                     potionMeta.clearCustomEffects();
                     potionMeta.addCustomEffect(new PotionEffect(customEffectType,duration,0,false,true),true);
                 }
                 break;
             case GLOWSTONE_DUST:
+                PotionEffectType customEffectType = potionMeta.getCustomEffects().get(0).getType();
+                if (customEffectType.equals(PotionEffectType.LUCK) || item.getItemMeta().getDisplayName().contains("Purity")) {
+                    potionMeta.getLore().clear();
+                    List<String> lore = new ArrayList<>();
+                    lore.add(ChatColor.RESET + "" + ChatColor.BLUE + "Instant Purity");
+                    lore.add("");
+                    lore.add(ChatColor.RESET + "" + ChatColor.DARK_PURPLE + "When Applied:");
+                    lore.add(ChatColor.RESET + "" + ChatColor.BLUE + "Clears active negative potion effects");
+                    potionMeta.setLore(lore);
+
+                    potionMeta.clearCustomEffects();
+                    potionMeta.addCustomEffect(new PotionEffect(customEffectType,200,1,false,true),true);
+                    item.setItemMeta(potionMeta);
+                    return;
+                }
                 if (potionMeta.getCustomEffects().get(0).getDuration() <= 4800) {
-                    PotionEffectType customEffectType = potionMeta.getCustomEffects().get(0).getType();
                     int duration = 1800;
-                    if (customEffectType.equals(PotionEffectType.LUCK)) {
-                        return;
-                    }
                     potionMeta.clearCustomEffects();
                     potionMeta.addCustomEffect(new PotionEffect(customEffectType,duration,1,false,true),true);
                 }
@@ -65,7 +68,8 @@ public class CustomPotionUpgrade extends BrewAction {
 
             case GUNPOWDER:
                 item.setType(Material.SPLASH_POTION);
-                return;
+                potionMeta.setDisplayName(ChatColor.WHITE+"Splash "+item.getItemMeta().getDisplayName());
+                break;
         }
 
         item.setItemMeta(potionMeta);
