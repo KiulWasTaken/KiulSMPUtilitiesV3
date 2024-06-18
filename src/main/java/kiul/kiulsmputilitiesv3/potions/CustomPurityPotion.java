@@ -38,7 +38,7 @@ public class CustomPurityPotion extends BrewAction {
         lore.add(ChatColor.RESET+""+ChatColor.BLUE+"Purity (01:30)");
         lore.add("");
         lore.add(ChatColor.RESET+""+ChatColor.DARK_PURPLE+"When Applied:");
-        lore.add(ChatColor.RESET+""+ChatColor.BLUE+"Immunity to negative potion effects");
+        lore.add(ChatColor.RESET+""+ChatColor.BLUE+"Cannot acquire negative potion effects");
         potionMeta.setLore(lore);
 
         item.setItemMeta(potionMeta);

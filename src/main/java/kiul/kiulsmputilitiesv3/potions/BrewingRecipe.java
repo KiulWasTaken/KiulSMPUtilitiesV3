@@ -1,6 +1,7 @@
 package kiul.kiulsmputilitiesv3.potions;
 
 import kiul.kiulsmputilitiesv3.C;
+import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.block.BrewingStand;
 import org.bukkit.inventory.BrewerInventory;
@@ -79,12 +80,10 @@ public class BrewingRecipe {
                     return recipe;
                 }
             } else {
-                if (!recipe.isPerfect() && inventory.getIngredient().getType() == recipe.getIngredient().getType() &&
-                        inventory.getFuel().getType() == recipe.getIngredient().getType()) {
+                if (!recipe.isPerfect() && inventory.getIngredient().getType() == recipe.getIngredient().getType()) {
                     return recipe;
                 }
-                if (recipe.isPerfect() && inventory.getIngredient().isSimilar(recipe.getIngredient()) &&
-                        inventory.getFuel().isSimilar(recipe.getFuel())) {
+                if (recipe.isPerfect() && inventory.getIngredient().isSimilar(recipe.getIngredient())) {
                     return recipe;
                 }
             }
@@ -149,33 +148,25 @@ public class BrewingRecipe {
                 } else {
                     inventory.setIngredient(new ItemStack(Material.AIR));
                 }
-                // Check the fuel in the recipe is more than 0, and exists
-                ItemStack newFuel = recipe.getFuel();
-                if (recipe.getFuel() != null && recipe.getFuel().getType() != Material.AIR &&
-                        recipe.getFuel().getAmount() > 0) {
-                    /*
-                     * We count how much fuel should be taken away in order to fill
-                     * the whole fuel bar
-                     */
-                    int count = 0;
-                    while (inventory.getFuel().getAmount() > 0 && stand.getFuelLevel() + recipe.fuelCharge < 100) {
-                        stand.setFuelLevel(stand.getFuelLevel() + recipe.fuelSet);
-                        count++;
-                    }
+
+                if (stand.getFuelLevel() <= 0) {
+                    // Check the fuel in the recipe is more than 0, and exists
+                    ItemStack newFuel = new ItemStack(Material.BLAZE_POWDER);
                     // If the fuel in the inventory is 0, set it to air.
-                    if (inventory.getFuel().getAmount() == 0) {
+                    if (inventory.getItem(4).getAmount() == 0) {
+                        Bukkit.broadcastMessage("fuck you im deleting it: " + inventory.getItem(4).getType() + " " + inventory.getItem(4).getAmount());
                         newFuel = new ItemStack(Material.AIR);
                     } else {
-                        /* Otherwise, set the percent of fuel level to 100 and update the
-                         *  count of the fuel
-                         */
-                        stand.setFuelLevel(100);
-                        newFuel.setAmount(inventory.getFuel().getAmount() - count);
+                        if (inventory.getItem(4).getType().equals(Material.BLAZE_POWDER)) {
+                            /* Otherwise, set the percent of fuel level to 100 and update the
+                             *  count of the fuel
+                             */
+                            stand.setFuelLevel(100);
+                            newFuel.setAmount(inventory.getItem(4).getAmount() - 1);
+                        }
                     }
-                } else {
-                    newFuel = new ItemStack(Material.AIR);
+                    inventory.setItem(4, newFuel);
                 }
-                inventory.setFuel(newFuel);
                 // Brew recipe for each item put in
                 for (int i = 0; i < 3; i++) {
                     if (inventory.getItem(i) == null || inventory.getItem(i).getType() == Material.AIR) {

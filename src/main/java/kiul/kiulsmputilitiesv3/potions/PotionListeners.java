@@ -6,13 +6,12 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.entity.EntityPotionEffectEvent;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
-import org.bukkit.inventory.BrewerInventory;
-import org.bukkit.inventory.Inventory;
-import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.*;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 
@@ -23,6 +22,20 @@ public class PotionListeners implements Listener {
     public void customPotionItemStackClick(InventoryClickEvent event) {
 
         Inventory inv = event.getClickedInventory();
+        InventoryView pInv = event.getWhoClicked().getOpenInventory();
+        ClickType type = event.getClick();
+        
+        if (event.getClickedInventory() == pInv.getBottomInventory() && pInv.getTopInventory() instanceof BrewerInventory) {
+            if (type == ClickType.SHIFT_LEFT || type == ClickType.SHIFT_RIGHT) {
+                event.setCancelled(true);
+                if (pInv.getTopInventory().firstEmpty() == -1) {
+                    return;
+                }
+                pInv.getTopInventory().setItem(pInv.getTopInventory().firstEmpty(), event.getCurrentItem());
+                event.setCurrentItem(event.getCursor());
+                return;
+            }
+        }
 
         if (inv == null || inv.getType() != InventoryType.BREWING) {
             return;
@@ -46,7 +59,7 @@ public class PotionListeners implements Listener {
         Player p = (Player)(event.getView().getPlayer());
 
         boolean compare = is.isSimilar(is2);
-        ClickType type = event.getClick();
+
 
         int firstAmount = is.getAmount();
         int secondAmount = is2.getAmount();
@@ -56,7 +69,10 @@ public class PotionListeners implements Listener {
 
         int clickedSlot = event.getSlot();
 
+
+
         if (type == ClickType.LEFT) {
+
 
             if (is == null || (is != null && is.getType() == Material.AIR)) {
 
@@ -133,6 +149,15 @@ public class PotionListeners implements Listener {
 
     }
 
+    @EventHandler
+    public void stopOnBreak (BlockBreakEvent e) {
+        if (e.getBlock() instanceof BlockInventoryHolder bi) {
+            if (bi instanceof BrewerInventory && C.brewingTasks.keySet().contains(bi)) {
+                C.brewingTasks.get(bi).cancel();
+                C.brewingTasks.remove(bi);
+;            }
+        }
+    }
     ArrayList<PotionEffectType> debuffTypes = new ArrayList<>() {{
        add(PotionEffectType.WEAKNESS);
        add(PotionEffectType.POISON);
