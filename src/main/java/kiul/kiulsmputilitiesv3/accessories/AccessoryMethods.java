@@ -64,6 +64,12 @@ public class AccessoryMethods {
                             if (item.getAttribute() != null) {
                                 p.getAttribute(item.getAttribute()).addModifier(new AttributeModifier(item.getAttribute().name(),(foundValue/100), AttributeModifier.Operation.ADD_NUMBER));
                             }
+
+                            if (item.getLocalName().equals("tome_peridot")) {
+                                TomeAccessory.peridotEffect(p);
+                            }
+
+
                             instantiateTrackingSignalTask(p);
                             AdvancementMethods.grantAdvancement(p, AdvancementEnum.ACTIVATE_ACCESSORY.getIdentifier());
                             p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(p.getInventory().getItemInMainHand().getItemMeta().getDisplayName() + ChatColor.GRAY + " - " + ChatColor.GREEN + "ACTIVE"));
