@@ -74,6 +74,21 @@ public class C {
         long seconds = ((millisecondsRemaining % 3600000) % 60000) / 1000;
         return new int[]{(int)hours, (int)minutes, (int)seconds};
     }
+    public static  HashMap<Team,List<Player>> sortTeams (List<UUID> playerList) {
+        HashMap<Team,List<Player>> teams = new HashMap<>();
+        for (UUID uuids : playerList) {
+            if (Bukkit.getPlayer(uuids) != null) {
+                Player p = Bukkit.getPlayer(uuids);
+                if (teams.get(C.getPlayerTeam(p)) != null) {
+                    teams.get(C.getPlayerTeam(p)).add(p);
+                } else {
+                    teams.put(C.getPlayerTeam(p),new ArrayList<>());
+                    teams.get(C.getPlayerTeam(p)).add(p);
+                }
+            }
+        }
+        return teams;
+    }
     public static net.md_5.bungee.api.ChatColor returnT(String textToTranslate) {
         Matcher matcher = HEX_PATTERN.matcher(textToTranslate);
         StringBuffer buffer = new StringBuffer();
@@ -241,4 +256,5 @@ public class C {
 
         return result;
     }
+
 }

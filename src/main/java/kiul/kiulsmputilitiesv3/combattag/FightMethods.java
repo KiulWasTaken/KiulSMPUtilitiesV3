@@ -1,11 +1,14 @@
 package kiul.kiulsmputilitiesv3.combattag;
 
 import kiul.kiulsmputilitiesv3.C;
+import kiul.kiulsmputilitiesv3.stats.StatDB;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.Team;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.UUID;
 
 public class FightMethods {
@@ -24,6 +27,11 @@ public class FightMethods {
                                 break;
                             }
                             fight.removeParticipant(p);
+                            HashMap<Team, List<Player>> team = C.sortTeams(fight.getParticipants());
+                            int numEnemies = fight.getParticipants().size() - team.get(C.getPlayerTeam(p)).size();
+                            if (numEnemies > team.get(C.getPlayerTeam(p)).size()) {
+                                StatDB.writePlayer(p.getUniqueId(), "stat_run", (int) StatDB.readPlayer(p.getUniqueId(), "stat_run") + 1);
+                            }
                             cancel();
                             return;
                         }

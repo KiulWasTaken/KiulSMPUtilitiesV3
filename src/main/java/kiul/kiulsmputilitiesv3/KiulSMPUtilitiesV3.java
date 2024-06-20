@@ -14,6 +14,7 @@ import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemCraft;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemPickupAfterDeath;
 import kiul.kiulsmputilitiesv3.potions.*;
+import kiul.kiulsmputilitiesv3.stats.StatDBListeners;
 import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
@@ -37,6 +38,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new PotionListeners(),this);
         getServer().getPluginManager().registerEvents(new ItemCraft(),this);
         getServer().getPluginManager().registerEvents(new ItemPickupAfterDeath(),this);
+        getServer().getPluginManager().registerEvents(new StatDBListeners(),this);
 
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
@@ -87,7 +89,6 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         ClaimData.setup();
 
         // Plugin Methods
-        ClaimMethods.initializeClaims();
         CrateMethods.startRandomCrates(getServer().getWorld("world"));
         new BrewingRecipe(Material.GLOW_BERRIES, new CustomHastePotion());
         new BrewingRecipe(Material.NETHERITE_SCRAP, new CustomPurityPotion());
