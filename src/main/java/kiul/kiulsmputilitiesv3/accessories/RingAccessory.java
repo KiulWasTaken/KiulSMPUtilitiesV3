@@ -23,7 +23,7 @@ public class RingAccessory implements Listener {
 
     @EventHandler
     public void baseEffect (PlayerInteractEntityEvent e) {
-        if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).contains("ring")) {
+        if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).contains("ring") && !AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).contains("ruby")) {
             if (e.getRightClicked() instanceof Villager) {
                 if (e.getPlayer().hasPotionEffect(PotionEffectType.HERO_OF_THE_VILLAGE)) {
                     return;
@@ -35,20 +35,8 @@ public class RingAccessory implements Listener {
     @EventHandler
     public void rubyEffect (PlayerTradeEvent e) {
         if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).equalsIgnoreCase("ring_ruby")) {
-            AbstractVillager villager = e.getVillager();
-            if (villager.getRecipes() == null) {
-                return;
-            }
-
-            for (MerchantRecipe recipes : villager.getRecipes()) {
-                int total = recipes.getIngredients().get(0).getAmount();
-                int price = total * 4;
-                if (price > 64) {
-                    price = 64;
-                }
-                recipes.getResult().setAmount(recipes.getResult().getAmount() * 2);
-                recipes.setDemand(price);
-            }
+            e.getTrade().getIngredients().get(0).setAmount(e.getTrade().getIngredients().get(0).getAmount()*4);
+            e.getTrade().getResult().setAmount(e.getTrade().getResult().getAmount()*2);
         }
     }
     @EventHandler
@@ -69,9 +57,8 @@ public class RingAccessory implements Listener {
     @EventHandler
     public void tanzaniteEffect (PlayerTradeEvent e) {
         if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).equalsIgnoreCase("ring_tanzanite")) {
-            for (MerchantRecipe recipes : e.getVillager().getRecipes()) {
-                recipes.setVillagerExperience(recipes.getVillagerExperience()*2);
-            }
+            ((Villager) e.getVillager()).setVillagerExperience(((Villager) e.getVillager()).getVillagerExperience()+e.getTrade().getVillagerExperience()*2);
+            e.getPlayer().openMerchant((Villager) e.getVillager(),true);
         }
     }
 

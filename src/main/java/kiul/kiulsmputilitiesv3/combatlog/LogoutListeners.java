@@ -155,10 +155,12 @@ public class LogoutListeners implements Listener {
             e.getPlayer().getInventory().clear();
             e.getPlayer().setHealth(0);
         }
-        if (Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc"))) != null) {
-            Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc"))).remove();
-            PersistentData.get().set(e.getPlayer().getUniqueId() + ".npc", null);
-            PersistentData.save();
+        if (PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc") != null) {
+            if (Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc"))) != null) {
+                Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc"))).remove();
+                PersistentData.get().set(e.getPlayer().getUniqueId() + ".npc", null);
+                PersistentData.save();
+            }
         }
     }
 

@@ -88,6 +88,7 @@ public class AccessoryListeners implements Listener {
     public void reforgeAccessory (InventoryClickEvent e) {
         Player p = (Player) e.getWhoClicked();
         if (e.getInventory() instanceof CraftingInventory) {
+            if (e.getCurrentItem() == null) {return;}
             if (e.getCurrentItem().equals(e.getInventory().getItem(0))) {
                 if (e.getCurrentItem().getItemMeta().hasLocalizedName()) {
                     for (AccessoryItemEnum accessoryItemEnum : AccessoryItemEnum.values()) {
