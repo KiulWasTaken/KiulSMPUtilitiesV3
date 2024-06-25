@@ -35,6 +35,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new AccessoryListeners(),this);
         getServer().getPluginManager().registerEvents(new CrateListeners(),this);
         getServer().getPluginManager().registerEvents(new RingAccessory(),this);
+        getServer().getPluginManager().registerEvents(new TomeAccessory(),this);
         getServer().getPluginManager().registerEvents(new PotionListeners(),this);
         getServer().getPluginManager().registerEvents(new ItemCraft(),this);
         getServer().getPluginManager().registerEvents(new ItemPickupAfterDeath(),this);

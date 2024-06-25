@@ -143,6 +143,7 @@ public class TomeAccessory implements Listener {
         Player p = e.getPlayer();
         if (AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_opal")) {
             int effect = (int)(Math.random()*(positivePotionEffects.size()+1));
+            e.getPlayer().sendMessage(Math.random()+" < 0.2");
             if (Math.random() < 0.2) {
                 if (!p.hasPotionEffect(positivePotionEffects.get(effect))) {
                     p.addPotionEffect(new PotionEffect(positivePotionEffects.get(effect), (int) ((Math.random() * 30) * 20), (int) (Math.random() * 2), false, true));
