@@ -14,11 +14,13 @@ public enum LootTableEnum {
     gold_rawGold("gold",Material.RAW_GOLD,32,64,0.5,1),
     gold_garrot("gold",Material.GOLDEN_CARROT,32,64,0.5,1),
     gold_totem("gold",Material.TOTEM_OF_UNDYING,1,1,0.8,1),
+    gold_gem("gold",Material.PLAYER_HEAD,1,1,0.2,-1),
     exp_bottles("exp",Material.EXPERIENCE_BOTTLE,48,64,1,1),
     exp_gunpowder("exp",Material.GUNPOWDER,48,64,0.5,1),
     exp_emeralds("exp",Material.EMERALD,48,64,0.5,1),
     exp_book("exp",Material.BOOK,32,64,0.5,1),
     exp_ebook("exp",Material.ENCHANTED_BOOK,1,1,1,1),
+    exp_gem("exp",Material.PLAYER_HEAD,1,1,0.2,-1),
     end_bottles("end",Material.EXPERIENCE_BOTTLE,52,64,1.2,1),
     end_eGap("end",Material.ENCHANTED_GOLDEN_APPLE,2,4,0.5,1),
     end_diamondArmour("end",Material.DIAMOND_BLOCK,1,1,0.5,1),
@@ -29,6 +31,7 @@ public enum LootTableEnum {
     end_pearl("end",Material.ENDER_PEARL,12,16,0.5,1),
     end_eyeTrim("end",Material.EYE_ARMOR_TRIM_SMITHING_TEMPLATE,1,1,0.5,1),
     end_spireTrim("end",Material.SPIRE_ARMOR_TRIM_SMITHING_TEMPLATE,1,1,0.5,1),
+    end_gem("end",Material.PLAYER_HEAD,1,1,0.1,-1),
     nether_scrap("nether",Material.NETHERITE_SCRAP,4,8,1,1),
     nether_goldBlock("nether",Material.GOLD_BLOCK,24,48,1,1),
     nether_nIngot("nether",Material.NETHERITE_INGOT,1,4,0.5,1),
@@ -39,7 +42,8 @@ public enum LootTableEnum {
     nether_eGap("nether",Material.ENCHANTED_GOLDEN_APPLE,4,8,0.8,1),
     nether_gap("nether",Material.GOLDEN_APPLE,16,32,1,1),
     nether_ribTrim("nether",Material.RIB_ARMOR_TRIM_SMITHING_TEMPLATE,1,1,0.3,1),
-    nether_snoutTrim("nether",Material.SNOUT_ARMOR_TRIM_SMITHING_TEMPLATE,1,1,0.3,1);
+    nether_snoutTrim("nether",Material.SNOUT_ARMOR_TRIM_SMITHING_TEMPLATE,1,1,0.3,1),
+    nether_gem("nether",Material.PLAYER_HEAD,1,1,0.1,-1);
 
 
 

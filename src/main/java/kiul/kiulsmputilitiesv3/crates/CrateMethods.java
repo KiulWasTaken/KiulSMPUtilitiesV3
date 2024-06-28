@@ -1,6 +1,7 @@
 package kiul.kiulsmputilitiesv3.crates;
 
 import kiul.kiulsmputilitiesv3.C;
+import kiul.kiulsmputilitiesv3.accessories.IngredientItemEnum;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -82,6 +83,28 @@ public class CrateMethods {
         ItemStack gearItem = itemStack;
 
         switch (itemStack.getType()) {
+            case PLAYER_HEAD:
+
+                double[] chance = {0.25, 0.5, 0.75, 1};
+                int event = Arrays.binarySearch(chance, Math.random());
+                if (event < 0) event = -event - 1;
+                switch (event) {
+                    case 0:
+                        gearItem = IngredientItemEnum.Opal.getIngredient();
+                        break;
+                    case 1:
+                        gearItem = IngredientItemEnum.Ruby.getIngredient();
+                        break;
+                    case 2:
+                        gearItem = IngredientItemEnum.Tanzanite.getIngredient();
+                        break;
+                    case 3:
+                        gearItem = IngredientItemEnum.Peridot.getIngredient();
+                        break;
+                    default:
+                        gearItem = IngredientItemEnum.Ruby.getIngredient();
+                }
+                break;
             case NETHERITE_BLOCK:
                 gearItem = netheriteBlock.get((int)(Math.random()*netheriteBlock.size()));
                 gearItem.addEnchantment(armourEnchantments.get(0),4);

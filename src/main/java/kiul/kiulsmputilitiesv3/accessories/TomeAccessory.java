@@ -112,7 +112,7 @@ public class TomeAccessory implements Listener {
             for (Entity nearbyEntities : p.getNearbyEntities(5,5,5)) {
                 if (nearbyEntities instanceof Player teammate && C.getPlayerTeam(teammate) == C.getPlayerTeam(p)) {
                     ExperienceOrb orb = (ExperienceOrb) teammate.getWorld().spawnEntity(teammate.getLocation(),EntityType.EXPERIENCE_ORB);
-                    orb.setExperience(e.getExperienceOrb().getExperience()/10+1);
+                    orb.setExperience((e.getExperienceOrb().getExperience()/10)+1);
                 }
             }
         }
