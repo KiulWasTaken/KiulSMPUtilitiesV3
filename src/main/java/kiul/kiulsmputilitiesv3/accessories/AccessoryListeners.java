@@ -93,19 +93,17 @@ public class AccessoryListeners implements Listener {
                 if (e.getCurrentItem().getItemMeta().hasLocalizedName()) {
                     for (AccessoryItemEnum accessoryItemEnum : AccessoryItemEnum.values()) {
                         if (accessoryItemEnum.getLocalName().equalsIgnoreCase(e.getCurrentItem().getItemMeta().getLocalizedName())) {
-                            ItemStack itemStack = accessoryItemEnum.getAccessory();
-                            e.setCurrentItem(itemStack);
                             AdvancementMethods.grantAdvancement(p, AdvancementEnum.CRAFT_ACCESSORY.getIdentifier());
 
-                            NamespacedKey key = new NamespacedKey(C.plugin, ChatColor.stripColor(itemStack.getItemMeta().getLore().get(itemStack.getItemMeta().getLore().size() - 1)));
-                            ItemMeta itemMeta = itemStack.getItemMeta();
-                            CustomItemTagContainer tagContainer = itemMeta.getCustomTagContainer();
-
-                            double foundValue = tagContainer.getCustomTag(key, ItemTagType.DOUBLE);
-
-                            if (foundValue > accessoryItemEnum.getMean() + (accessoryItemEnum.getStandardDeviation() * 2)) {
-                                AdvancementMethods.grantAdvancement(p, AdvancementEnum.CRAFT_PERFECT_ACCESSORY.getIdentifier());
-                            }
+//                            NamespacedKey key = new NamespacedKey(C.plugin, ChatColor.stripColor(itemStack.getItemMeta().getLore().get(itemStack.getItemMeta().getLore().size() - 1)));
+//                            ItemMeta itemMeta = itemStack.getItemMeta();
+//                            CustomItemTagContainer tagContainer = itemMeta.getCustomTagContainer();
+//
+//                            double foundValue = tagContainer.getCustomTag(key, ItemTagType.DOUBLE);
+//
+//                            if (foundValue > accessoryItemEnum.getMean() + (accessoryItemEnum.getStandardDeviation() * 2)) {
+//                                AdvancementMethods.grantAdvancement(p, AdvancementEnum.CRAFT_PERFECT_ACCESSORY.getIdentifier());
+//                            }
                         }
                     }
                 }

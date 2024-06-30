@@ -96,7 +96,7 @@ public class StatDBListeners implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void killPlayer (EntityDamageByEntityEvent e) {
         if (e.getEntity() instanceof Player killed && e.getDamager() instanceof Player killer && e.getFinalDamage() >= killed.getHealth()) {
-            if (!(new EntityResurrectEvent(killed).isCancelled()) && C.getPlayerTeam(killer) != C.getPlayerTeam(killed)) {
+            if ((new EntityResurrectEvent(killed).isCancelled()) && C.getPlayerTeam(killer) != C.getPlayerTeam(killed)) {
                 StatDB.writePlayer(killer.getUniqueId(),"stat_kills",(int)StatDB.readPlayer(killer.getUniqueId(),"stat_kills")+1);
                 Fight fight = C.fightManager.findFightForMember(killer);
                 if (fight == null) {return;}

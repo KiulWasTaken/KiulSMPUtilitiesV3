@@ -1,9 +1,11 @@
 package kiul.kiulsmputilitiesv3.accessories;
 
+import com.destroystokyo.paper.event.entity.ExperienceOrbMergeEvent;
 import com.destroystokyo.paper.event.player.PlayerPickupExperienceEvent;
 import jdk.jfr.Enabled;
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.potions.CustomHastePotion;
+import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.ExperienceOrb;
@@ -21,14 +23,18 @@ import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerLevelChangeEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.Team;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 
 public class TomeAccessory implements Listener {
+
+    HashMap<Player,Long> experiencePickupCooldown = new HashMap<>();
 
     @EventHandler
     public void baseEffect (PlayerExpChangeEvent e) {
@@ -39,16 +45,40 @@ public class TomeAccessory implements Listener {
         }
     }
 
+    @EventHandler
+    public void rubyPreventJank (ExperienceOrbMergeEvent e) {
+        if (e.getEntity().hasMetadata("no")) {
+            e.setCancelled(true);
+        }
+    }
+    @EventHandler
+    public void rubyPreventSteal (PlayerPickupExperienceEvent e) {
+        if (e.getExperienceOrb().hasMetadata("no")) {
+            if (experiencePickupCooldown.containsKey(e.getPlayer())) {
+                if (experiencePickupCooldown.get(e.getPlayer()) <= System.currentTimeMillis()) {
+                    experiencePickupCooldown.remove(e.getPlayer());
+                } else {
+                    e.setCancelled(true);
+                }
+            }
+        }
+    }
+
     @EventHandler (priority = EventPriority.MONITOR)
     public void rubyEffect (EntityResurrectEvent e) {
         if (!e.isCancelled() && e.getEntity().getLastDamageCause() instanceof EntityDamageByEntityEvent) {
             Entity entity = ((EntityDamageByEntityEvent) e.getEntity().getLastDamageCause()).getDamager();
             if (entity instanceof Player damager) {
                 if (AccessoryMethods.getActiveAccessoryIdentifier(damager).equals("tome_ruby")) {
-                    int numOrbs = (int)(Math.random()*8)+2;
+                    int numOrbs = (int) (Math.random() * 4) + 4;
                     for (int i = 0; i < numOrbs; i++) {
-                        ExperienceOrb orb = (ExperienceOrb) damager.getWorld().spawnEntity(e.getEntity().getLocation().add(Math.random()*2,Math.random()*2,Math.random()*2), EntityType.EXPERIENCE_ORB);
-                        orb.setExperience(1+(int)(Math.random()*2));
+                        ExperienceOrb orb = (ExperienceOrb) damager.getWorld().spawnEntity(e.getEntity().getLocation().add(Math.random() * 2, Math.random() * 2, Math.random() * 2), EntityType.EXPERIENCE_ORB);
+                        orb.setGlowing(true);
+                        orb.setExperience(10);
+                        orb.setMetadata("no", new FixedMetadataValue(C.plugin, "no"));
+                        if (e.getEntity() instanceof Player damaged) {
+                            experiencePickupCooldown.put(damaged, System.currentTimeMillis() + 5000);
+                        }
                     }
                 }
             }
@@ -78,6 +108,9 @@ public class TomeAccessory implements Listener {
 
    static HashMap<Player,HashMap<ItemStack,Long>> itemRepairCooldown = new HashMap<>();
     public static void peridotEffect (Player p) {
+        if (itemRepairCooldown.get(p) == null) {
+            itemRepairCooldown.put(p, new HashMap<>());
+        }
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -85,17 +118,26 @@ public class TomeAccessory implements Listener {
                 if (itemRepairCooldown.get(p) != null) {
                     for (int i = 9; i <= 35; i++) {
                         ItemStack itemsToRepair = p.getInventory().getItem(i);
-                        if (itemRepairCooldown.get(p).get(itemsToRepair) == null) {
-                            if (itemsToRepair.getItemMeta() instanceof Damageable itemMeta && itemMeta.getDamage() > 0) {
-                                if (Math.random() < 0.3) {
-                                    itemMeta.setDamage(itemMeta.getDamage() - 1);
-                                    itemsToRepair.setItemMeta(itemMeta);
+                        if (itemsToRepair != null) {
+                            if (itemRepairCooldown.get(p).get(itemsToRepair) == null) {
+                                if (itemsToRepair.getItemMeta() instanceof Damageable itemMeta && itemMeta.getDamage() > 0) {
+                                        if (Math.random() < 0.3 && p.getExp() > 0) {
+                                            itemMeta.setDamage(itemMeta.getDamage() - 1);
+                                            itemsToRepair.setItemMeta(itemMeta);
+                                            if (p.getExp()-0.013889F <= 0 && p.getLevel() > 0) {
+                                                p.setLevel(p.getLevel() - 1);
+                                                p.setExp(0.99F);
+                                            } else {
+                                                p.setExp(p.getExp() - 0.013889F);
+                                            }
+
+                                        }
+                                    break;
                                 }
-                                break;
-                            }
-                        } else {
-                            if (itemRepairCooldown.get(p).get(itemsToRepair) < System.currentTimeMillis()) {
-                                itemRepairCooldown.get(p).remove(itemsToRepair);
+                            } else {
+                                if (itemRepairCooldown.get(p).get(itemsToRepair) < System.currentTimeMillis()) {
+                                    itemRepairCooldown.get(p).remove(itemsToRepair);
+                                }
                             }
                         }
                     }
@@ -109,10 +151,16 @@ public class TomeAccessory implements Listener {
     public void tanzaniteEffect (PlayerPickupExperienceEvent e) {
         Player p = e.getPlayer();
         if (AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_tanzanite")) {
-            for (Entity nearbyEntities : p.getNearbyEntities(5,5,5)) {
-                if (nearbyEntities instanceof Player teammate && C.getPlayerTeam(teammate) == C.getPlayerTeam(p)) {
-                    ExperienceOrb orb = (ExperienceOrb) teammate.getWorld().spawnEntity(teammate.getLocation(),EntityType.EXPERIENCE_ORB);
-                    orb.setExperience((e.getExperienceOrb().getExperience()/10)+1);
+            Team team = C.getPlayerTeam(p);
+            for (String teammateNames : team.getEntries()) {
+                if (Bukkit.getPlayer(teammateNames) != null) {
+                    Player teammate = Bukkit.getPlayer(teammateNames);
+                    if (teammate != p) {
+                        if (p.getLocation().distance(Bukkit.getPlayer(teammateNames).getLocation()) < 5) {
+                            ExperienceOrb orb = (ExperienceOrb) teammate.getWorld().spawnEntity(teammate.getLocation(), EntityType.EXPERIENCE_ORB);
+                            orb.setExperience(1 + (e.getExperienceOrb().getExperience() / 5));
+                        }
+                    }
                 }
             }
         }
