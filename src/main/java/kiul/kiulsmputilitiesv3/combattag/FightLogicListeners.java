@@ -14,7 +14,6 @@ import org.bukkit.event.player.PlayerRiptideEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.UUID;
 
 import static kiul.kiulsmputilitiesv3.combattag.FightMethods.fastPearlThrow;
@@ -34,47 +33,65 @@ public class FightLogicListeners implements Listener {
 
                 boolean p1inFight = C.fightManager.playerIsInFight(p1);
                 boolean p2inFight = C.fightManager.playerIsInFight(p2);
-                Fight p1Fight = C.fightManager.findFightForMember(p1);
-                Fight p2Fight = C.fightManager.findFightForMember(p2);
-                if (p1Fight != null && p1Fight.getParticipants().contains(p2.getUniqueId())) {return;}
-                if (p2Fight != null && p2Fight.getParticipants().contains(p1.getUniqueId())) {return;}
+                FightObject p1FightObject = C.fightManager.findFightForMember(p1);
+                FightObject p2FightObject = C.fightManager.findFightForMember(p2);
+                if (p1FightObject != null && p1FightObject.getParticipants().contains(p2.getUniqueId())) {
+                    p1FightObject.getDamageDealt().put(p1.getUniqueId(),p1FightObject.getDamageDealt().get(p1.getUniqueId())+e.getFinalDamage());
+                    p1FightObject.getDamageTaken().put(p2.getUniqueId(),p1FightObject.getDamageTaken().get(p2.getUniqueId())+e.getFinalDamage());
+                    return;
+                }
+                if (p2FightObject != null && p2FightObject.getParticipants().contains(p1.getUniqueId())) {
+                    p2FightObject.getDamageDealt().put(p1.getUniqueId(),p1FightObject.getDamageDealt().get(p1.getUniqueId())+e.getFinalDamage());
+                    p2FightObject.getDamageTaken().put(p2.getUniqueId(),p1FightObject.getDamageTaken().get(p2.getUniqueId())+e.getFinalDamage());
+                    return;
+                }
 
                     if (!p1inFight && !p2inFight) {
                         ArrayList<UUID> participants = new ArrayList<>();
                         participants.add(p1.getUniqueId());
                         participants.add(p2.getUniqueId());
-                        Fight newFight = C.fightManager.createFight(participants);
-                        FightMethods.startDistanceCheck(p1, newFight);
-                        FightMethods.startDistanceCheck(p2, newFight);
+                        FightObject newFightObject = C.fightManager.createFight(participants);
+                        FightMethods.startDistanceCheck(p1, newFightObject);
+                        FightMethods.startDistanceCheck(p2, newFightObject);
                         return;
                     }
 
                     if (p1inFight ^ p2inFight) {
                         if (p1inFight) {
-                            p1Fight.addParticipant(p2);
-                            FightMethods.startDistanceCheck(p2, p1Fight);
+                            p1FightObject.addParticipant(p2);
+                            FightMethods.startDistanceCheck(p2, p1FightObject);
                             return;
                         }
                         if (p2inFight) {
-                            p2Fight.addParticipant(p1);
-                            FightMethods.startDistanceCheck(p1, p2Fight);
+                            p2FightObject.addParticipant(p1);
+                            FightMethods.startDistanceCheck(p1, p2FightObject);
                             return;
                         }
                     }
 
                     if (p1inFight && p2inFight) {
-                        if (p1Fight.getDuration() > p2Fight.getDuration()) {
-                            for (UUID p2FightUUIDs : p2Fight.getParticipants()) {
-                                p1Fight.addParticipant(Bukkit.getPlayer(p2FightUUIDs));
-                                FightMethods.startDistanceCheck(Bukkit.getPlayer(p2FightUUIDs), p1Fight);
+                        if (p1FightObject.getDuration() > p2FightObject.getDuration()) {
+                            for (UUID p2FightUUIDs : p2FightObject.getParticipants()) {
+                                p1FightObject.addParticipant(Bukkit.getPlayer(p2FightUUIDs));
+                                FightMethods.startDistanceCheck(Bukkit.getPlayer(p2FightUUIDs), p1FightObject);
+                                p1FightObject.getDamageDealt().put(p2FightUUIDs,p1FightObject.getDamageDealt().get(p2FightUUIDs));
+                                p1FightObject.getDamageTaken().put(p2FightUUIDs,p1FightObject.getDamageTaken().get(p2FightUUIDs));
+                                p1FightObject.getJoinTimestamp().put(p2FightUUIDs,p1FightObject.getJoinTimestamp().get(p2FightUUIDs));
+                                p1FightObject.getLeaveTimestamp().put(p2FightUUIDs,p1FightObject.getLeaveTimestamp().get(p2FightUUIDs));
+                                p1FightObject.getDieTimestamp().put(p2FightUUIDs,p1FightObject.getDieTimestamp().get(p2FightUUIDs));
                             }
-                            C.fightManager.disbandFight(p2Fight);
+                            C.fightManager.disbandFight(p2FightObject);
                         } else {
-                            for (UUID p1FightUUIDs : p1Fight.getParticipants()) {
-                                p2Fight.addParticipant(Bukkit.getPlayer(p1FightUUIDs));
-                                FightMethods.startDistanceCheck(Bukkit.getPlayer(p1FightUUIDs), p2Fight);
+                            for (UUID p1FightUUIDs : p1FightObject.getParticipants()) {
+                                p2FightObject.addParticipant(Bukkit.getPlayer(p1FightUUIDs));
+                                FightMethods.startDistanceCheck(Bukkit.getPlayer(p1FightUUIDs), p2FightObject);
+                                p2FightObject.getDamageDealt().put(p1FightUUIDs,p1FightObject.getDamageDealt().get(p1FightUUIDs));
+                                p2FightObject.getDamageTaken().put(p1FightUUIDs,p1FightObject.getDamageTaken().get(p1FightUUIDs));
+                                p2FightObject.getJoinTimestamp().put(p1FightUUIDs,p1FightObject.getJoinTimestamp().get(p1FightUUIDs));
+                                p2FightObject.getLeaveTimestamp().put(p1FightUUIDs,p1FightObject.getLeaveTimestamp().get(p1FightUUIDs));
+                                p2FightObject.getDieTimestamp().put(p1FightUUIDs,p1FightObject.getDieTimestamp().get(p1FightUUIDs));
                             }
-                            C.fightManager.disbandFight(p1Fight);
+                            C.fightManager.disbandFight(p1FightObject);
                         }
                     }
             }
@@ -84,9 +101,9 @@ public class FightLogicListeners implements Listener {
     @EventHandler
     public void removeFromFightOnDeath (PlayerDeathEvent e) {
         Player p = e.getEntity();
-        Fight fight = C.fightManager.findFightForMember(p);
-        if (fight != null) {
-            fight.removeParticipant(p);
+        FightObject fightObject = C.fightManager.findFightForMember(p);
+        if (fightObject != null) {
+            fightObject.removeParticipant(p,true);
         }
     }
 
@@ -135,8 +152,8 @@ public class FightLogicListeners implements Listener {
     public void useTridentCoolDown (PlayerRiptideEvent e) {
         Player p = e.getPlayer();
         if (C.fightManager.playerIsInFight(p)) {
-            Fight fight = C.fightManager.findFightForMember(p);
-            p.setCooldown(Material.TRIDENT,300+(int)((10 * (fight.getDuration() / 1000 / 60))));
+            FightObject fightObject = C.fightManager.findFightForMember(p);
+            p.setCooldown(Material.TRIDENT,300+(int)((10 * (fightObject.getDuration() / 1000 / 60))));
         }
     }
 

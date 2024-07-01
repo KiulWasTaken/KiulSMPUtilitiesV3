@@ -16,7 +16,7 @@ public class FightMethods {
     public static HashMap<UUID,Long> lastPearlThrow = new HashMap<>();
     public static HashMap<UUID,Integer> fastPearlThrow = new HashMap<>();
 
-    public static void startDistanceCheck (Player p,Fight fight) {
+    public static void startDistanceCheck (Player p,FightObject fight) {
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -26,7 +26,7 @@ public class FightMethods {
                             if (p.getLocation().distance(Bukkit.getPlayer(fight.getParticipants().get(i)).getLocation()) < 500) {
                                 break;
                             }
-                            fight.removeParticipant(p);
+                            fight.removeParticipant(p,false);
                             HashMap<Team, List<Player>> team = C.sortTeams(fight.getParticipants());
                             int numEnemies = fight.getParticipants().size() - team.get(C.getPlayerTeam(p)).size();
                             if (numEnemies > team.get(C.getPlayerTeam(p)).size()) {

@@ -2,7 +2,7 @@ package kiul.kiulsmputilitiesv3.stats;
 
 import io.papermc.paper.event.player.PlayerTradeEvent;
 import kiul.kiulsmputilitiesv3.C;
-import kiul.kiulsmputilitiesv3.combattag.Fight;
+import kiul.kiulsmputilitiesv3.combattag.FightObject;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
 import org.bukkit.Material;
 import org.bukkit.Statistic;
@@ -98,7 +98,7 @@ public class StatDBListeners implements Listener {
         if (e.getEntity() instanceof Player killed && e.getDamager() instanceof Player killer && e.getFinalDamage() >= killed.getHealth()) {
             if (!(new EntityResurrectEvent(killed).isCancelled()) && C.getPlayerTeam(killer) != C.getPlayerTeam(killed)) {
                 StatDB.writePlayer(killer.getUniqueId(),"stat_kills",(int)StatDB.readPlayer(killer.getUniqueId(),"stat_kills")+1);
-                Fight fight = C.fightManager.findFightForMember(killer);
+                FightObject fight = C.fightManager.findFightForMember(killer);
                 if (fight == null) {return;}
                 if (fight.isPartaking(killed.getUniqueId())) {
                     HashMap<Team, List<Player>> team = C.sortTeams(fight.getParticipants());

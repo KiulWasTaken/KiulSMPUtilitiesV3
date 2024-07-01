@@ -24,10 +24,7 @@ import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -74,6 +71,22 @@ public class C {
         long seconds = ((millisecondsRemaining % 3600000) % 60000) / 1000;
         return new int[]{(int)hours, (int)minutes, (int)seconds};
     }
+    public static int[] splitTimestampManual(long startTimestamp, long endTimestamp) {
+        long millisecondsRemaining = endTimestamp - startTimestamp;
+        long hours = millisecondsRemaining / 3600000;
+        long minutes = (millisecondsRemaining % 3600000) / 60000;
+        long seconds = ((millisecondsRemaining % 3600000) % 60000) / 1000;
+        return new int[]{(int)hours, (int)minutes, (int)seconds};
+    }
+
+    public static <T, E> T getKeyByValue(Map<T, E> map, E value) {
+        for (Map.Entry<T, E> entry : map.entrySet()) {
+            if (Objects.equals(value, entry.getValue())) {
+                return entry.getKey();
+            }
+        }
+        return null;
+    }
     public static  HashMap<Team,List<Player>> sortTeams (List<UUID> playerList) {
         HashMap<Team,List<Player>> teams = new HashMap<>();
         for (UUID uuids : playerList) {
@@ -114,7 +127,9 @@ public class C {
     public static ItemStack createItemStack (String itemName, Material material, int amount, String[] lore, Enchantment enchantment, Integer enchantLvl, String localizedName,URL URL) {
         ItemStack i = new ItemStack(material);
         if (material == Material.PLAYER_HEAD) {
-            i = C.getHeadFromURL(URL);
+            if (URL != null) {
+                i = C.getHeadFromURL(URL);
+            }
         }
         ItemMeta iM = i.getItemMeta();
         List<String> adjustedLore = new ArrayList<>();

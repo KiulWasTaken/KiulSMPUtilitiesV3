@@ -6,6 +6,7 @@ import kiul.kiulsmputilitiesv3.claims.ClaimMethods;
 import kiul.kiulsmputilitiesv3.combatlog.LogoutListeners;
 import kiul.kiulsmputilitiesv3.combatlog.MovementListeners;
 import kiul.kiulsmputilitiesv3.combattag.FightLogicListeners;
+import kiul.kiulsmputilitiesv3.combattag.RecapInventory;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.config.ClaimData;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
@@ -33,6 +34,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new LogoutListeners(),this);
         getServer().getPluginManager().registerEvents(new MovementListeners(),this);
         getServer().getPluginManager().registerEvents(new AccessoryListeners(),this);
+        getServer().getPluginManager().registerEvents(new RecapInventory(), this);
         getServer().getPluginManager().registerEvents(new CrateListeners(),this);
         getServer().getPluginManager().registerEvents(new RingAccessory(),this);
         getServer().getPluginManager().registerEvents(new TomeAccessory(),this);
@@ -91,7 +93,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
 
         // Plugin Methods
         CrateMethods.startRandomCrates(getServer().getWorld("world"));
-        new BrewingRecipe(Material.GLOW_BERRIES, new CustomHastePotion());
+        new BrewingRecipe(Material.GOLD_BLOCK, new CustomHastePotion());
         new BrewingRecipe(Material.NETHERITE_SCRAP, new CustomPurityPotion());
         new BrewingRecipe(Material.GUNPOWDER, new CustomPotionUpgrade());
         new BrewingRecipe(Material.GLOWSTONE_DUST, new CustomPotionUpgrade());
