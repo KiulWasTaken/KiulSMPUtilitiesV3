@@ -174,12 +174,14 @@ public class FightLogicListeners implements Listener {
     public void damagedRocketCoolDown (EntityDamageByEntityEvent e) {
         if (e.getDamager() instanceof Player && e.getEntity() instanceof Player damaged) {
             if (C.fightManager.playerIsInFight(damaged)) {
-                if (damaged.getInventory().contains(Material.ELYTRA) || damaged.getInventory().getChestplate().getType() == Material.ELYTRA) {
-                    int cooldown = damaged.getCooldown(Material.FIREWORK_ROCKET) + 200;
-                    if (cooldown > 1200) {
-                        cooldown = 1200;
+                if (damaged.getInventory().getChestplate() != null) {
+                    if (damaged.getInventory().contains(Material.ELYTRA) || damaged.getInventory().getChestplate().getType() == Material.ELYTRA) {
+                        int cooldown = damaged.getCooldown(Material.FIREWORK_ROCKET) + 200;
+                        if (cooldown > 1200) {
+                            cooldown = 1200;
+                        }
+                        damaged.setCooldown(Material.FIREWORK_ROCKET, cooldown);
                     }
-                    damaged.setCooldown(Material.FIREWORK_ROCKET, cooldown);
                 }
             }
         }

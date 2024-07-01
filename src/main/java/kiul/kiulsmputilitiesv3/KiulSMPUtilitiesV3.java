@@ -6,7 +6,6 @@ import kiul.kiulsmputilitiesv3.claims.ClaimMethods;
 import kiul.kiulsmputilitiesv3.combatlog.LogoutListeners;
 import kiul.kiulsmputilitiesv3.combatlog.MovementListeners;
 import kiul.kiulsmputilitiesv3.combattag.FightLogicListeners;
-import kiul.kiulsmputilitiesv3.combattag.RecapInventory;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.config.ClaimData;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
@@ -19,8 +18,12 @@ import kiul.kiulsmputilitiesv3.stats.StatDBListeners;
 import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.RecipeChoice;
+import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public final class KiulSMPUtilitiesV3 extends JavaPlugin {
 
@@ -34,7 +37,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new LogoutListeners(),this);
         getServer().getPluginManager().registerEvents(new MovementListeners(),this);
         getServer().getPluginManager().registerEvents(new AccessoryListeners(),this);
-        getServer().getPluginManager().registerEvents(new RecapInventory(), this);
+        getServer().getPluginManager().registerEvents(new CraftAccessory(),this);
         getServer().getPluginManager().registerEvents(new CrateListeners(),this);
         getServer().getPluginManager().registerEvents(new RingAccessory(),this);
         getServer().getPluginManager().registerEvents(new TomeAccessory(),this);
@@ -45,32 +48,21 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
 
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
-            ItemStack is = new ItemStack(accessoryItem.getAccessory());
-
-            ShapelessRecipe sr = new ShapelessRecipe(new NamespacedKey(C.plugin,accessoryItem.getLocalName()),is);
-
-            RecipeChoice recipeChoice = new RecipeChoice.ExactChoice(IngredientItemEnum.Ruby.getIngredient());
-            if (accessoryItem.getLocalName().contains("base")) {
-
-            } else {
-                sr.addIngredient(new RecipeChoice.ExactChoice(accessoryItem.getAccessory()));
+            if ((accessoryItem.getLocalName().contains("ring") || accessoryItem.getLocalName().contains("tome")) && accessoryItem.getLocalName().contains("base")) {
+                ItemStack is = accessoryItem.getAccessory();
+                ShapelessRecipe sr = new ShapelessRecipe(new NamespacedKey(C.plugin, accessoryItem.getLocalName()), is);
+                    switch (accessoryItem.getLocalName().substring(0, 4)) {
+                        case "ring":
+                            sr.addIngredient(Material.IRON_INGOT);
+                            sr.addIngredient(Material.NETHERITE_SCRAP);
+                            break;
+                        case "tome":
+                            sr.addIngredient(Material.BOOK);
+                            sr.addIngredient(Material.NETHERITE_SCRAP);
+                            break;
+                    }
+                Bukkit.addRecipe(sr);
             }
-            if (accessoryItem.getLocalName().contains("ruby")) {
-                recipeChoice = new RecipeChoice.ExactChoice(IngredientItemEnum.Ruby.getIngredient());
-            }
-            if (accessoryItem.getLocalName().contains("tanzanite")) {
-                recipeChoice = new RecipeChoice.ExactChoice(IngredientItemEnum.Tanzanite.getIngredient());
-            }
-            if (accessoryItem.getLocalName().contains("peridot")) {
-                recipeChoice = new RecipeChoice.ExactChoice(IngredientItemEnum.Peridot.getIngredient());
-            }
-            if (accessoryItem.getLocalName().contains("opal")) {
-                recipeChoice = new RecipeChoice.ExactChoice(IngredientItemEnum.Opal.getIngredient());
-            }
-
-
-            sr.addIngredient(recipeChoice);
-            Bukkit.addRecipe(sr);
         }
 
 
@@ -93,7 +85,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
 
         // Plugin Methods
         CrateMethods.startRandomCrates(getServer().getWorld("world"));
-        new BrewingRecipe(Material.GOLD_BLOCK, new CustomHastePotion());
+        new BrewingRecipe(Material.GLOW_BERRIES, new CustomHastePotion());
         new BrewingRecipe(Material.NETHERITE_SCRAP, new CustomPurityPotion());
         new BrewingRecipe(Material.GUNPOWDER, new CustomPotionUpgrade());
         new BrewingRecipe(Material.GLOWSTONE_DUST, new CustomPotionUpgrade());
