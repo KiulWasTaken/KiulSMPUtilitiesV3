@@ -1,6 +1,7 @@
 package kiul.kiulsmputilitiesv3;
 
 import kiul.kiulsmputilitiesv3.accessories.AccessoryMethods;
+import kiul.kiulsmputilitiesv3.combattag.RecapInventory;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.crates.CrateTypeEnum;
@@ -130,8 +131,12 @@ public class Commands implements TabExecutor {
                 CrateTypeEnum crateType = CrateMethods.getCrate(args[0]);
                 CrateMethods.populateCrate(crateType,null,p);
                 break;
+            case "recaps":
+                RecapInventory.open(p,0);
+                break;
             case "translate":
                 p.sendMessage(C.t(args[0]));
+                break;
         }
 
         return false;

@@ -12,6 +12,7 @@ public class FightObject {
 
     private ArrayList<UUID> participants;
     private ArrayList<UUID> everParticipated;
+    private HashMap<UUID,Integer> hits;
     private HashMap<UUID,Double> damageDealt;
     private HashMap<UUID,Double> damageTaken;
     private TreeMap<UUID,Long> joinTimestamp;
@@ -28,6 +29,7 @@ public class FightObject {
         this.joinTimestamp = new TreeMap<>();
         this.leaveTimestamp = new TreeMap<>();
         this.dieTimestamp = new TreeMap<>();
+        this.hits = new HashMap<>();
     }
 
     public ArrayList<UUID> getParticipants() {return participants;}
@@ -66,6 +68,10 @@ public class FightObject {
 
     public TreeMap<UUID, Long> getLeaveTimestamp() {
         return leaveTimestamp;
+    }
+
+    public HashMap<UUID, Integer> getHits() {
+        return hits;
     }
 
     public void addParticipant(Player p) {

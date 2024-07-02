@@ -32,6 +32,7 @@ public class FightManager {
         PersistentData.get().set("recaps."+fightUUID+".jointime",fightObject.getJoinTimestamp());
         PersistentData.get().set("recaps."+fightUUID+".leavetime",fightObject.getLeaveTimestamp());
         PersistentData.get().set("recaps."+fightUUID+".dietime",fightObject.getDieTimestamp());
+        PersistentData.get().set("recaps."+fightUUID+".hits",fightObject.getHits());
         fightObjects.remove(fightObject);
     }
 

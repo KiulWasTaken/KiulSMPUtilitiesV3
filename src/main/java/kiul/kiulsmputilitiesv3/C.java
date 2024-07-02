@@ -124,6 +124,33 @@ public class C {
         return head;
     }
 
+    public static ItemStack createHead (String itemName, Material material, int amount, String[] lore, String localizedName, URL URL,String displayName) {
+        ItemStack i = new ItemStack(material);
+        if (material == Material.PLAYER_HEAD) {
+            SkullMeta meta = (SkullMeta) i.getItemMeta();
+            meta.setOwningPlayer(Bukkit.getOfflinePlayer(Bukkit.getPlayerUniqueId(displayName)));
+            i.setItemMeta(meta);
+            if (URL != null) {
+                i = C.getHeadFromURL(URL);
+            }
+        }
+        ItemMeta iM = i.getItemMeta();
+        List<String> adjustedLore = new ArrayList<>();
+        for (String oldLore : lore) {
+            adjustedLore.add(C.t(oldLore));
+        }
+        iM.setLore(adjustedLore);
+        if (localizedName != null) {
+            iM.setLocalizedName(localizedName);
+        }
+
+        i.setAmount(amount);
+        iM.setDisplayName(C.t(itemName));
+
+        i.setItemMeta(iM);
+        return i;
+    }
+
     public static ItemStack createItemStack (String itemName, Material material, int amount, String[] lore, Enchantment enchantment, Integer enchantLvl, String localizedName,URL URL) {
         ItemStack i = new ItemStack(material);
         if (material == Material.PLAYER_HEAD) {

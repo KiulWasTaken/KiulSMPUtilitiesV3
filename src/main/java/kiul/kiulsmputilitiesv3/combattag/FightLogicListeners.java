@@ -4,7 +4,10 @@ import kiul.kiulsmputilitiesv3.C;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.EnderPearl;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.entity.Projectile;
+import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
@@ -28,21 +31,42 @@ public class FightLogicListeners implements Listener {
      **/
     @EventHandler
     public void startFight(EntityDamageByEntityEvent e) {
-        if (e.getDamager() instanceof Player p1 && e.getEntity() instanceof Player p2) {
+        if ((e.getDamager() instanceof Player || e.getDamager() instanceof ExplosiveMinecart) && e.getEntity() instanceof Player p2) {
+            Player p1 = null;
+            if (e.getDamager() instanceof ExplosiveMinecart cart) {
+                if (cart.getLastDamageCause() instanceof EntityDamageByEntityEvent lastDamageCause) {
+                    if ((lastDamageCause.getDamager().getType() == EntityType.ARROW || lastDamageCause.getDamager().getType() == EntityType.SPECTRAL_ARROW || lastDamageCause.getDamager().getType() == EntityType.PLAYER)) {
+                        Player damager = null;
+                        if ((lastDamageCause.getDamager() instanceof Projectile arrow)) {
+                            damager = (Player) arrow.getShooter();
+                        }
+                        if (lastDamageCause.getDamager() instanceof Player) {
+                            damager = (Player) lastDamageCause.getDamager();
+                        }
+                        p1 = damager;
+                    }
+                }
+            } else {
+                p1 = (Player) e.getDamager();
+            }
             if (C.getPlayerTeam(p1) != C.getPlayerTeam(p2)) {
-
+                Bukkit.broadcastMessage("they are not on the same team");
                 boolean p1inFight = C.fightManager.playerIsInFight(p1);
                 boolean p2inFight = C.fightManager.playerIsInFight(p2);
                 FightObject p1FightObject = C.fightManager.findFightForMember(p1);
                 FightObject p2FightObject = C.fightManager.findFightForMember(p2);
+                Bukkit.broadcastMessage("p1Fight " + p1inFight + C.fightManager.findFightForMember(p1));
+                Bukkit.broadcastMessage("p2Fight " + p2inFight + C.fightManager.findFightForMember(p2));
                 if (p1FightObject != null && p1FightObject.getParticipants().contains(p2.getUniqueId())) {
                     p1FightObject.getDamageDealt().put(p1.getUniqueId(),p1FightObject.getDamageDealt().get(p1.getUniqueId())+e.getFinalDamage());
                     p1FightObject.getDamageTaken().put(p2.getUniqueId(),p1FightObject.getDamageTaken().get(p2.getUniqueId())+e.getFinalDamage());
+                    p1FightObject.getHits().put(p1.getUniqueId(),p1FightObject.getHits().get(p1.getUniqueId())+1);
                     return;
                 }
                 if (p2FightObject != null && p2FightObject.getParticipants().contains(p1.getUniqueId())) {
                     p2FightObject.getDamageDealt().put(p1.getUniqueId(),p1FightObject.getDamageDealt().get(p1.getUniqueId())+e.getFinalDamage());
                     p2FightObject.getDamageTaken().put(p2.getUniqueId(),p1FightObject.getDamageTaken().get(p2.getUniqueId())+e.getFinalDamage());
+                    p2FightObject.getHits().put(p1.getUniqueId(),p2FightObject.getHits().get(p1.getUniqueId())+1);
                     return;
                 }
 
