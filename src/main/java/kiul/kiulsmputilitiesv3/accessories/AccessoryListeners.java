@@ -5,6 +5,7 @@ import kiul.kiulsmputilitiesv3.InventoryToBase64;
 import kiul.kiulsmputilitiesv3.advancements.AdvancementEnum;
 import kiul.kiulsmputilitiesv3.advancements.AdvancementMethods;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
+import kiul.kiulsmputilitiesv3.stats.StatDB;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
@@ -36,6 +37,10 @@ public class AccessoryListeners implements Listener {
     public void accessoryConfigSetup (PlayerJoinEvent e) {
         Player p = e.getPlayer();
         UUID uuid = p.getUniqueId();
+        p.sendMessage("§f§a§i§r§x§a§e§r§o"); // disables worldmap caves
+        if (StatDB.readPlayer(uuid,"stat_kills") == null) {
+            StatDB.setupPlayer(uuid);
+        }
         AccessoryData.get().options().copyDefaults(true);
         AccessoryData.get().addDefault(uuid+".accessory.identifier",null);
         AccessoryData.get().addDefault(uuid+".accessory.item",null);
