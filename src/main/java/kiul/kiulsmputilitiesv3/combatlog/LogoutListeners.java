@@ -28,7 +28,7 @@ import java.util.concurrent.TimeUnit;
 
 public class LogoutListeners implements Listener {
 
-    private HashMap<Zombie, UUID> NPCOwner = new HashMap<>();
+    private HashMap<Villager, UUID> NPCOwner = new HashMap<>();
 
     private HashMap<Chunk,Player> markedChunks = new HashMap<>();
 
@@ -41,17 +41,18 @@ public class LogoutListeners implements Listener {
             // Spawn NPC and update its displayname to communicate the time until it despawns.
             Location location = e.getPlayer().getLocation();
             World world = location.getWorld();
-            Zombie npc = (Zombie) world.spawnEntity(location, EntityType.ZOMBIE);
+            Villager npc = (Villager) world.spawnEntity(location, EntityType.VILLAGER);
             npc.setMetadata(e.getPlayer().getDisplayName(), new FixedMetadataValue(C.plugin, "rat"));
             npc.setAI(false);
+            npc.setProfession(Villager.Profession.NITWIT);
+            npc.setBreed(false);
             npc.setAdult();
-            npc.getAttribute(Attribute.GENERIC_ARMOR).addModifier(new AttributeModifier("GENERIC_ARMOR", e.getPlayer().getAttribute(Attribute.GENERIC_ARMOR).getValue(), AttributeModifier.Operation.ADD_NUMBER));
             npc.setHealth(e.getPlayer().getHealth());
             npc.setCanPickupItems(false);
             npc.setRemoveWhenFarAway(false);
             npc.setCustomNameVisible(true);
             npc.getLocation().getChunk().setForceLoaded(true);
-            npc.setCustomName(ChatColor.RED + e.getPlayer().getDisplayName() + ChatColor.GRAY + " - " + ChatColor.YELLOW + "90");
+            npc.setCustomName(ChatColor.RED + e.getPlayer().getDisplayName() + ChatColor.GRAY + " - " + ChatColor.YELLOW + "1 : 30");
             NPCOwner.put(npc, e.getPlayer().getUniqueId());
 
             long npcSpawnTime = System.currentTimeMillis();
@@ -94,55 +95,64 @@ public class LogoutListeners implements Listener {
 
     @EventHandler
     public void killNPC(EntityDamageByEntityEvent e) {
-        if (e.getDamager() instanceof Player) {
-            if (e.getEntity() instanceof Zombie) {
-                if (((Zombie) e.getEntity()).getHealth() < e.getFinalDamage()) {
+        if (e.getEntity() instanceof Villager && !(e.getDamager() instanceof Player)) {
+            if (NPCOwner.get(e.getEntity()) != null) {
+                e.setCancelled(true);
+                return;
+            }
+            if (e.getDamager() instanceof Player) {
+                if (e.getEntity() instanceof Villager) {
                     if (NPCOwner.get(e.getEntity()) != null) {
-                        PersistentData.get().set(NPCOwner.get(e.getEntity()) + ".flagged", true);
-                        PersistentData.save();
+                        e.setDamage(2);
+                    }
+                    if (((Villager) e.getEntity()).getHealth() < e.getFinalDamage()) {
+                        if (NPCOwner.get(e.getEntity()) != null) {
+                            PersistentData.get().set(NPCOwner.get(e.getEntity()) + ".flagged", true);
+                            PersistentData.save();
 
-                        // Drop Logger's Inventory
-                        World world = e.getDamager().getWorld();
-                        Location location = e.getEntity().getLocation();
+                            // Drop Logger's Inventory
+                            World world = e.getDamager().getWorld();
+                            Location location = e.getEntity().getLocation();
 
-                        try {
-                            for (ItemStack itemStack : InventoryToBase64.itemStackArrayFromBase64(PersistentData.get().getString(NPCOwner.get(e.getEntity()) + ".inventory"))) {
-                                if (itemStack != null) {
-                                    world.dropItemNaturally(location, itemStack);
+                            try {
+                                for (ItemStack itemStack : InventoryToBase64.itemStackArrayFromBase64(PersistentData.get().getString(NPCOwner.get(e.getEntity()) + ".inventory"))) {
+                                    if (itemStack != null) {
+                                        world.dropItemNaturally(location, itemStack);
+                                    }
+                                }
+                                for (ItemStack itemStack : InventoryToBase64.itemStackArrayFromBase64(PersistentData.get().getString(NPCOwner.get(e.getEntity()) + ".armour"))) {
+                                    if (itemStack != null) {
+                                        world.dropItemNaturally(location, itemStack);
+                                    }
+                                }
+
+                            } catch (IOException err) {
+                                err.printStackTrace();
+                            }
+
+                            Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+                            String damagerteamName = "";
+                            String entityteamName = "";
+                            for (Team team : sb.getTeams()) {
+                                if (team.hasEntry(((Player) e.getDamager()).getDisplayName())) {
+                                    damagerteamName = team.getPrefix();
+                                }
+                                if (team.hasEntry(Bukkit.getOfflinePlayer(NPCOwner.get(e.getEntity())).getName())) {
+                                    entityteamName = team.getPrefix();
                                 }
                             }
-                            for (ItemStack itemStack : InventoryToBase64.itemStackArrayFromBase64(PersistentData.get().getString(NPCOwner.get(e.getEntity()) + ".armour"))) {
-                                if (itemStack != null) {
-                                    world.dropItemNaturally(location, itemStack);
-                                }
-                            }
-
-                        } catch (IOException err) {
-                            err.printStackTrace();
-                        }
-
-                        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
-                        String damagerteamName = "";
-                        String entityteamName = "";
-                        for (Team team : sb.getTeams()) {
-                            if (team.hasEntry(((Player) e.getDamager()).getDisplayName())) {
-                                damagerteamName = team.getPrefix();
-                            }
-                            if (team.hasEntry(Bukkit.getOfflinePlayer(NPCOwner.get(e.getEntity())).getName())) {
-                                entityteamName = team.getPrefix();
-                            }
-                        }
-                        if (((Player) e.getDamager()).getInventory().getItemInMainHand() != null) {
-                            if (((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta() != null) {
-                                if (((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName() != null) {
-                                    if (((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName().length() > 0) {
-                                        Bukkit.broadcastMessage(entityteamName + ChatColor.RESET  + Bukkit.getOfflinePlayer(NPCOwner.get(e.getEntity())).getName() + " was slain by " + damagerteamName + ChatColor.RESET  + ((Player) e.getDamager()).getDisplayName() + " using " + ChatColor.AQUA + "[" + ChatColor.RESET + ((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName() + ChatColor.AQUA + "]" + ChatColor.RESET);
-                                        return;
+                            if (((Player) e.getDamager()).getInventory().getItemInMainHand() != null) {
+                                if (((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta() != null) {
+                                    if (((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName() != null) {
+                                        if (((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName().length() > 0) {
+                                            Bukkit.broadcastMessage(entityteamName + ChatColor.RESET + Bukkit.getOfflinePlayer(NPCOwner.get(e.getEntity())).getName() + " was slain by " + damagerteamName + ChatColor.RESET + ((Player) e.getDamager()).getDisplayName() + " using " + ChatColor.AQUA + "[" + ChatColor.RESET + ((Player) e.getDamager()).getInventory().getItemInMainHand().getItemMeta().getDisplayName() + ChatColor.AQUA + "]" + ChatColor.RESET);
+                                            return;
+                                        }
                                     }
                                 }
                             }
+                            Bukkit.broadcastMessage(entityteamName + ChatColor.RESET + Bukkit.getOfflinePlayer(NPCOwner.get(e.getEntity())).getName() + " was slain by " + damagerteamName + ChatColor.RESET + ((Player) e.getDamager()).getDisplayName());
                         }
-                        Bukkit.broadcastMessage(entityteamName + ChatColor.RESET + Bukkit.getOfflinePlayer(NPCOwner.get(e.getEntity())).getName() + " was slain by " + damagerteamName + ChatColor.RESET  + ((Player) e.getDamager()).getDisplayName());
                     }
                 }
             }

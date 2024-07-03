@@ -79,6 +79,10 @@ public class StatDB {
         DBObject r = new BasicDBObject("uuid", uuid.toString());
         DBObject found = null;
         boolean exists = false;
+        if (stats == null) {
+            setupPlayer(uuid);
+            return true;
+        }
         // try-with-resources will handle the closing of the resources
         try (DBCursor cursor = stats.find(r)){
             while(cursor.hasNext()) {

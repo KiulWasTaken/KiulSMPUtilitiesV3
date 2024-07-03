@@ -11,25 +11,33 @@ import java.util.*;
 public class FightObject {
 
     private ArrayList<UUID> participants;
-    private ArrayList<UUID> everParticipated;
-    private HashMap<UUID,Integer> hits;
-    private HashMap<UUID,Double> damageDealt;
-    private HashMap<UUID,Double> damageTaken;
-    private TreeMap<UUID,Long> joinTimestamp;
-    private TreeMap<UUID,Long> leaveTimestamp;
-    private TreeMap<UUID,Long> dieTimestamp;
+    private ArrayList<String> everParticipated;
+    private HashMap<String,Integer> hits;
+    private HashMap<String,Double> damageDealt;
+    private HashMap<String,Double> damageTaken;
+    private TreeMap<String,Long> joinTimestamp;
+    private TreeMap<String,Long> leaveTimestamp;
+    private TreeMap<String,Long> dieTimestamp;
     private long startTime;
 
     public FightObject(ArrayList<UUID> participants, long startTime) {
         this.participants = participants;
         this.startTime = startTime;
-        this.everParticipated = (ArrayList<UUID>) participants.clone();
+        this.everParticipated = new ArrayList<>();
         this.damageDealt = new HashMap<>();
         this.damageTaken = new HashMap<>();
         this.joinTimestamp = new TreeMap<>();
         this.leaveTimestamp = new TreeMap<>();
         this.dieTimestamp = new TreeMap<>();
         this.hits = new HashMap<>();
+
+        for (UUID uuids : participants) {
+            everParticipated.add(uuids.toString());
+            damageDealt.put(uuids.toString(),0.0);
+            damageTaken.put(uuids.toString(),0.0);
+            hits.put(uuids.toString(),0);
+            joinTimestamp.put(uuids.toString(),System.currentTimeMillis());
+        }
     }
 
     public ArrayList<UUID> getParticipants() {return participants;}
@@ -46,44 +54,47 @@ public class FightObject {
     public long getStartTime() {return startTime;}
     public long getDuration() {return System.currentTimeMillis()-startTime;}
 
-    public ArrayList<UUID> getEverParticipated() {
+    public ArrayList<String> getEverParticipated() {
         return everParticipated;
     }
 
-    public HashMap<UUID, Double> getDamageDealt() {
+    public HashMap<String, Double> getDamageDealt() {
         return damageDealt;
     }
 
-    public HashMap<UUID, Double> getDamageTaken() {
+    public HashMap<String, Double> getDamageTaken() {
         return damageTaken;
     }
 
-    public TreeMap<UUID, Long> getDieTimestamp() {
+    public TreeMap<String, Long> getDieTimestamp() {
         return dieTimestamp;
     }
 
-    public TreeMap<UUID, Long> getJoinTimestamp() {
+    public TreeMap<String, Long> getJoinTimestamp() {
         return joinTimestamp;
     }
 
-    public TreeMap<UUID, Long> getLeaveTimestamp() {
+    public TreeMap<String, Long> getLeaveTimestamp() {
         return leaveTimestamp;
     }
 
-    public HashMap<UUID, Integer> getHits() {
+    public HashMap<String, Integer> getHits() {
         return hits;
     }
 
     public void addParticipant(Player p) {
-        participants.add(p.getUniqueId());
-        everParticipated.add(p.getUniqueId());
-        getJoinTimestamp().put(p.getUniqueId(),System.currentTimeMillis());
+        getParticipants().add(p.getUniqueId());
+        getEverParticipated().add(p.getUniqueId().toString());
+        getJoinTimestamp().put(p.getUniqueId().toString(),System.currentTimeMillis());
+        getDamageDealt().put(p.getUniqueId().toString(),0.0);
+        getDamageTaken().put(p.getUniqueId().toString(),0.0);
+        getHits().put(p.getUniqueId().toString(),0);
     }
     public void removeParticipant(Player p, boolean die) {
         if (die) {
-            getDieTimestamp().put(p.getUniqueId(),System.currentTimeMillis());
+            getDieTimestamp().put(p.getUniqueId().toString(),System.currentTimeMillis());
         } else {
-            getLeaveTimestamp().put(p.getUniqueId(),System.currentTimeMillis());
+            getLeaveTimestamp().put(p.getUniqueId().toString(),System.currentTimeMillis());
         }
 
         participants.remove(p.getUniqueId());

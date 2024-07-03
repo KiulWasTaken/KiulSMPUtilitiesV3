@@ -13,8 +13,10 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerRiptideEvent;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.UUID;
@@ -31,7 +33,7 @@ public class FightLogicListeners implements Listener {
      **/
     @EventHandler
     public void startFight(EntityDamageByEntityEvent e) {
-        if ((e.getDamager() instanceof Player || e.getDamager() instanceof ExplosiveMinecart) && e.getEntity() instanceof Player p2) {
+        if (e.getEntity() instanceof Player) {
             Player p1 = null;
             if (e.getDamager() instanceof ExplosiveMinecart cart) {
                 if (cart.getLastDamageCause() instanceof EntityDamageByEntityEvent lastDamageCause) {
@@ -46,10 +48,14 @@ public class FightLogicListeners implements Listener {
                         p1 = damager;
                     }
                 }
-            } else {
-                p1 = (Player) e.getDamager();
             }
-            if (C.getPlayerTeam(p1) != C.getPlayerTeam(p2)) {
+            if (e.getDamager() instanceof Player) {
+            p1 = (Player) e.getDamager();
+            }
+
+            Player p2 = (Player) e.getEntity();
+            if (p1 == null) {return;}
+            if ((C.getPlayerTeam(p1) != C.getPlayerTeam(p2)) || (C.getPlayerTeam(p1) == null && C.getPlayerTeam(p2) == null)) {
                 Bukkit.broadcastMessage("they are not on the same team");
                 boolean p1inFight = C.fightManager.playerIsInFight(p1);
                 boolean p2inFight = C.fightManager.playerIsInFight(p2);
@@ -58,15 +64,15 @@ public class FightLogicListeners implements Listener {
                 Bukkit.broadcastMessage("p1Fight " + p1inFight + C.fightManager.findFightForMember(p1));
                 Bukkit.broadcastMessage("p2Fight " + p2inFight + C.fightManager.findFightForMember(p2));
                 if (p1FightObject != null && p1FightObject.getParticipants().contains(p2.getUniqueId())) {
-                    p1FightObject.getDamageDealt().put(p1.getUniqueId(),p1FightObject.getDamageDealt().get(p1.getUniqueId())+e.getFinalDamage());
-                    p1FightObject.getDamageTaken().put(p2.getUniqueId(),p1FightObject.getDamageTaken().get(p2.getUniqueId())+e.getFinalDamage());
-                    p1FightObject.getHits().put(p1.getUniqueId(),p1FightObject.getHits().get(p1.getUniqueId())+1);
+                    p1FightObject.getDamageDealt().put(p1.getUniqueId().toString(),p1FightObject.getDamageDealt().get(p1.getUniqueId().toString())+e.getFinalDamage());
+                    p1FightObject.getDamageTaken().put(p2.getUniqueId().toString(),p1FightObject.getDamageTaken().get(p2.getUniqueId().toString())+e.getFinalDamage());
+                    p1FightObject.getHits().put(p1.getUniqueId().toString(),p1FightObject.getHits().get(p1.getUniqueId().toString())+1);
                     return;
                 }
                 if (p2FightObject != null && p2FightObject.getParticipants().contains(p1.getUniqueId())) {
-                    p2FightObject.getDamageDealt().put(p1.getUniqueId(),p1FightObject.getDamageDealt().get(p1.getUniqueId())+e.getFinalDamage());
-                    p2FightObject.getDamageTaken().put(p2.getUniqueId(),p1FightObject.getDamageTaken().get(p2.getUniqueId())+e.getFinalDamage());
-                    p2FightObject.getHits().put(p1.getUniqueId(),p2FightObject.getHits().get(p1.getUniqueId())+1);
+                    p2FightObject.getDamageDealt().put(p1.getUniqueId().toString(),p1FightObject.getDamageDealt().get(p1.getUniqueId().toString())+e.getFinalDamage());
+                    p2FightObject.getDamageTaken().put(p2.getUniqueId().toString(),p1FightObject.getDamageTaken().get(p2.getUniqueId().toString())+e.getFinalDamage());
+                    p2FightObject.getHits().put(p1.getUniqueId().toString(),p2FightObject.getHits().get(p1.getUniqueId().toString())+1);
                     return;
                 }
 
@@ -98,22 +104,22 @@ public class FightLogicListeners implements Listener {
                             for (UUID p2FightUUIDs : p2FightObject.getParticipants()) {
                                 p1FightObject.addParticipant(Bukkit.getPlayer(p2FightUUIDs));
                                 FightMethods.startDistanceCheck(Bukkit.getPlayer(p2FightUUIDs), p1FightObject);
-                                p1FightObject.getDamageDealt().put(p2FightUUIDs,p1FightObject.getDamageDealt().get(p2FightUUIDs));
-                                p1FightObject.getDamageTaken().put(p2FightUUIDs,p1FightObject.getDamageTaken().get(p2FightUUIDs));
-                                p1FightObject.getJoinTimestamp().put(p2FightUUIDs,p1FightObject.getJoinTimestamp().get(p2FightUUIDs));
-                                p1FightObject.getLeaveTimestamp().put(p2FightUUIDs,p1FightObject.getLeaveTimestamp().get(p2FightUUIDs));
-                                p1FightObject.getDieTimestamp().put(p2FightUUIDs,p1FightObject.getDieTimestamp().get(p2FightUUIDs));
+                                p1FightObject.getDamageDealt().put(p2FightUUIDs.toString(),p1FightObject.getDamageDealt().get(p2FightUUIDs.toString()));
+                                p1FightObject.getDamageTaken().put(p2FightUUIDs.toString(),p1FightObject.getDamageTaken().get(p2FightUUIDs.toString()));
+                                p1FightObject.getJoinTimestamp().put(p2FightUUIDs.toString(),p1FightObject.getJoinTimestamp().get(p2FightUUIDs.toString()));
+                                p1FightObject.getLeaveTimestamp().put(p2FightUUIDs.toString(),p1FightObject.getLeaveTimestamp().get(p2FightUUIDs.toString()));
+                                p1FightObject.getDieTimestamp().put(p2FightUUIDs.toString(),p1FightObject.getDieTimestamp().get(p2FightUUIDs.toString()));
                             }
                             C.fightManager.disbandFight(p2FightObject);
                         } else {
                             for (UUID p1FightUUIDs : p1FightObject.getParticipants()) {
                                 p2FightObject.addParticipant(Bukkit.getPlayer(p1FightUUIDs));
                                 FightMethods.startDistanceCheck(Bukkit.getPlayer(p1FightUUIDs), p2FightObject);
-                                p2FightObject.getDamageDealt().put(p1FightUUIDs,p1FightObject.getDamageDealt().get(p1FightUUIDs));
-                                p2FightObject.getDamageTaken().put(p1FightUUIDs,p1FightObject.getDamageTaken().get(p1FightUUIDs));
-                                p2FightObject.getJoinTimestamp().put(p1FightUUIDs,p1FightObject.getJoinTimestamp().get(p1FightUUIDs));
-                                p2FightObject.getLeaveTimestamp().put(p1FightUUIDs,p1FightObject.getLeaveTimestamp().get(p1FightUUIDs));
-                                p2FightObject.getDieTimestamp().put(p1FightUUIDs,p1FightObject.getDieTimestamp().get(p1FightUUIDs));
+                                p2FightObject.getDamageDealt().put(p1FightUUIDs.toString(),p1FightObject.getDamageDealt().get(p1FightUUIDs.toString()));
+                                p2FightObject.getDamageTaken().put(p1FightUUIDs.toString(),p1FightObject.getDamageTaken().get(p1FightUUIDs.toString()));
+                                p2FightObject.getJoinTimestamp().put(p1FightUUIDs.toString(),p1FightObject.getJoinTimestamp().get(p1FightUUIDs.toString()));
+                                p2FightObject.getLeaveTimestamp().put(p1FightUUIDs.toString(),p1FightObject.getLeaveTimestamp().get(p1FightUUIDs.toString()));
+                                p2FightObject.getDieTimestamp().put(p1FightUUIDs.toString(),p1FightObject.getDieTimestamp().get(p1FightUUIDs.toString()));
                             }
                             C.fightManager.disbandFight(p1FightObject);
                         }
@@ -121,6 +127,7 @@ public class FightLogicListeners implements Listener {
             }
         }
     }
+
 
     @EventHandler
     public void removeFromFightOnDeath (PlayerDeathEvent e) {
@@ -178,6 +185,21 @@ public class FightLogicListeners implements Listener {
         if (C.fightManager.playerIsInFight(p)) {
             FightObject fightObject = C.fightManager.findFightForMember(p);
             p.setCooldown(Material.TRIDENT,300+(int)((10 * (fightObject.getDuration() / 1000 / 60))));
+        }
+    }
+    @EventHandler
+    public void useWindChargeCoolDown (PlayerInteractEvent e) {
+        Player p = e.getPlayer();
+        if (e.getAction().isRightClick() && e.getItem().getType().equals(Material.WIND_CHARGE)) {
+            if (C.fightManager.playerIsInFight(p)) {
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        p.setCooldown(Material.WIND_CHARGE, 300);
+                    }
+                }.runTaskLater(C.plugin, 0);
+
+            }
         }
     }
 

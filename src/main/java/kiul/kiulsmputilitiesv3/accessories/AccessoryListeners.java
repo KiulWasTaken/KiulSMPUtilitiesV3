@@ -39,7 +39,7 @@ public class AccessoryListeners implements Listener {
         Player p = e.getPlayer();
         UUID uuid = p.getUniqueId();
         p.sendMessage("§f§a§i§r§x§a§e§r§o"); // disables worldmap caves
-        if (StatDB.readPlayer(uuid,"stat_kills") == null) {
+        if (StatDB.playerExists(uuid)) {
             StatDB.setupPlayer(uuid);
         }
         AccessoryData.get().options().copyDefaults(true);
@@ -73,8 +73,10 @@ public class AccessoryListeners implements Listener {
         if (getActiveAccessoryIdentifier(p) != null) {
             for (AccessoryItemEnum accessoryItemEnum : AccessoryItemEnum.values()) {
                 if (accessoryItemEnum.getLocalName().equalsIgnoreCase(getActiveAccessoryIdentifier(p))) {
-                    for (AttributeModifier attributeModifiers : p.getAttribute(accessoryItemEnum.getAttribute()).getModifiers()) {
-                        p.getAttribute(accessoryItemEnum.getAttribute()).removeModifier(attributeModifiers);
+                    if (accessoryItemEnum.getAttribute() != null) {
+                        for (AttributeModifier attributeModifiers : p.getAttribute(accessoryItemEnum.getAttribute()).getModifiers()) {
+                            p.getAttribute(accessoryItemEnum.getAttribute()).removeModifier(attributeModifiers);
+                        }
                     }
                 }
             }

@@ -23,7 +23,9 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.text.DateFormat;
 import java.text.DecimalFormat;
+import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -39,6 +41,7 @@ public class C {
     public static DecimalFormat twoPointDecimal = new DecimalFormat("#.##");
     public static int claimCoreRange = 32;
     public static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yy");
+
     public static FightManager fightManager = new FightManager();
 
     /* static lists */

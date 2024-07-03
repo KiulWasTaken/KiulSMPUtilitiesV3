@@ -22,18 +22,20 @@ public class FightManager {
 
     public void disbandFight(FightObject fightObject) {
 
-        UUID fightUUID = UUID.randomUUID();
+        String fightUUID = UUID.randomUUID().toString();
 
         PersistentData.get().set("recaps."+fightUUID+".starttime",fightObject.getStartTime());
         PersistentData.get().set("recaps."+fightUUID+".endtime",System.currentTimeMillis());
-        PersistentData.get().set("recaps."+fightUUID+".damagedealt",fightObject.getDamageDealt());
-        PersistentData.get().set("recaps."+fightUUID+".damagetaken",fightObject.getDamageTaken());
+        PersistentData.get().createSection("recaps."+fightUUID+".damagedealt",fightObject.getDamageDealt());
+        PersistentData.get().createSection("recaps."+fightUUID+".damagetaken",fightObject.getDamageTaken());
         PersistentData.get().set("recaps."+fightUUID+".participants",fightObject.getEverParticipated());
-        PersistentData.get().set("recaps."+fightUUID+".jointime",fightObject.getJoinTimestamp());
-        PersistentData.get().set("recaps."+fightUUID+".leavetime",fightObject.getLeaveTimestamp());
-        PersistentData.get().set("recaps."+fightUUID+".dietime",fightObject.getDieTimestamp());
-        PersistentData.get().set("recaps."+fightUUID+".hits",fightObject.getHits());
+        PersistentData.get().createSection("recaps."+fightUUID+".jointime",fightObject.getJoinTimestamp());
+        PersistentData.get().createSection("recaps."+fightUUID+".leavetime",fightObject.getLeaveTimestamp());
+        PersistentData.get().createSection("recaps."+fightUUID+".dietime",fightObject.getDieTimestamp());
+        PersistentData.get().createSection("recaps."+fightUUID+".hits",fightObject.getHits());
+        PersistentData.save();
         fightObjects.remove(fightObject);
+
     }
 
     public FightObject findFightForMember(Player p) {

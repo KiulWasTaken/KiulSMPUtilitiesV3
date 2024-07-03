@@ -78,58 +78,74 @@ public class Commands implements TabExecutor {
 
         switch (label) {
             case "give-accessory":
-                AccessoryMethods.giveAccessory(p,args[0]);
+                if (p.hasPermission("kiulsmp.debug")) {
+                    AccessoryMethods.giveAccessory(p, args[0]);
+                }
                 break;
             case "give-ingredient":
-                AccessoryMethods.giveIngredient(p,args[0]);
+                if (p.hasPermission("kiulsmp.debug")) {
+                    AccessoryMethods.giveIngredient(p, args[0]);
+                }
                 break;
             case "accessory":
                 AccessoryMethods.equipAccessory(p);
                 break;
             case "toggle-sounds":
-                AccessoryData.get().set(p.getUniqueId()+".sounds.all",!AccessoryData.get().getBoolean(p.getUniqueId()+".sounds"));
-                if (AccessoryData.get().getBoolean(p.getUniqueId()+".sounds.all")) {
-                    p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
-                } else {
-                    p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Tracking Sounds " + ChatColor.RED + "DISABLED"));
+                if (args.length == 0) {
+                    AccessoryData.get().set(p.getUniqueId() + ".sounds.all", !AccessoryData.get().getBoolean(p.getUniqueId() + ".sounds.all"));
+                    if (AccessoryData.get().getBoolean(p.getUniqueId() + ".sounds.all")) {
+                        p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
+                    } else {
+                        p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Tracking Sounds " + ChatColor.RED + "DISABLED"));
+                    }
                 }
-                switch (args[0]) {
-                    case "teammates":
-                        if (AccessoryData.get().getBoolean(p.getUniqueId()+".sounds.teammates")) {
-                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Teammate Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
-                        } else {
-                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Teammate Tracking Sounds " + ChatColor.RED + "DISABLED"));
-                        }
-                        break;
-                    case "enemies":
-                        if (AccessoryData.get().getBoolean(p.getUniqueId()+".sounds.enemies")) {
-                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Enemy Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
-                        } else {
-                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Enemy Tracking Sounds " + ChatColor.RED + "DISABLED"));
-                        }
-                        break;
-                    case "all":
-                        if (AccessoryData.get().getBoolean(p.getUniqueId()+".sounds.all")) {
-                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
-                        } else {
-                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Tracking Sounds " + ChatColor.RED + "DISABLED"));
-                        }
-                        break;
-                    case "self":
-                        if (AccessoryData.get().getBoolean(p.getUniqueId()+".sounds.self")) {
-                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "All Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
-                        } else {
-                            p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "All Tracking Sounds " + ChatColor.RED + "DISABLED"));
-                        }
-                        break;
+                if (args.length > 0) {
+                    switch (args[0]) {
+                        case "teammates":
+                            AccessoryData.get().set(p.getUniqueId() + ".sounds.teammates", !AccessoryData.get().getBoolean(p.getUniqueId() + ".sounds.teammates"));
+                            if (AccessoryData.get().getBoolean(p.getUniqueId() + ".sounds.teammates")) {
+                                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Teammate Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
+                            } else {
+                                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Teammate Tracking Sounds " + ChatColor.RED + "DISABLED"));
+                            }
+                            break;
+                        case "enemies":
+                            AccessoryData.get().set(p.getUniqueId() + ".sounds.enemies", !AccessoryData.get().getBoolean(p.getUniqueId() + ".sounds.enemies"));
+                            if (AccessoryData.get().getBoolean(p.getUniqueId() + ".sounds.enemies")) {
+                                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Enemy Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
+                            } else {
+                                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Enemy Tracking Sounds " + ChatColor.RED + "DISABLED"));
+                            }
+                            break;
+                        case "all":
+                            AccessoryData.get().set(p.getUniqueId()+".sounds.all",!AccessoryData.get().getBoolean(p.getUniqueId()+".sounds.all"));
+                            if (AccessoryData.get().getBoolean(p.getUniqueId() + ".sounds.all")) {
+                                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
+                            } else {
+                                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Tracking Sounds " + ChatColor.RED + "DISABLED"));
+                            }
+                            break;
+                        case "self":
+                            AccessoryData.get().set(p.getUniqueId() + ".sounds.self", !AccessoryData.get().getBoolean(p.getUniqueId() + ".sounds.self"));
+                            if (AccessoryData.get().getBoolean(p.getUniqueId() + ".sounds.self")) {
+                                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Self Tracking Sounds " + ChatColor.GREEN + "ENABLED"));
+                            } else {
+                                p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(ChatColor.WHITE + "Self Tracking Sounds " + ChatColor.RED + "DISABLED"));
+                            }
+                            break;
+                    }
                 }
                 break;
             case "test-crate":
-                CrateMethods.createCrate(p.getWorld(),"end");
+                if (p.hasPermission("kiulsmp.debug")) {
+                    CrateMethods.createCrate(p.getWorld(), "end");
+                }
                 break;
             case "populate-crate":
-                CrateTypeEnum crateType = CrateMethods.getCrate(args[0]);
-                CrateMethods.populateCrate(crateType,null,p);
+                if (p.hasPermission("kiulsmp.debug")) {
+                    CrateTypeEnum crateType = CrateMethods.getCrate(args[0]);
+                    CrateMethods.populateCrate(crateType, null, p);
+                }
                 break;
             case "recaps":
                 RecapInventory.open(p,0);
