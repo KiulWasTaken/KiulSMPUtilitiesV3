@@ -23,7 +23,7 @@ public class CustomHastePotion extends BrewAction {
         }
 
         potionMeta.setColor(Color.fromRGB(96,64,70));
-        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.FAST_DIGGING,3600,0,false,true),true);
+        potionMeta.addCustomEffect(new PotionEffect(PotionEffectType.HASTE,3600,0,false,true),true);
         potionMeta.setDisplayName(ChatColor.WHITE+"Potion of Haste");
         item.setItemMeta(potionMeta);
 

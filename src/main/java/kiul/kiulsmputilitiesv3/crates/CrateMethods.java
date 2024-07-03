@@ -45,15 +45,15 @@ public class CrateMethods {
 
     public static ItemStack randomEnchantedGear (ItemStack itemStack) {
         ArrayList<Enchantment> armourEnchantments = new ArrayList<>() {{
-            add(Enchantment.PROTECTION_ENVIRONMENTAL);
-            add(Enchantment.DURABILITY);
+            add(Enchantment.PROTECTION);
+            add(Enchantment.UNBREAKING);
             add(Enchantment.MENDING);
         }};
         ArrayList<Enchantment> toolEnchants = new ArrayList<>() {{
-            add(Enchantment.DIG_SPEED);
+            add(Enchantment.EFFICIENCY);
             add(Enchantment.SILK_TOUCH);
-            add(Enchantment.LOOT_BONUS_BLOCKS);
-            add(Enchantment.DURABILITY);
+            add(Enchantment.FORTUNE);
+            add(Enchantment.UNBREAKING);
             add(Enchantment.MENDING);
         }};
 
@@ -286,8 +286,8 @@ public class CrateMethods {
                                 double zOffset = 15 * Math.sin(angle);
                                 Location particleLocation = crateSpawnLocation.clone().add(xOffset, 7, zOffset);
                                 Location particleLocation1 = crateSpawnLocation.clone().add(-xOffset, 7, -zOffset);
-                                crateSpawnLocation.getWorld().spawnParticle(Particle.TOTEM, particleLocation, 1, 0.1, 0.1, 0.1, 0);
-                                crateSpawnLocation.getWorld().spawnParticle(Particle.TOTEM, particleLocation1, 1, 0.1, 0.1, 0.1, 0);
+                                crateSpawnLocation.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, particleLocation, 1, 0.1, 0.1, 0.1, 0);
+                                crateSpawnLocation.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, particleLocation1, 1, 0.1, 0.1, 0.1, 0);
                                 i++;
                             } else {
                                 cancel();

@@ -15,6 +15,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.tags.CustomItemTagContainer;
 import org.bukkit.inventory.meta.tags.ItemTagType;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Team;
@@ -50,7 +51,7 @@ public class AccessoryMethods {
             if (AccessoryData.get().get(p.getUniqueId() + ".accessory.identifier") == null) {
                 if (p.getInventory().getItemInMainHand().getType() != Material.AIR) {
                     for (AccessoryItemEnum item : AccessoryItemEnum.values()) {
-                        if (item.getLocalName().equalsIgnoreCase(p.getInventory().getItemInMainHand().getItemMeta().getLocalizedName())) {
+                        if (item.getLocalName().equalsIgnoreCase(p.getInventory().getItemInMainHand().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING))) {
                             AccessoryData.get().set(p.getUniqueId() + ".accessory.identifier", item.getLocalName());
                             AccessoryData.get().set(p.getUniqueId() + ".accessory.item", InventoryToBase64.itemStackToBase64(p.getInventory().getItemInMainHand()));
                             AccessoryData.get().set(p.getUniqueId() + ".accessory.range", item.getRange());
@@ -117,7 +118,7 @@ public class AccessoryMethods {
     public static String getActiveAccessoryIdentifier (Player p) {
         try {
             if (InventoryToBase64.itemStackFromBase64(AccessoryData.get().getString(p.getUniqueId() + ".accessory.item")) != null) {
-                return InventoryToBase64.itemStackFromBase64(AccessoryData.get().getString(p.getUniqueId() + ".accessory.item")).getItemMeta().getLocalizedName();
+                return InventoryToBase64.itemStackFromBase64(AccessoryData.get().getString(p.getUniqueId() + ".accessory.item")).getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING);
             }
         } catch (IOException err) {
             err.printStackTrace();

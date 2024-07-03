@@ -11,10 +11,8 @@ import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.ItemFlag;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.PotionMeta;
-import org.bukkit.potion.Potion;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
-import org.bukkit.potion.PotionType;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -27,7 +25,7 @@ public class CustomPotionUpgrade extends BrewAction {
             return;
         }
         PotionMeta potionMeta = (PotionMeta) item.getItemMeta();
-        if (!(potionMeta.getCustomEffects().get(0).getType() == PotionEffectType.FAST_DIGGING ||
+        if (!(potionMeta.getCustomEffects().get(0).getType() == PotionEffectType.HASTE ||
                 potionMeta.getCustomEffects().get(0).getType() == PotionEffectType.LUCK)) {
             return;
         }

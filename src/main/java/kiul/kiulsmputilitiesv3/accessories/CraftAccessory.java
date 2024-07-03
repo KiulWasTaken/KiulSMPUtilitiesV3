@@ -1,11 +1,14 @@
 package kiul.kiulsmputilitiesv3.accessories;
 
+import kiul.kiulsmputilitiesv3.C;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.PrepareItemCraftEvent;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.util.Arrays;
 import java.util.List;
@@ -33,13 +36,13 @@ public class CraftAccessory implements Listener {
             if (item != null) {
                 for (AccessoryItemEnum accessoryItems : AccessoryItemEnum.values()) {
                     if (accessoryItems.getLocalName().contains("base")) {
-                        if (item.getItemMeta().getLocalizedName().equalsIgnoreCase(accessoryItems.getLocalName())) {
+                        if (item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING).equalsIgnoreCase(accessoryItems.getLocalName())) {
                             accessoryItemEnum = accessoryItems;
                         }
                     }
                 }
                 for (IngredientItemEnum ingredientItems : IngredientItemEnum.values()) {
-                    if (item.getItemMeta().getLocalizedName().equalsIgnoreCase(ingredientItems.getLocalName()) && accessoryItemEnum != null) {
+                    if (item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING).equalsIgnoreCase(ingredientItems.getLocalName()) && accessoryItemEnum != null) {
                         ItemStack result = matchItem(accessoryItemEnum, ingredientItems);
                         e.getInventory().setResult(result);
                     }

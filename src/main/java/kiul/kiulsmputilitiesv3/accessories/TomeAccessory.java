@@ -170,20 +170,20 @@ public class TomeAccessory implements Listener {
        add(PotionEffectType.ABSORPTION);
        add(PotionEffectType.REGENERATION);
        add(PotionEffectType.SPEED);
-       add(PotionEffectType.INCREASE_DAMAGE);
-       add(PotionEffectType.DAMAGE_RESISTANCE);
+       add(PotionEffectType.STRENGTH);
+       add(PotionEffectType.RESISTANCE);
        add(PotionEffectType.FIRE_RESISTANCE);
        add(PotionEffectType.LUCK);
-       add(PotionEffectType.FAST_DIGGING);
+       add(PotionEffectType.HASTE);
        add(PotionEffectType.DOLPHINS_GRACE);
        add(PotionEffectType.HERO_OF_THE_VILLAGE);
        add(PotionEffectType.NIGHT_VISION);
-       add(PotionEffectType.JUMP);
+       add(PotionEffectType.JUMP_BOOST);
        add(PotionEffectType.CONDUIT_POWER);
        add(PotionEffectType.SATURATION);
        add(PotionEffectType.WATER_BREATHING);
        add(PotionEffectType.HEALTH_BOOST);
-       add(PotionEffectType.HEAL);
+       add(PotionEffectType.INSTANT_DAMAGE);
     }};
 
     @EventHandler

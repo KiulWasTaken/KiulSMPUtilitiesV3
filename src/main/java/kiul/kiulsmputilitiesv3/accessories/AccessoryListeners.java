@@ -24,6 +24,7 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.tags.CustomItemTagContainer;
 import org.bukkit.inventory.meta.tags.ItemTagType;
+import org.bukkit.persistence.PersistentDataType;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -95,9 +96,9 @@ public class AccessoryListeners implements Listener {
         if (e.getInventory() instanceof CraftingInventory) {
             if (e.getCurrentItem() == null) {return;}
             if (e.getCurrentItem().equals(e.getInventory().getItem(0))) {
-                if (e.getCurrentItem().getItemMeta().hasLocalizedName()) {
+                if (e.getCurrentItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) {
                     for (AccessoryItemEnum accessoryItemEnum : AccessoryItemEnum.values()) {
-                        if (accessoryItemEnum.getLocalName().equalsIgnoreCase(e.getCurrentItem().getItemMeta().getLocalizedName())) {
+                        if (accessoryItemEnum.getLocalName().equalsIgnoreCase(e.getCurrentItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING))) {
                             AdvancementMethods.grantAdvancement(p, AdvancementEnum.CRAFT_ACCESSORY.getIdentifier());
 
 //                            NamespacedKey key = new NamespacedKey(C.plugin, ChatColor.stripColor(itemStack.getItemMeta().getLore().get(itemStack.getItemMeta().getLore().size() - 1)));
@@ -119,7 +120,7 @@ public class AccessoryListeners implements Listener {
     @EventHandler
     public void preventPlacement (BlockPlaceEvent e) {
         if (e.getBlock().getType().equals(Material.PLAYER_HEAD)) {
-            if (e.getItemInHand().getItemMeta().hasLocalizedName()) {
+            if (e.getItemInHand().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) {
                 e.setCancelled(true);
             }
         }

@@ -10,6 +10,7 @@ import org.bukkit.inventory.BrewerInventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.inventory.meta.SkullMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.profile.PlayerProfile;
 import org.bukkit.profile.PlayerTextures;
@@ -141,7 +142,7 @@ public class C {
         }
         iM.setLore(adjustedLore);
         if (localizedName != null) {
-            iM.setLocalizedName(localizedName);
+            iM.getPersistentDataContainer().set(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING,localizedName);
         }
 
         i.setAmount(amount);
@@ -165,7 +166,7 @@ public class C {
         }
         iM.setLore(adjustedLore);
         if (localizedName != null) {
-            iM.setLocalizedName(localizedName);
+            iM.getPersistentDataContainer().set(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING,localizedName);
         }
 
         i.setAmount(amount);

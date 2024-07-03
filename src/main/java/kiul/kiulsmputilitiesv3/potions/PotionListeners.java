@@ -163,10 +163,10 @@ public class PotionListeners implements Listener {
        add(PotionEffectType.POISON);
        add(PotionEffectType.WITHER);
        add(PotionEffectType.HUNGER);
-       add(PotionEffectType.SLOW);
-       add(PotionEffectType.SLOW_DIGGING);
+       add(PotionEffectType.SLOWNESS);
+       add(PotionEffectType.MINING_FATIGUE);
        add(PotionEffectType.SLOW_FALLING);
-       add(PotionEffectType.CONFUSION);
+       add(PotionEffectType.NAUSEA);
        add(PotionEffectType.DARKNESS);
        add(PotionEffectType.BAD_OMEN);
     }};
