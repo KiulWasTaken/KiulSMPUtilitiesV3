@@ -10,7 +10,10 @@ import org.bukkit.entity.*;
 import org.bukkit.inventory.EquipmentSlot;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.EnchantmentStorageMeta;
+import org.bukkit.inventory.meta.FireworkMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -48,6 +51,12 @@ public class CrateMethods {
             add(Enchantment.PROTECTION);
             add(Enchantment.UNBREAKING);
             add(Enchantment.MENDING);
+        }};
+
+        ArrayList<Enchantment> maceBookEnchantments = new ArrayList<>() {{
+            add(Enchantment.WIND_BURST);
+            add(Enchantment.DENSITY);
+            add(Enchantment.BREACH);
         }};
         ArrayList<Enchantment> toolEnchants = new ArrayList<>() {{
             add(Enchantment.EFFICIENCY);
@@ -104,6 +113,18 @@ public class CrateMethods {
                     default:
                         gearItem = IngredientItemEnum.Ruby.getIngredient();
                 }
+                break;
+            case ENCHANTED_BOOK:
+                EnchantmentStorageMeta meta = (EnchantmentStorageMeta) itemStack.getItemMeta();
+                int enchantmentNum = (int)(Math.random()*maceBookEnchantments.size());
+                meta.addStoredEnchant(maceBookEnchantments.get(enchantmentNum),(int)(Math.random()*maceBookEnchantments.get(enchantmentNum).getMaxLevel()+0.5),false);
+                if (Math.random() > 0.5) {
+                    meta.addStoredEnchant(armourEnchantments.get(1),(int)(Math.random()*3.5),false);
+                }
+                if (!meta.hasStoredEnchants()) {
+                    meta.addStoredEnchant(Enchantment.MENDING,1,false);
+                }
+                itemStack.setItemMeta(meta);
                 break;
             case NETHERITE_BLOCK:
                 gearItem = netheriteBlock.get((int)(Math.random()*netheriteBlock.size()));
@@ -216,52 +237,65 @@ public class CrateMethods {
 
 
 
-    public static void createCrate(World world, String type) {
+    public static void createCrate(World world, String type,boolean debug) {
 
 
         CrateTypeEnum crateType = getCrate(type);
 
         Location crateSpawnLocation = returnCrateLocation(world);
         Bukkit.broadcastMessage(crateSpawnLocation.toString());
-
         long crateSpawnTime = System.currentTimeMillis()+crateType.getSpawnTime();
+        if (debug) {
+            crateSpawnTime = System.currentTimeMillis()+1000*60;
+        }
+
         int x = (int) crateSpawnLocation.getX();
         int y = (int) crateSpawnLocation.getY();
         int z = (int) crateSpawnLocation.getZ();
         crateSpawnLocation.getChunk().setForceLoaded(true);
+        int[] timestamps = C.splitTimestamp(crateSpawnTime);
         Bukkit.broadcastMessage("");
-        Bukkit.broadcastMessage(C.eventPrefix + crateType.getDisplayName() + ChatColor.WHITE + " container will arrive at " + x + " " + y + " " + z + " in " + ChatColor.RED + (((crateSpawnTime - System.currentTimeMillis()) / 1000) / 60) + " minutes.");
+        Bukkit.broadcastMessage(C.eventPrefix + crateType.getDisplayName() + ChatColor.WHITE + " container will arrive at " + x + " " + y + " " + z + " in " + ChatColor.RED + String.format("%02d:%02d:%02d",timestamps[0],timestamps[1],timestamps[2]));
         Bukkit.broadcastMessage("");
-
+        long spawnTime = crateSpawnTime;
         new BukkitRunnable() {
             ArmorStand nameplate = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0.5,2,0.5),EntityType.ARMOR_STAND);
-            long timeUntilSpawn = crateSpawnTime-System.currentTimeMillis();
+            long timeUntilSpawn = spawnTime-System.currentTimeMillis();
             int tick = 0;
             @Override
             public void run() {
 
-                if (System.currentTimeMillis() < crateSpawnTime) {
+                if (System.currentTimeMillis() < spawnTime) {
                     tick++;
+                    int[] timestamps = C.splitTimestamp(spawnTime);
                     nameplate.setInvulnerable(true);
                     nameplate.setVisible(false);
                     nameplate.setGravity(false);
                     nameplate.setCustomNameVisible(true);
                     nameplate.setPersistent(true);
                     nameplate.setMarker(true);
-
-                    if (crateSpawnTime-System.currentTimeMillis() < 5*1000*60 || tick >= 15) {
+                    if (tick >= 300) {
                         tick = 0;
-                        int[] timestamps = C.splitTimestamp(crateSpawnTime);
                         Bukkit.broadcastMessage("");
                         Bukkit.broadcastMessage(C.eventPrefix + crateType.getDisplayName() + ChatColor.WHITE + " container will arrive at " + x + " " + y + " " + z + " in " + ChatColor.RED + String.format("%02d:%02d:%02d",timestamps[0],timestamps[1],timestamps[2]));
                         Bukkit.broadcastMessage("");
                     }
+                    if (spawnTime-System.currentTimeMillis() <= 5*1000*60) {
+                        if (spawnTime-System.currentTimeMillis() <= 5*1000) {
+                            tick = 0;
+                            Bukkit.broadcastMessage("");
+                            Bukkit.broadcastMessage(C.eventPrefix + crateType.getDisplayName() + ChatColor.WHITE + " container will arrive at " + x + " " + y + " " + z + " in " + ChatColor.RED + String.format("%02d:%02d:%02d", timestamps[0], timestamps[1], timestamps[2]));
+                            Bukkit.broadcastMessage("");
+                        }
+                        if (tick >= 30) {
+                            tick = 0;
+                            Bukkit.broadcastMessage("");
+                            Bukkit.broadcastMessage(C.eventPrefix + crateType.getDisplayName() + ChatColor.WHITE + " container will arrive at " + x + " " + y + " " + z + " in " + ChatColor.RED + String.format("%02d:%02d:%02d", timestamps[0], timestamps[1], timestamps[2]));
+                            Bukkit.broadcastMessage("");
+                        }
+                    }
 
-                    nameplate.setCustomName(String.format("%02d : %02d",
-                            TimeUnit.MILLISECONDS.toMinutes(crateSpawnTime - System.currentTimeMillis()),
-                            TimeUnit.MILLISECONDS.toSeconds(crateSpawnTime - System.currentTimeMillis()) -
-                                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(crateSpawnTime - System.currentTimeMillis()))
-                    ));
+                    nameplate.setCustomName(String.format("%02d:%02d:%02d", timestamps[0], timestamps[1], timestamps[2]));
                 } else {
                     nameplate.remove();
                         Random random = new Random();
@@ -366,7 +400,6 @@ public class CrateMethods {
                                 public void run() {
                                     if (!wait) {
                                         Iterator<Team> iterator = involvedTeams.iterator();
-                                        Bukkit.broadcastMessage("max score:" + maxScore);
                                         int total = 0;
 
                                         for (Team team : teamScores.keySet()) {
@@ -417,8 +450,6 @@ public class CrateMethods {
 
                                         while (iterator.hasNext()) {
                                             Team team = iterator.next();
-                                            Bukkit.broadcastMessage("cooldown: "+teamCooldown.get(team));
-                                            Bukkit.broadcastMessage("score: "+teamScores.get(team));
                                             if (teamCooldown.get(team) < System.currentTimeMillis()) {
                                                 teamScores.put(team, teamScores.get(team) - 20);
                                                 if (teamScores.get(team) <= 0) {
@@ -434,6 +465,16 @@ public class CrateMethods {
                                                     int phasesRemaining = crateType.getUnlockPhases()-phase;
                                                     crate.setCustomName(color + phases.repeat(phasesRemaining));
                                                     wait = true;
+                                                    Bukkit.broadcastMessage("");
+                                                    Bukkit.broadcastMessage(C.eventPrefix + ChatColor.RESET + team.getPrefix() + ChatColor.RESET + ChatColor.WHITE + "has broken a lock! " + color + phasesRemaining + ChatColor.WHITE + " lock(s) remain!");
+                                                    Bukkit.broadcastMessage("");
+                                                    Firework fw = (Firework) world.spawnEntity(crate.getLocation().clone().add(0,3,0), EntityType.FIREWORK_ROCKET);
+                                                    FireworkMeta fwM = fw.getFireworkMeta();
+                                                    FireworkEffect fwE = FireworkEffect.builder().with(FireworkEffect.Type.BALL_LARGE).withColor(Color.WHITE).build();
+                                                    fwM.addEffect(fwE);
+                                                    fw.setFireworkMeta(fwM);
+                                                    fw.setMetadata("pat",new FixedMetadataValue(C.plugin,"rat"));
+                                                    fw.detonate();
                                                     new BukkitRunnable() {
                                                         int tick = 0;
                                                         ArrayList<String> playerNames = new ArrayList<>(team.getEntries());
@@ -443,10 +484,7 @@ public class CrateMethods {
                                                             Player teamMember = Bukkit.getPlayer(playerNames.get(tick));
                                                             if (teamMember != null) {
                                                                 privateItemStacks.put(teamMember,new ArrayList<>());
-                                                                double angle = 2 * Math.PI * tick / team.getSize(); // Calculate the angle for this location
-                                                                double xOffset = 2 * Math.cos(angle); // Calculate the x offset
-                                                                double zOffset = 2 * Math.sin(angle); // Calculate the z offset
-                                                                Location location = crateSpawnLocation.clone().add(xOffset, 4, zOffset); // Add the offsets to the center location
+                                                                Location location = crateSpawnLocation.clone().add(0, 3,0); // Add the offsets to the center location
                                                                 for (int i = 0; i < crateType.getLootTableRolls(); i++) {
                                                                     ItemStack item = CrateMethods.getLootTableItem(crateType.getLootTable(), crateType);
                                                                     i = i + CrateMethods.getRollConsumption(item, crateType);
@@ -461,6 +499,10 @@ public class CrateMethods {
                                                                         item.setAmount(1);
                                                                     }
                                                                     Item droppedItem = world.dropItem(location,item);
+                                                                    for (Player onlinePlayers : Bukkit.getOnlinePlayers()) {
+                                                                        onlinePlayers.hideEntity(C.plugin,droppedItem);
+                                                                    }
+                                                                    teamMember.showEntity(C.plugin,droppedItem);
                                                                     privateItemStacks.get(teamMember).add(droppedItem);
                                                                 }
                                                             }
@@ -550,24 +592,24 @@ public class CrateMethods {
                         if (event < 0) event = -event - 1;
                         switch (event) {
                             case 0:
-                                createCrate(world, "gold");
+                                createCrate(world, "gold",false);
 
                                 break;
                             case 1:
-                                createCrate(world, "exp");
+                                createCrate(world, "oxidized",false);
                                 // event 1
                                 break;
                             case 2:
-                                createCrate(world, "end");
+                                createCrate(world, "end",false);
                                 // event 2
                                 break;
                             case 3:
-                                createCrate(world, "nether");
+                                createCrate(world, "nether",false);
                                 // event 3
                                 break;
                             case 4:
                                 // blackbox
-                                createCrate(world, "nether");
+                                createCrate(world, "nether",false);
                                 // event 4
                                 break;
                         }

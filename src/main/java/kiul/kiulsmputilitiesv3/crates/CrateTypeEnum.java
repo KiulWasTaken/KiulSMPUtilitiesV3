@@ -12,7 +12,7 @@ public enum CrateTypeEnum {
     /**
      * Symbols
      */
-    Gold(C.t("&#FFC70BG&#FFD007O&#FFDA04L&#FFE300D"),"gold",(long)1000*60*1,1,0,1000*60*1,Material.RAW_GOLD_BLOCK, new ArrayList<ItemStack>() {{
+    Gold(C.t("&#FFC70BG&#FFD007O&#FFDA04L&#FFE300D"),"gold",(long)1000*60*60,1,0,1000*60*1,Material.RAW_GOLD_BLOCK, new ArrayList<ItemStack>() {{
         add(new ItemStack(Material.GOLD_BLOCK));
         add(new ItemStack(Material.GOLD_INGOT));
         add(new ItemStack(Material.GOLDEN_APPLE));
@@ -20,7 +20,7 @@ public enum CrateTypeEnum {
         add(new ItemStack(Material.GOLDEN_CARROT));
         add(new ItemStack(Material.TOTEM_OF_UNDYING));
     }},7),
-    Experience(C.t("&#29753BE&#478E42X&#65A649P&#84BF50E&#A2D857R&#A2D857I&#84BF50E&#65A649N&#478E42C&#29753BE"),"exp",(long)1000*60*60,1,0,1000*60*5,Material.SCULK, new ArrayList<ItemStack>() {{
+    Oxidized(C.t("&#96694DO&#8F7757X&#878462I&#80926CD&#789F77I&#71AD81Z&#69BA8CE&#62C896D"),"oxidized",(long)1000*60*60,1,0,1000*60*5,Material.VAULT, new ArrayList<ItemStack>() {{
         add(new ItemStack(Material.EXPERIENCE_BOTTLE));
         add(new ItemStack(Material.GUNPOWDER));
         add(new ItemStack(Material.EMERALD));
@@ -29,7 +29,7 @@ public enum CrateTypeEnum {
         add(new ItemStack(Material.ENCHANTED_BOOK));
         add(new ItemStack(Material.ENCHANTED_BOOK));
     }},7),
-    End(C.t("&#B766D9R&#C579D3E&#D48CCEM&#D48CCEO&#C579D3T&#B766D9E"),"end",(long)1000*60*1,2,2000,0,Material.SHULKER_BOX,new ArrayList<ItemStack>() {{
+    End(C.t("&#B766D9R&#C579D3E&#D48CCEM&#D48CCEO&#C579D3T&#B766D9E"),"end",(long)1000*60*120,2,2000,0,Material.SHULKER_BOX,new ArrayList<ItemStack>() {{
         add(new ItemStack(Material.EXPERIENCE_BOTTLE));
         add(new ItemStack(Material.ENCHANTED_GOLDEN_APPLE));
         add(new ItemStack(Material.DIAMOND_BLOCK));

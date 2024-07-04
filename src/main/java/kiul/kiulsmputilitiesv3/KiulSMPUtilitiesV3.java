@@ -14,6 +14,7 @@ import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemCraft;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemPickupAfterDeath;
 import kiul.kiulsmputilitiesv3.potions.*;
+import kiul.kiulsmputilitiesv3.stats.StatDB;
 import kiul.kiulsmputilitiesv3.stats.StatDBListeners;
 import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
@@ -91,6 +92,9 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         new BrewingRecipe(Material.GUNPOWDER, new CustomPotionUpgrade());
         new BrewingRecipe(Material.GLOWSTONE_DUST, new CustomPotionUpgrade());
         new BrewingRecipe(Material.REDSTONE, new CustomPotionUpgrade());
+
+        // Database
+        StatDB.connect();
     }
 
     @Override

@@ -9,10 +9,7 @@ import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityCombustEvent;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityDeathEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.ItemStack;
@@ -91,7 +88,15 @@ public class LogoutListeners implements Listener {
 
     }
 
-
+    @EventHandler
+    public void damageNPC (EntityDamageEvent e) {
+        if (!e.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
+            if (NPCOwner.get(e.getEntity())!= null) {
+                e.setCancelled(true);
+                return;
+            }
+        }
+    }
 
     @EventHandler
     public void killNPC(EntityDamageByEntityEvent e) {
@@ -100,12 +105,13 @@ public class LogoutListeners implements Listener {
                 e.setCancelled(true);
                 return;
             }
+        }
             if (e.getDamager() instanceof Player) {
                 if (e.getEntity() instanceof Villager) {
                     if (NPCOwner.get(e.getEntity()) != null) {
                         e.setDamage(2);
                     }
-                    if (((Villager) e.getEntity()).getHealth() < e.getFinalDamage()) {
+                    if (((Villager) e.getEntity()).getHealth() <= e.getFinalDamage()) {
                         if (NPCOwner.get(e.getEntity()) != null) {
                             PersistentData.get().set(NPCOwner.get(e.getEntity()) + ".flagged", true);
                             PersistentData.save();
@@ -157,7 +163,6 @@ public class LogoutListeners implements Listener {
                 }
             }
         }
-    }
 
     @EventHandler
     public void punishCombatLogger (PlayerJoinEvent e) {

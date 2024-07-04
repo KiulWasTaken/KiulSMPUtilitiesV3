@@ -3,10 +3,7 @@ package kiul.kiulsmputilitiesv3.combattag;
 import kiul.kiulsmputilitiesv3.C;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.entity.EnderPearl;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.Projectile;
+import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -155,18 +152,19 @@ public class FightLogicListeners implements Listener {
                     fastPearlThrow.put(p.getUniqueId(), 0);
                 }
 
-                    if ((System.currentTimeMillis() - lastPearlThrow.get(p.getUniqueId())) < 3000) {
+                    if ((System.currentTimeMillis() - lastPearlThrow.get(p.getUniqueId())) < 9000) {
                         fastPearlThrow.put(p.getUniqueId(), fastPearlThrow.get(p.getUniqueId()) + 1);
                         Bukkit.broadcastMessage(fastPearlThrow.get(p.getUniqueId()) + "");
 
                         new BukkitRunnable() {
-                            int cooldown = (int)(2*(C.fightManager.findFightForMember(p).getDuration() / 1000 / 60 / 1)) * fastPearlThrow.get(p.getUniqueId());
+                            int cooldown = ((int)(C.fightManager.findFightForMember(p).getDuration() / 1000 / 60 / 1)*fastPearlThrow.get(p.getUniqueId()));
 
                             @Override
                             public void run() {
-                                if (cooldown > 60) {
-                                    cooldown = 60;
+                                if (cooldown > 160) {
+                                    cooldown = 160;
                                 }
+                                p.sendMessage(cooldown + "");
                                 p.setCooldown(Material.ENDER_PEARL,(20 + cooldown));
                             }
                         }.runTaskLater(C.plugin,0);
@@ -188,20 +186,20 @@ public class FightLogicListeners implements Listener {
         }
     }
     @EventHandler
-    public void useWindChargeCoolDown (PlayerInteractEvent e) {
-        Player p = e.getPlayer();
-        if (e.getAction().isRightClick() && e.getItem().getType().equals(Material.WIND_CHARGE)) {
-            if (C.fightManager.playerIsInFight(p)) {
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        p.setCooldown(Material.WIND_CHARGE, 300);
-                    }
-                }.runTaskLater(C.plugin, 0);
+    public void useWindChargeCoolDown (ProjectileLaunchEvent e) {
 
+        if (e.getEntity() instanceof WindCharge && e.getEntity().getShooter() instanceof Player p) {
+                if (C.fightManager.playerIsInFight(p)) {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            p.setCooldown(Material.WIND_CHARGE, 300);
+                        }
+                    }.runTaskLater(C.plugin, 0);
+
+                }
             }
         }
-    }
 
     @EventHandler
     public void damagedTridentCoolDown (EntityDamageByEntityEvent e) {
