@@ -32,7 +32,7 @@ public class LogoutListeners implements Listener {
 
     @EventHandler
     public void spawnDummy(PlayerQuitEvent e) {
-
+        if (!C.combatLogEnabled) {return;}
 
         if (!C.loggingOut.contains(e.getPlayer())) {
             // Spawn NPC and update its displayname to communicate the time until it despawns.

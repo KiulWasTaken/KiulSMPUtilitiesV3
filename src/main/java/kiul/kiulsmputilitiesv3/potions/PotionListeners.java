@@ -20,6 +20,7 @@ import java.util.ArrayList;
 public class PotionListeners implements Listener {
     @EventHandler
     public void customPotionItemStackClick(InventoryClickEvent event) {
+        if (!C.potionsEnabled) {return;}
 
         Inventory inv = event.getClickedInventory();
         InventoryView pInv = event.getWhoClicked().getOpenInventory();

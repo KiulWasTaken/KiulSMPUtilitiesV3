@@ -3,15 +3,19 @@ package kiul.kiulsmputilitiesv3.combattag;
 import kiul.kiulsmputilitiesv3.C;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRiptideEvent;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.jetbrains.annotations.Nullable;
 
@@ -30,6 +34,7 @@ public class FightLogicListeners implements Listener {
      **/
     @EventHandler
     public void startFight(EntityDamageByEntityEvent e) {
+        if (!C.combatTagEnabled) {return;}
         if (e.getEntity() instanceof Player) {
             Player p1 = null;
             if (e.getDamager() instanceof ExplosiveMinecart cart) {
@@ -44,6 +49,11 @@ public class FightLogicListeners implements Listener {
                         }
                         p1 = damager;
                     }
+                }
+            }
+            if (e.getDamager() instanceof AbstractArrow arrow) {
+                if (arrow.getShooter() instanceof Player) {
+                    p1 = (Player) arrow.getShooter();
                 }
             }
             if (e.getDamager() instanceof Player) {
@@ -128,9 +138,13 @@ public class FightLogicListeners implements Listener {
 
     @EventHandler
     public void removeFromFightOnDeath (PlayerDeathEvent e) {
+        if (!C.combatTagEnabled) {return;}
         Player p = e.getEntity();
         FightObject fightObject = C.fightManager.findFightForMember(p);
         if (fightObject != null) {
+            if (p.getKiller() != null) {
+                fightObject.getKiller().put(p.getUniqueId().toString(), p.getKiller().getUniqueId().toString());
+            }
             fightObject.removeParticipant(p,true);
         }
     }
@@ -143,10 +157,9 @@ public class FightLogicListeners implements Listener {
 
     @EventHandler
     public void pearlSlowDown (ProjectileLaunchEvent e) {
+        if (!C.combatTagEnabled) {return;}
         if (e.getEntity() instanceof EnderPearl && e.getEntity().getShooter() instanceof Player p) {
-            Bukkit.broadcastMessage("event called");
             if (C.fightManager.playerIsInFight(p)) {
-                Bukkit.broadcastMessage("playerIsInFight");
                 if (lastPearlThrow.get(p.getUniqueId()) == null) {
                     lastPearlThrow.put(p.getUniqueId(), System.currentTimeMillis());
                     fastPearlThrow.put(p.getUniqueId(), 0);
@@ -154,7 +167,6 @@ public class FightLogicListeners implements Listener {
 
                     if ((System.currentTimeMillis() - lastPearlThrow.get(p.getUniqueId())) < 9000) {
                         fastPearlThrow.put(p.getUniqueId(), fastPearlThrow.get(p.getUniqueId()) + 1);
-                        Bukkit.broadcastMessage(fastPearlThrow.get(p.getUniqueId()) + "");
 
                         new BukkitRunnable() {
                             int cooldown = ((int)(C.fightManager.findFightForMember(p).getDuration() / 1000 / 60 / 1)*fastPearlThrow.get(p.getUniqueId()));
@@ -164,7 +176,6 @@ public class FightLogicListeners implements Listener {
                                 if (cooldown > 160) {
                                     cooldown = 160;
                                 }
-                                p.sendMessage(cooldown + "");
                                 p.setCooldown(Material.ENDER_PEARL,(20 + cooldown));
                             }
                         }.runTaskLater(C.plugin,0);
@@ -179,6 +190,7 @@ public class FightLogicListeners implements Listener {
 
     @EventHandler
     public void useTridentCoolDown (PlayerRiptideEvent e) {
+        if (!C.combatTagEnabled) {return;}
         Player p = e.getPlayer();
         if (C.fightManager.playerIsInFight(p)) {
             FightObject fightObject = C.fightManager.findFightForMember(p);
@@ -187,7 +199,7 @@ public class FightLogicListeners implements Listener {
     }
     @EventHandler
     public void useWindChargeCoolDown (ProjectileLaunchEvent e) {
-
+        if (!C.combatTagEnabled) {return;}
         if (e.getEntity() instanceof WindCharge && e.getEntity().getShooter() instanceof Player p) {
                 if (C.fightManager.playerIsInFight(p)) {
                     new BukkitRunnable() {
@@ -203,6 +215,7 @@ public class FightLogicListeners implements Listener {
 
     @EventHandler
     public void damagedTridentCoolDown (EntityDamageByEntityEvent e) {
+        if (!C.combatTagEnabled) {return;}
         if (e.getDamager() instanceof Player && e.getEntity() instanceof Player damaged) {
             if (C.fightManager.playerIsInFight(damaged)) {
                 int cooldown = damaged.getCooldown(Material.TRIDENT)+100;
@@ -213,9 +226,61 @@ public class FightLogicListeners implements Listener {
             }
         }
     }
+    ArrayList<Player> glidingPlayers = new ArrayList<>();
+    public void updateElytraHitBox (Player p) {
+
+        new BukkitRunnable() {
+
+            @Override
+            public void run() {
+               for (Entity nearbyEntities : p.getNearbyEntities(2,2,2)) {
+                   if (nearbyEntities instanceof Arrow || nearbyEntities instanceof SpectralArrow) {
+                       ((AbstractArrow) nearbyEntities).hitEntity(p);
+                   }
+               }
+                if (!p.isGliding()) {
+                    p.setCollidable(true);
+                    glidingPlayers.remove(p);
+                    cancel();
+                }
+            }
+        }.runTaskTimer(C.plugin,0,1);
+    }
+    @EventHandler
+    public void elytraGlidingCheck (PlayerMoveEvent e) {
+        if (e.getFrom().getX() != e.getTo().getX() || e.getFrom().getZ() != e.getTo().getZ()) {
+            if (!e.getPlayer().isGliding()) {return;}
+            if (!glidingPlayers.contains(e.getPlayer())) {
+                glidingPlayers.add(e.getPlayer());
+                updateElytraHitBox(e.getPlayer());
+            }
+        }
+    }
+
+    @EventHandler
+    public void preventStartGlidingOnCooldown (EntityToggleGlideEvent e) {
+        if (e.getEntity() instanceof Player p) {
+            if (p.getCooldown(Material.ELYTRA) > 0) {
+                p.setGliding(false);
+                e.setCancelled(true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void elytraMidAirDisable (EntityDamageByEntityEvent e) {
+        if (e.getEntity() instanceof Player p && (e.getDamager() instanceof Arrow || e.getDamager() instanceof SpectralArrow || e.getDamager() instanceof Player)) {
+            if (p.isGliding()) {
+                p.setGliding(false);
+
+                p.setCooldown(Material.ELYTRA,600);
+            }
+        }
+    }
 
     @EventHandler
     public void damagedRocketCoolDown (EntityDamageByEntityEvent e) {
+        if (!C.combatTagEnabled) {return;}
         if (e.getDamager() instanceof Player && e.getEntity() instanceof Player damaged) {
             if (C.fightManager.playerIsInFight(damaged)) {
                 if (damaged.getInventory().getChestplate() != null) {

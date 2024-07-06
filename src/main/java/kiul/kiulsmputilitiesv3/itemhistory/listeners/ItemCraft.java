@@ -52,6 +52,7 @@ public class ItemCraft implements Listener {
 
     @EventHandler
     public void craftItemEvent (CraftItemEvent e) {
+        if (!C.itemHistoryEnabled) {return;}
         if (historyItems.contains(e.getRecipe().getResult().getType())) {
             if ((e.getView().getBottomInventory().firstEmpty() != -1)) {
                 LocalDate currentDate = LocalDate.now();
@@ -62,6 +63,7 @@ public class ItemCraft implements Listener {
 
     @EventHandler
     public void smithDate (SmithItemEvent e) {
+        if (!C.itemHistoryEnabled) {return;}
         if (historyItems.contains(e.getInventory().getRecipe().getResult().getType())) {
             LocalDate currentDate = LocalDate.now();
             ItemMethods.addLore(e.getInventory().getResult(),ChatColor.GRAY + "↑ - " + ((Player)e.getView().getPlayer()).getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
@@ -70,6 +72,7 @@ public class ItemCraft implements Listener {
 
     @EventHandler
     public void combineDate (InventoryClickEvent e) {
+        if (!C.itemHistoryEnabled) {return;}
         if (e.getInventory() instanceof AnvilInventory && e.getSlot() == 2) {
             if (historyItems.contains(e.getCurrentItem().getType())) {
                 LocalDate currentDate = LocalDate.now();
@@ -79,6 +82,7 @@ public class ItemCraft implements Listener {
     }
     @EventHandler
     public void enchantDate (EnchantItemEvent e) {
+        if (!C.itemHistoryEnabled) {return;}
         if (historyItems.contains(e.getInventory().getItem(0).getType())) {
             LocalDate currentDate = LocalDate.now();
             ItemMethods.addLore(e.getInventory().getItem(0),ChatColor.GRAY + "" + ChatColor.BOLD+ "\uD83D\uDCD6" + ChatColor.RESET+ChatColor.GRAY+ " - " + ((Player)e.getView().getPlayer()).getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
@@ -87,6 +91,7 @@ public class ItemCraft implements Listener {
 
     @EventHandler
     public void grindstoneClear (InventoryClickEvent e) {
+        if (!C.itemHistoryEnabled) {return;}
         if (e.getInventory() instanceof GrindstoneInventory && e.getSlot() == 2) {
             if (historyItems.contains(e.getCurrentItem().getType())) {
                 List<String> lore = new ArrayList<>();

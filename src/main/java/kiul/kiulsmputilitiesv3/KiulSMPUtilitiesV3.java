@@ -6,11 +6,14 @@ import kiul.kiulsmputilitiesv3.claims.ClaimMethods;
 import kiul.kiulsmputilitiesv3.combatlog.LogoutListeners;
 import kiul.kiulsmputilitiesv3.combatlog.MovementListeners;
 import kiul.kiulsmputilitiesv3.combattag.FightLogicListeners;
+import kiul.kiulsmputilitiesv3.combattag.RecapInventory;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.config.ClaimData;
+import kiul.kiulsmputilitiesv3.config.ConfigData;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
 import kiul.kiulsmputilitiesv3.crates.CrateListeners;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
+import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemCraft;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemPickupAfterDeath;
 import kiul.kiulsmputilitiesv3.potions.*;
@@ -46,6 +49,8 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ItemCraft(),this);
         getServer().getPluginManager().registerEvents(new ItemPickupAfterDeath(),this);
         getServer().getPluginManager().registerEvents(new StatDBListeners(),this);
+        getServer().getPluginManager().registerEvents(new RecapInventory(),this);
+        getServer().getPluginManager().registerEvents(new FeatureInventory(),this);
 
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
@@ -79,15 +84,34 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getCommand("populate-crate").setExecutor(new Commands());
         getCommand("translate").setExecutor(new Commands());
         getCommand("recaps").setExecutor(new Commands());
+        getCommand("kmenu").setExecutor(new Commands());
 
         // Config
+        ConfigData.setup();
+        if (ConfigData.get().get("combatlog") == null) {
+            ConfigData.get().options().copyDefaults(true);
+            ConfigData.get().addDefault("combatlog", true);
+            ConfigData.get().addDefault("combattag", true);
+            ConfigData.get().addDefault("potions", true);
+            ConfigData.get().addDefault("itemhistory", true);
+            ConfigData.get().addDefault("accessories", true);
+            ConfigData.get().addDefault("crates", true);
+        }
+        C.combatLogEnabled = ConfigData.get().getBoolean("combatlog");
+        C.combatTagEnabled = ConfigData.get().getBoolean("combattag");
+        C.potionsEnabled = ConfigData.get().getBoolean("potions");
+        C.itemHistoryEnabled = ConfigData.get().getBoolean("itemhistory");
+        C.accessoriesEnabled = ConfigData.get().getBoolean("accessories");
+        C.cratesEnabled = ConfigData.get().getBoolean("crates");
         PersistentData.setup();
         AccessoryData.setup();
         ClaimData.setup();
 
         // Plugin Methods
-        CrateMethods.startRandomCrates(getServer().getWorld("world"));
-        new BrewingRecipe(Material.GLOW_BERRIES, new CustomHastePotion());
+        if (C.cratesEnabled) {
+            CrateMethods.startRandomCrates(getServer().getWorld("world"));
+        }
+        new BrewingRecipe(Material.GOLD_BLOCK, new CustomHastePotion());
         new BrewingRecipe(Material.NETHERITE_SCRAP, new CustomPurityPotion());
         new BrewingRecipe(Material.GUNPOWDER, new CustomPotionUpgrade());
         new BrewingRecipe(Material.GLOWSTONE_DUST, new CustomPotionUpgrade());
@@ -100,5 +124,12 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
+        ConfigData.get().set("combatlog",C.combatLogEnabled);
+        ConfigData.get().set("combattag",C.combatTagEnabled);
+        ConfigData.get().set("potions",C.potionsEnabled);
+        ConfigData.get().set("itemhistory",C.itemHistoryEnabled);
+        ConfigData.get().set("accessories",C.accessoriesEnabled);
+        ConfigData.get().set("crates",C.cratesEnabled);
+        ConfigData.save();
     }
 }

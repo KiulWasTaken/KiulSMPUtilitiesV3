@@ -585,7 +585,7 @@ public class CrateMethods {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (!C.restarting) {
+                if (!C.restarting && C.cratesEnabled) {
                     if (Math.random() < 0.016 && Bukkit.getOnlinePlayers().size() > 10) {
                         double[] chance = {0.3, 0.6, 0.85, 0.9, 1};
                         int event = Arrays.binarySearch(chance, Math.random());

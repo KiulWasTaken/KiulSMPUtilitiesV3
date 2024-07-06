@@ -7,10 +7,7 @@ import kiul.kiulsmputilitiesv3.config.PersistentData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.Sound;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -19,6 +16,7 @@ import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.Team;
 import org.checkerframework.checker.units.qual.A;
 
 import java.text.DateFormat;
@@ -63,7 +61,7 @@ public class RecapInventory implements Listener {
     public static void open(Player p, int page) {
 
         int invSize = 54;
-        String pattern = "dd/MM/yyyy HH:mm:ss";
+        String pattern = "dd/MM/yyyy @ HH:mm:ss";
         DateFormat df = new SimpleDateFormat(pattern);
         Inventory inventory = Bukkit.createInventory(p, invSize, "Fight Recaps");
         List<ItemStack> items = new ArrayList<>();
@@ -79,12 +77,12 @@ public class RecapInventory implements Listener {
                         String fightUUID = configurationSection.get(i);
                         ArrayList<String> lore = new ArrayList<>();
                         String path = "recaps." + fightUUID;
-                        Bukkit.broadcastMessage(path + ".participants");
                         if (PersistentData.get().getList(path + ".participants").contains(p.getUniqueId().toString())) {
                             ArrayList<String> participants = (ArrayList<String>) PersistentData.get().getList(path + ".participants");
                             HashMap<String, Double> hits = (HashMap) PersistentData.get().getConfigurationSection(path + ".hits").getValues(false);
                             HashMap<String, Double> damageTaken = (HashMap) PersistentData.get().getConfigurationSection(path + ".damagetaken").getValues(false);
                             HashMap<String, Double> damageDealt = (HashMap) PersistentData.get().getConfigurationSection(path + ".damagedealt").getValues(false);
+                            HashMap<String, String> killer = (HashMap) PersistentData.get().getConfigurationSection(path + ".killer").getValues(false);
                             TreeMap<String, Long> joinTime = new TreeMap<>((HashMap) PersistentData.get().getConfigurationSection(path + ".jointime").getValues(false));
                             TreeMap<String, Long> leaveTime = new TreeMap<>((HashMap) PersistentData.get().getConfigurationSection(path + ".leavetime").getValues(false));
                             TreeMap<String, Long> dieTime = new TreeMap<>((HashMap) PersistentData.get().getConfigurationSection(path + ".dietime").getValues(false));
@@ -95,50 +93,91 @@ public class RecapInventory implements Listener {
                             Collections.sort(timestamps);
                             Long startTime = PersistentData.get().getLong(path + ".starttime");
                             Long endTime = PersistentData.get().getLong(path + ".endtime");
-                            java.util.Date time = new java.util.Date(startTime);
+                            Date time = new Date(startTime);
 
                             Double damageDealtDelta = (double)damageDealt.get(p.getUniqueId().toString()) - (double)damageTaken.get(p.getUniqueId().toString());
                             int[] times = C.splitTimestampManual(startTime, endTime);
-                            String displayName = C.t("&f" + df.format(time));
+                            String dateString = C.t(" &f" + df.format(time) + " ACST");
+                            String displayName = "";
+                            String participantsString = "";
+                            ArrayList<String> teams = new ArrayList<>();
+                            for (int j = 0; j < participants.size(); j++) {
+                                String playerUUIDs = participants.get(j);
+                                OfflinePlayer playerInQuestion = Bukkit.getOfflinePlayer(UUID.fromString(playerUUIDs));
 
-                            lore.add(C.t("&fParticipants &8▸ " + participants.toString()));
-                            lore.add(C.t("&fDuration &8▸ " + String.format("%02d:%02d:%02d", times[0], times[1], times[2])));
-                            lore.add(C.t("&fHits &8▸ " + b(p.getUniqueId().toString(), path + ".hits") + hits.get(p.getUniqueId())));
-                            lore.add(C.t("&fDamage &8▸ " + b(p.getUniqueId().toString(), path + ".damagedealt") + C.twoPointDecimal.format((double)damageDealt.get(p.getUniqueId().toString()))));
-                            lore.add(C.t("&fDDΔ &8▸ " + damageDealtDelta(path, p.getUniqueId().toString()) + C.twoPointDecimal.format(damageDealtDelta)));
+                                if (j != participants.size()-1) {
+                                    participantsString += playerInQuestion.getName() + ", ";
+                                } else {
+                                    participantsString += playerInQuestion.getName();
+                                }
+                                if (C.getPlayerTeamOffline(playerInQuestion) == null) {
+                                    teams.add(playerInQuestion.getName());
+                                    break;
+                                }
+                                if (!teams.contains(C.getPlayerTeamOffline(playerInQuestion))) {
+                                    teams.add(C.getPlayerTeamOffline(playerInQuestion).getPrefix());
+                                }
+                            }
+
+                            for (int j = 0; j < teams.size(); j++) {
+                                String groupName = teams.get(j);
+
+                                if (j != teams.size()-1) {
+                                    displayName += groupName + ChatColor.RESET+ "vs. ";
+                                } else {
+                                    displayName += groupName;
+                                }
+                            }
+                            displayName = displayName+ChatColor.RESET+dateString;
+
+
+
+
+
+                            lore.add(C.t("&7Participants &8▸ &f" + participantsString));
+                            lore.add(C.t("&7Duration &8▸ &f" + String.format("%02d:%02d:%02d", times[0], times[1], times[2])));
+                            lore.add(C.t("&7Hits &8▸ " + b(p.getUniqueId().toString(), path + ".hits") + hits.get(p.getUniqueId().toString())));
+                            lore.add(C.t("&7Damage &8▸ " + b(p.getUniqueId().toString(), path + ".damagedealt") + C.twoPointDecimal.format((double)damageDealt.get(p.getUniqueId().toString()))));
+                            lore.add(C.t("&7DDΔ &8▸ " + damageDealtDelta(path, p.getUniqueId().toString()) + C.twoPointDecimal.format(damageDealtDelta)));
                             lore.add("");
-                            lore.add(C.t("&7⎯⎯⎯⎯⎯ &fTimeline &7⎯⎯⎯⎯⎯"));
+                            lore.add(C.t("&7&m     &r &fTimeline &7&m     "));
                             for (int i = 0; i < timestamps.size(); i++) {
                                 Long timestamp = timestamps.get(i);
                                 if (joinTime.containsValue(timestamp)) {
                                     String playerUUID = C.getKeyByValue(joinTime, timestamp);
                                     int[] joinTimes = C.splitTimestampManual(startTime, timestamp);
-                                    lore.add(C.t("&f" + String.format("%02d:%02d:%02d", joinTimes[0], joinTimes[1], joinTimes[2]) + " &7▸&f " + Bukkit.getPlayer(UUID.fromString(playerUUID)).getDisplayName() + "&a ↓"));
+                                    lore.add(C.t("&f" + String.format("%02d:%02d:%02d", joinTimes[0], joinTimes[1], joinTimes[2]) + " &7▸&f&a +&f " + Bukkit.getPlayer(UUID.fromString(playerUUID)).getDisplayName()));
                                 }
                                 if (dieTime.containsValue(timestamp)) {
                                     String playerUUID = C.getKeyByValue(dieTime, timestamp);
                                     int[] joinTimes = C.splitTimestampManual(startTime, timestamp);
-                                    lore.add(C.t("&f" + String.format("%02d:%02d:%02d", joinTimes[0], joinTimes[1], joinTimes[2]) + " &7▸&f " + Bukkit.getPlayer(UUID.fromString(playerUUID)).getDisplayName() + "&c ☠"));
+                                    String killerText = "";
+                                    if (killer.get(playerUUID) != null) {
+                                        killerText = Bukkit.getOfflinePlayer(UUID.fromString(killer.get(playerUUID))).getName() + " ";
+                                    }
+                                    lore.add(C.t("&f" + String.format("%02d:%02d:%02d", joinTimes[0], joinTimes[1], joinTimes[2]) + " &7▸&f " + killerText + "&c☠&f " + ChatColor.WHITE + Bukkit.getPlayer(UUID.fromString(playerUUID)).getDisplayName()));
                                 }
                                 if (leaveTime.containsValue(timestamp)) {
                                     String playerUUID = C.getKeyByValue(leaveTime, timestamp);
                                     int[] joinTimes = C.splitTimestampManual(startTime, timestamp);
-                                    lore.add(C.t("&f" + String.format("%02d:%02d:%02d", joinTimes[0], joinTimes[1], joinTimes[2]) + " &7▸&f " + Bukkit.getPlayer(UUID.fromString(playerUUID)).getDisplayName() + "&e ↑"));
+                                    lore.add(C.t("&f" + String.format("%02d:%02d:%02d", joinTimes[0], joinTimes[1], joinTimes[2]) + " &7▸&f&e -&f " + Bukkit.getPlayer(UUID.fromString(playerUUID)).getDisplayName()));
                                 }
                             }
                             String participantName = p.getDisplayName();
                             for (int i = 0; i < participants.size(); i++) {
                                 if (UUID.fromString(participants.get(i)) != p.getUniqueId()) {
-                                    participantName = Bukkit.getPlayer(UUID.fromString(participants.get(i))).getDisplayName();
+                                    participantName = Bukkit.getOfflinePlayer(UUID.fromString(participants.get(i))).getName();
                                 }
                             }
                             for (int i = 0; i < lore.size(); i++) {
                                 String line = lore.get(i);
-                                if (line.length() > 30) {
-                                    String newLine = line.substring(30, line.length());
+                                if (line.length() > 50) {
+                                    String newLine = line.substring(50, line.length());
                                     lore.add(i + 1, newLine);
+                                    lore.set(i,ChatColor.getLastColors(newLine)+line.substring(0,50));
                                 }
                             }
+                            lore.add(C.t("&7&m                      "));
                             String[] arr = new String[lore.size()];
 
                             // Converting ArrayList to Array

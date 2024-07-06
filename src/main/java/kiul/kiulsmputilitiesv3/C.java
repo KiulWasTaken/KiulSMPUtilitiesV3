@@ -2,6 +2,7 @@ package kiul.kiulsmputilitiesv3;
 
 import com.google.j2objc.annotations.Property;
 import kiul.kiulsmputilitiesv3.combattag.FightManager;
+import kiul.kiulsmputilitiesv3.config.ConfigData;
 import kiul.kiulsmputilitiesv3.potions.BrewingRecipe;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
@@ -32,11 +33,30 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class C {
+    private static final Pattern HEX_PATTERN = Pattern.compile("&#(\\w{5}[0-9a-fA-F])");
+    public static String t(String textToTranslate) {
+        Matcher matcher = HEX_PATTERN.matcher(textToTranslate);
+        StringBuffer buffer = new StringBuffer();
+        while(matcher.find()) {
+            matcher.appendReplacement(buffer, net.md_5.bungee.api.ChatColor.of("#" + matcher.group(1)).toString());
+        }
+
+        return ChatColor.translateAlternateColorCodes('&', matcher.appendTail(buffer).toString());
+    }
+
+    /* config booleans */
+    public static boolean combatLogEnabled;
+    public static boolean combatTagEnabled;
+    public static boolean potionsEnabled;
+    public static boolean itemHistoryEnabled;
+    public static boolean accessoriesEnabled;
+    public static boolean cratesEnabled;
 
     /* static utilities */
     public static Plugin plugin = KiulSMPUtilitiesV3.getPlugin(KiulSMPUtilitiesV3.class);
     public static String chatColour = ChatColor.GRAY + "" + ChatColor.ITALIC;
-    public static String eventPrefix = ChatColor.GOLD+""+ChatColor.BOLD+"CRATE" + ChatColor.RESET+ChatColor.GRAY+" » ";
+    public static String eventPrefix = ChatColor.GOLD+""+ChatColor.BOLD+"EVENT" + ChatColor.RESET+ChatColor.GRAY+" » ";
+    public static String pluginPrefix = C.t("&#F37BD2&lS&#EF75A8&lM&#EA6E7D&lP"+ChatColor.RESET+ChatColor.GRAY+" » ");
     public static boolean restarting = false;
     public static DecimalFormat twoPointDecimal = new DecimalFormat("#.##");
     public static int claimCoreRange = 32;
@@ -58,16 +78,7 @@ public class C {
     public static int accessoryCooldownTimeMinutes = 0;
 
     /* Global Utility Methods */
-    private static final Pattern HEX_PATTERN = Pattern.compile("&#(\\w{5}[0-9a-fA-F])");
-    public static String t(String textToTranslate) {
-        Matcher matcher = HEX_PATTERN.matcher(textToTranslate);
-        StringBuffer buffer = new StringBuffer();
-        while(matcher.find()) {
-            matcher.appendReplacement(buffer, net.md_5.bungee.api.ChatColor.of("#" + matcher.group(1)).toString());
-        }
 
-        return ChatColor.translateAlternateColorCodes('&', matcher.appendTail(buffer).toString());
-    }
     public static int[] splitTimestamp(long futureTimestamp) {
         long millisecondsRemaining = futureTimestamp - System.currentTimeMillis();
         long hours = millisecondsRemaining / 3600000;
@@ -205,6 +216,15 @@ public class C {
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         for (Team team : sb.getTeams()) {
             if (team.hasEntry(p.getDisplayName())) {
+                return team;
+            }
+        }
+        return null;
+    }
+    public static Team getPlayerTeamOffline (OfflinePlayer p ) {
+        Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        for (Team team : sb.getTeams()) {
+            if (team.hasEntry(p.getName())) {
                 return team;
             }
         }

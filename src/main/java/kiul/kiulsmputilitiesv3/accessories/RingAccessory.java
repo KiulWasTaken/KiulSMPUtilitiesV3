@@ -33,6 +33,7 @@ public class RingAccessory implements Listener {
 
     @EventHandler
     public void baseEffect (PlayerInteractEntityEvent e) {
+        if (!C.accessoriesEnabled) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).contains("ring") && !AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).contains("ruby")) {
             if (e.getRightClicked() instanceof Villager v) {
                 e.getPlayer().sendMessage(v.getVillagerExperience() + "");
@@ -48,6 +49,7 @@ public class RingAccessory implements Listener {
     HashMap<MerchantRecipe,Villager> customVillagerGUI = new HashMap<>();
     @EventHandler
     public void rubyCreateGUI (PlayerInteractEntityEvent e) {
+        if (!C.accessoriesEnabled) {return;}
         if (e.getRightClicked() instanceof Villager) {
             if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).equalsIgnoreCase("ring_ruby")) {
                 e.setCancelled(true);
@@ -80,7 +82,7 @@ public class RingAccessory implements Listener {
     }
     @EventHandler
     public void rubyTrade (PlayerPurchaseEvent e) {
-
+        if (!C.accessoriesEnabled) {return;}
             if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).equalsIgnoreCase("ring_ruby")) {
                 if (customVillagerGUI.containsKey(e.getTrade())) {
                     Villager v = customVillagerGUI.get(e.getTrade());
@@ -96,6 +98,7 @@ public class RingAccessory implements Listener {
     }
     @EventHandler
     public void peridotEffect (EntitySpawnEvent e) {
+        if (!C.accessoriesEnabled) {return;}
         if (e.getEntity() instanceof ExperienceOrb exp) {
             if (exp.getSpawnReason().equals(ExperienceOrb.SpawnReason.VILLAGER_TRADE)) {
                 for (Entity nearbyEntity : exp.getNearbyEntities(5,5,5)) {
@@ -111,6 +114,7 @@ public class RingAccessory implements Listener {
 
     @EventHandler
     public void tanzaniteEffect (PlayerTradeEvent e) {
+        if (!C.accessoriesEnabled) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).equalsIgnoreCase("ring_tanzanite")) {
 
             Villager villager = (Villager) e.getVillager();
@@ -123,6 +127,7 @@ public class RingAccessory implements Listener {
 
     @EventHandler
     public void opalEffect (PlayerPurchaseEvent e) {
+        if (!C.accessoriesEnabled) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).equalsIgnoreCase("ring_opal")) {
             if (Math.random() < 0.3) {
                 e.setIncreaseTradeUses(false);

@@ -15,6 +15,7 @@ public class FightObject {
     private HashMap<String,Integer> hits;
     private HashMap<String,Double> damageDealt;
     private HashMap<String,Double> damageTaken;
+    private HashMap<String,String> killer;
     private TreeMap<String,Long> joinTimestamp;
     private TreeMap<String,Long> leaveTimestamp;
     private TreeMap<String,Long> dieTimestamp;
@@ -30,13 +31,15 @@ public class FightObject {
         this.leaveTimestamp = new TreeMap<>();
         this.dieTimestamp = new TreeMap<>();
         this.hits = new HashMap<>();
+        this.killer = new HashMap<>();
 
-        for (UUID uuids : participants) {
+        for (int i = 0; i < participants.size(); i++) {
+            UUID uuids = participants.get(i);
             everParticipated.add(uuids.toString());
             damageDealt.put(uuids.toString(),0.0);
             damageTaken.put(uuids.toString(),0.0);
             hits.put(uuids.toString(),0);
-            joinTimestamp.put(uuids.toString(),System.currentTimeMillis());
+            joinTimestamp.put(uuids.toString(),System.currentTimeMillis()+i);
         }
     }
 
@@ -64,6 +67,10 @@ public class FightObject {
 
     public HashMap<String, Double> getDamageTaken() {
         return damageTaken;
+    }
+
+    public HashMap<String, String> getKiller() {
+        return killer;
     }
 
     public TreeMap<String, Long> getDieTimestamp() {
@@ -94,7 +101,17 @@ public class FightObject {
         if (die) {
             getDieTimestamp().put(p.getUniqueId().toString(),System.currentTimeMillis());
         } else {
-            getLeaveTimestamp().put(p.getUniqueId().toString(),System.currentTimeMillis());
+            if (participants.size() <= 2) {
+                for (int i = 0; i < participants.size(); i++) {
+                    UUID uuids = participants.get(i);
+                    getLeaveTimestamp().put(uuids.toString(),System.currentTimeMillis()+i);
+                }
+                participants.clear();
+                C.fightManager.disbandFight(this);
+                return;
+            } else {
+                getLeaveTimestamp().put(p.getUniqueId().toString(),System.currentTimeMillis());
+            }
         }
 
         participants.remove(p.getUniqueId());

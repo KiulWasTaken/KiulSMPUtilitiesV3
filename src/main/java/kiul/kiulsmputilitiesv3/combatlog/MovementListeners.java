@@ -9,6 +9,7 @@ public class MovementListeners implements Listener {
 
     @EventHandler
     public void checkForMovement (PlayerMoveEvent e) {
+        if (!C.combatLogEnabled) {return;}
         if (e.getTo().distance(e.getFrom()) > 0.01) {
             if (C.logoutTimer.contains(e.getPlayer())) {
                 C.logoutTimer.remove(e.getPlayer());

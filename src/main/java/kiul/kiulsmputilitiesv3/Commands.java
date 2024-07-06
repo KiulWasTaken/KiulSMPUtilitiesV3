@@ -5,6 +5,7 @@ import kiul.kiulsmputilitiesv3.combattag.RecapInventory;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.crates.CrateTypeEnum;
+import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.ChatColor;
@@ -88,7 +89,13 @@ public class Commands implements TabExecutor {
                 }
                 break;
             case "accessory":
+                if (!C.accessoriesEnabled) {break;}
                 AccessoryMethods.equipAccessory(p);
+                break;
+            case "kmenu":
+                if (p.hasPermission("kiulsmp.debug")) {
+                    FeatureInventory.open(p,false);
+                }
                 break;
             case "toggle-sounds":
                 if (args.length == 0) {

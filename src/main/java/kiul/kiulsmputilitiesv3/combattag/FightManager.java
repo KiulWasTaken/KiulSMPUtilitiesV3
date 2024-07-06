@@ -33,6 +33,7 @@ public class FightManager {
         PersistentData.get().createSection("recaps."+fightUUID+".leavetime",fightObject.getLeaveTimestamp());
         PersistentData.get().createSection("recaps."+fightUUID+".dietime",fightObject.getDieTimestamp());
         PersistentData.get().createSection("recaps."+fightUUID+".hits",fightObject.getHits());
+        PersistentData.get().createSection("recaps."+fightUUID+".killer",fightObject.getKiller());
         PersistentData.save();
         fightObjects.remove(fightObject);
 

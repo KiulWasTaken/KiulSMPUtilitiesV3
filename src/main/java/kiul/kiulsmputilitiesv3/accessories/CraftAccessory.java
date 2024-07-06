@@ -30,6 +30,7 @@ public class CraftAccessory implements Listener {
 
     @EventHandler
     public void craftEvent (PrepareItemCraftEvent e) {
+        if (!C.accessoriesEnabled) {return;}
         List<ItemStack> items = Arrays.stream(e.getInventory().getMatrix()).toList();
         AccessoryItemEnum accessoryItemEnum = null;
         for (ItemStack item : items) {

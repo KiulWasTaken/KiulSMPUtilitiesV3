@@ -23,19 +23,22 @@ public class FightMethods {
                 boolean nearby = false;
                 if (fight != null && fight.isPartaking(p.getUniqueId())) {
                     for (int i = 0; i < fight.getParticipants().size(); i++) {
-                        if (Bukkit.getPlayer(fight.getParticipants().get(i)) != null) {
+                        if (Bukkit.getPlayer(fight.getParticipants().get(i)) != null && Bukkit.getPlayer(fight.getParticipants().get(i)) != p) {
                             if (p.getLocation().distance(Bukkit.getPlayer(fight.getParticipants().get(i)).getLocation()) < 500) {
+                                nearby = true;
+                            }
+                            if (fight.getParticipants().size() < 2) {
                                 nearby = true;
                             }
                         }
                     }
                     if (!nearby) {
-                        fight.removeParticipant(p,false);
                         HashMap<Team, List<Player>> team = C.sortTeams(fight.getParticipants());
                         int numEnemies = fight.getParticipants().size() - team.get(C.getPlayerTeam(p)).size();
                         if (numEnemies > team.get(C.getPlayerTeam(p)).size()) {
                             StatDB.writePlayer(p.getUniqueId(), "stat_run", (int) StatDB.readPlayer(p.getUniqueId(), "stat_run") + 1);
                         }
+                        fight.removeParticipant(p,false);
                         cancel();
                         return;
                     }

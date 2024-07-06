@@ -151,7 +151,7 @@ public class AccessoryMethods {
 
             @Override
             public void run() {
-                if (p.isOnline() && AccessoryData.get().get(p.getUniqueId()+".accessory.identifier") != null) {
+                if (p.isOnline() && AccessoryData.get().get(p.getUniqueId()+".accessory.identifier") != null && C.accessoriesEnabled) {
                     for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                         Team onlinePlayerTeam = C.getPlayerTeam(onlinePlayer);
                         Team pTeam = C.getPlayerTeam(p);
