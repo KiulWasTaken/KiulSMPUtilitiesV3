@@ -163,13 +163,13 @@ public class AccessoryMethods {
                             if (pTeam != null) {
                                 if (onlinePlayerTeam != null) {
                                     if (C.getPlayerTeam(onlinePlayer) == C.getPlayerTeam(p)) {
-                                        if (AccessoryData.get().getBoolean(onlinePlayer.getUniqueId() + ".sounds.teammates")) {
+                                        if (!AccessoryData.get().getBoolean(onlinePlayer.getUniqueId() + ".sounds.teammates")) {
                                             return;
                                         }
                                     }
                                 }
                                 if (C.getPlayerTeam(p) != C.getPlayerTeam(onlinePlayer)) {
-                                    if (AccessoryData.get().getBoolean(onlinePlayer.getUniqueId()+".sounds.enemies")) {
+                                    if (!AccessoryData.get().getBoolean(onlinePlayer.getUniqueId()+".sounds.enemies")) {
                                         return;
                                     }
                                 }

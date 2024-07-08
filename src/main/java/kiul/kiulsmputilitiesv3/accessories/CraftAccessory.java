@@ -33,19 +33,23 @@ public class CraftAccessory implements Listener {
         if (!C.accessoriesEnabled) {return;}
         List<ItemStack> items = Arrays.stream(e.getInventory().getMatrix()).toList();
         AccessoryItemEnum accessoryItemEnum = null;
+
         for (ItemStack item : items) {
+
             if (item != null) {
-                for (AccessoryItemEnum accessoryItems : AccessoryItemEnum.values()) {
-                    if (accessoryItems.getLocalName().contains("base")) {
-                        if (item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING).equalsIgnoreCase(accessoryItems.getLocalName())) {
-                            accessoryItemEnum = accessoryItems;
+                if (item.getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) {
+                    for (AccessoryItemEnum accessoryItems : AccessoryItemEnum.values()) {
+                        if (accessoryItems.getLocalName().contains("base")) {
+                            if (item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin, "local"), PersistentDataType.STRING).equalsIgnoreCase(accessoryItems.getLocalName())) {
+                                accessoryItemEnum = accessoryItems;
+                            }
                         }
                     }
-                }
-                for (IngredientItemEnum ingredientItems : IngredientItemEnum.values()) {
-                    if (item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING).equalsIgnoreCase(ingredientItems.getLocalName()) && accessoryItemEnum != null) {
-                        ItemStack result = matchItem(accessoryItemEnum, ingredientItems);
-                        e.getInventory().setResult(result);
+                    for (IngredientItemEnum ingredientItems : IngredientItemEnum.values()) {
+                        if (item.getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin, "local"), PersistentDataType.STRING).equalsIgnoreCase(ingredientItems.getLocalName()) && accessoryItemEnum != null) {
+                            ItemStack result = matchItem(accessoryItemEnum, ingredientItems);
+                            e.getInventory().setResult(result);
+                        }
                     }
                 }
             }

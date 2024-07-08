@@ -63,13 +63,10 @@ public class FightLogicListeners implements Listener {
             Player p2 = (Player) e.getEntity();
             if (p1 == null) {return;}
             if ((C.getPlayerTeam(p1) != C.getPlayerTeam(p2)) || (C.getPlayerTeam(p1) == null && C.getPlayerTeam(p2) == null)) {
-                Bukkit.broadcastMessage("they are not on the same team");
                 boolean p1inFight = C.fightManager.playerIsInFight(p1);
                 boolean p2inFight = C.fightManager.playerIsInFight(p2);
                 FightObject p1FightObject = C.fightManager.findFightForMember(p1);
                 FightObject p2FightObject = C.fightManager.findFightForMember(p2);
-                Bukkit.broadcastMessage("p1Fight " + p1inFight + C.fightManager.findFightForMember(p1));
-                Bukkit.broadcastMessage("p2Fight " + p2inFight + C.fightManager.findFightForMember(p2));
                 if (p1FightObject != null && p1FightObject.getParticipants().contains(p2.getUniqueId())) {
                     p1FightObject.getDamageDealt().put(p1.getUniqueId().toString(),p1FightObject.getDamageDealt().get(p1.getUniqueId().toString())+e.getFinalDamage());
                     p1FightObject.getDamageTaken().put(p2.getUniqueId().toString(),p1FightObject.getDamageTaken().get(p2.getUniqueId().toString())+e.getFinalDamage());
@@ -216,14 +213,47 @@ public class FightLogicListeners implements Listener {
     @EventHandler
     public void damagedTridentCoolDown (EntityDamageByEntityEvent e) {
         if (!C.combatTagEnabled) {return;}
-        if (e.getDamager() instanceof Player && e.getEntity() instanceof Player damaged) {
-            if (C.fightManager.playerIsInFight(damaged)) {
-                int cooldown = damaged.getCooldown(Material.TRIDENT)+100;
-                if (cooldown > 300) {
-                    cooldown = 300;
+        if (e.getEntity() instanceof Player) {
+            Player p1 = null;
+            if (e.getDamager() instanceof ExplosiveMinecart cart) {
+                if (cart.getLastDamageCause() instanceof EntityDamageByEntityEvent lastDamageCause) {
+                    if ((lastDamageCause.getDamager().getType() == EntityType.ARROW || lastDamageCause.getDamager().getType() == EntityType.SPECTRAL_ARROW || lastDamageCause.getDamager().getType() == EntityType.PLAYER)) {
+                        Player damager = null;
+                        if ((lastDamageCause.getDamager() instanceof Projectile arrow)) {
+                            damager = (Player) arrow.getShooter();
+                        }
+                        if (lastDamageCause.getDamager() instanceof Player) {
+                            damager = (Player) lastDamageCause.getDamager();
+                        }
+                        p1 = damager;
+                    }
                 }
-                damaged.setCooldown(Material.TRIDENT,cooldown);
             }
+            if (e.getDamager() instanceof AbstractArrow arrow) {
+                if (arrow.getShooter() instanceof Player) {
+                    p1 = (Player) arrow.getShooter();
+                }
+            }
+            if (e.getDamager() instanceof Player) {
+                p1 = (Player) e.getDamager();
+            }
+
+            Player p2 = (Player) e.getEntity();
+            if (C.fightManager.playerIsInFight(p2)) {
+                int p2cooldown = p2.getCooldown(Material.TRIDENT)+100;
+                if (p2cooldown > 300) {
+                    p2cooldown = 300;
+                }
+                p2.setCooldown(Material.TRIDENT,p2cooldown);
+
+
+                int p1cooldown = p1.getCooldown(Material.TRIDENT)+100;
+                if (p1cooldown > 300) {
+                    p1cooldown = 300;
+                }
+                p1.setCooldown(Material.TRIDENT,p1cooldown);
+            }
+
         }
     }
     ArrayList<Player> glidingPlayers = new ArrayList<>();

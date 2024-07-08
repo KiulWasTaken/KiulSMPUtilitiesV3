@@ -38,6 +38,7 @@ public class TomeAccessory implements Listener {
 
     @EventHandler
     public void baseEffect (PlayerExpChangeEvent e) {
+        if (!C.accessoriesEnabled) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).contains("tome")) {
             if (e.getAmount() > 0) {
                 e.setAmount((int) (e.getAmount() * 1.25));
@@ -46,13 +47,8 @@ public class TomeAccessory implements Listener {
     }
 
     @EventHandler
-    public void rubyPreventJank (ExperienceOrbMergeEvent e) {
-        if (e.getEntity().hasMetadata("no")) {
-            e.setCancelled(true);
-        }
-    }
-    @EventHandler
     public void rubyPreventSteal (PlayerPickupExperienceEvent e) {
+        if (!C.accessoriesEnabled) {return;}
         if (e.getExperienceOrb().hasMetadata("no")) {
             if (experiencePickupCooldown.containsKey(e.getPlayer())) {
                 if (experiencePickupCooldown.get(e.getPlayer()) <= System.currentTimeMillis()) {
@@ -66,6 +62,7 @@ public class TomeAccessory implements Listener {
 
     @EventHandler (priority = EventPriority.MONITOR)
     public void rubyEffect (EntityResurrectEvent e) {
+        if (!C.accessoriesEnabled) {return;}
         if (!e.isCancelled() && e.getEntity().getLastDamageCause() instanceof EntityDamageByEntityEvent) {
             Entity entity = ((EntityDamageByEntityEvent) e.getEntity().getLastDamageCause()).getDamager();
             if (entity instanceof Player damager) {
@@ -87,6 +84,7 @@ public class TomeAccessory implements Listener {
 
     @EventHandler
     public void peridotEffectCooldown (PlayerItemDamageEvent e) {
+        if (!C.accessoriesEnabled) {return;}
         Player p = e.getPlayer();
         if (AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_peridot")) {
             if (itemRepairCooldown.get(p) == null) {
@@ -101,6 +99,7 @@ public class TomeAccessory implements Listener {
     @EventHandler
     public void startPeridotEffect (PlayerJoinEvent e) {
         Player p = e.getPlayer();
+        if (!C.accessoriesEnabled) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_peridot")) {
             peridotEffect(p);
         }
@@ -114,12 +113,12 @@ public class TomeAccessory implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (!p.isOnline() || !AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_peridot")) {cancel();return;}
+                if (!p.isOnline() || !AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_peridot") || !C.accessoriesEnabled) {cancel();return;}
                 if (itemRepairCooldown.get(p) != null) {
                     for (int i = 9; i <= 35; i++) {
                         ItemStack itemsToRepair = p.getInventory().getItem(i);
                         if (itemsToRepair != null) {
-                            if (itemRepairCooldown.get(p).get(itemsToRepair) == null) {
+                            if (itemRepairCooldown.get(p).get(itemsToRepair) == null ) {
                                 if (itemsToRepair.getItemMeta() instanceof Damageable itemMeta && itemMeta.getDamage() > 0) {
                                         if (Math.random() < 0.3 && p.getExp() > 0) {
                                             itemMeta.setDamage(itemMeta.getDamage() - 1);
@@ -150,6 +149,7 @@ public class TomeAccessory implements Listener {
     @EventHandler
     public void tanzaniteEffect (PlayerPickupExperienceEvent e) {
         Player p = e.getPlayer();
+        if (!C.accessoriesEnabled) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_tanzanite")) {
             Team team = C.getPlayerTeam(p);
             for (String teammateNames : team.getEntries()) {
@@ -182,16 +182,14 @@ public class TomeAccessory implements Listener {
        add(PotionEffectType.CONDUIT_POWER);
        add(PotionEffectType.SATURATION);
        add(PotionEffectType.WATER_BREATHING);
-       add(PotionEffectType.HEALTH_BOOST);
-       add(PotionEffectType.INSTANT_DAMAGE);
     }};
 
     @EventHandler
     public void opalEffect (PlayerPickupExperienceEvent e) {
+        if (!C.accessoriesEnabled) {return;}
         Player p = e.getPlayer();
         if (AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_opal")) {
             int effect = (int)(Math.random()*(positivePotionEffects.size()+1));
-            e.getPlayer().sendMessage(Math.random()+" < 0.2");
             if (Math.random() < 0.2) {
                 if (!p.hasPotionEffect(positivePotionEffects.get(effect))) {
                     p.addPotionEffect(new PotionEffect(positivePotionEffects.get(effect), (int) ((Math.random() * 30) * 20), (int) (Math.random() * 2), false, true));

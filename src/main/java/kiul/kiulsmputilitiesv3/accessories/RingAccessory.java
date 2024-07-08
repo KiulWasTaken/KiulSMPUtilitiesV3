@@ -36,7 +36,6 @@ public class RingAccessory implements Listener {
         if (!C.accessoriesEnabled) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).contains("ring") && !AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).contains("ruby")) {
             if (e.getRightClicked() instanceof Villager v) {
-                e.getPlayer().sendMessage(v.getVillagerExperience() + "");
                 if (e.getPlayer().hasPotionEffect(PotionEffectType.HERO_OF_THE_VILLAGE)) {
                     return;
                 }

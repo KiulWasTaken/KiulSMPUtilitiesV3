@@ -231,6 +231,10 @@ public enum AccessoryItemEnum {
             lore.add(posNeg + C.twoPointDecimal.format(value) + valueName);
         }
             lore.add("");
+            lore.add(ChatColor.GRAY+"Whilst equipped, you will produce a tracking");
+            lore.add(ChatColor.GRAY+"signal that can be heard from up to " + ChatColor.YELLOW + getRange());
+            lore.add(ChatColor.GRAY+"blocks away.");
+            lore.add("");
             lore.add(ChatColor.DARK_GRAY + itemUUID);
         itemMeta.setLore(lore);
         itemStack.setItemMeta(itemMeta);

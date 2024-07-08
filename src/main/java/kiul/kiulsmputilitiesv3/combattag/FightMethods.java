@@ -3,6 +3,7 @@ package kiul.kiulsmputilitiesv3.combattag;
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.stats.StatDB;
 import org.bukkit.Bukkit;
+import org.bukkit.World;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
@@ -24,8 +25,16 @@ public class FightMethods {
                 if (fight != null && fight.isPartaking(p.getUniqueId())) {
                     for (int i = 0; i < fight.getParticipants().size(); i++) {
                         if (Bukkit.getPlayer(fight.getParticipants().get(i)) != null && Bukkit.getPlayer(fight.getParticipants().get(i)) != p) {
-                            if (p.getLocation().distance(Bukkit.getPlayer(fight.getParticipants().get(i)).getLocation()) < 500) {
-                                nearby = true;
+                            if (p.getWorld() != Bukkit.getPlayer(fight.getParticipants().get(i)).getWorld()) {
+                                if (Bukkit.getPlayer(fight.getParticipants().get(i)).getWorld().getEnvironment().equals(World.Environment.NETHER) || Bukkit.getPlayer(fight.getParticipants().get(i)).getWorld().getEnvironment().equals(World.Environment.THE_END)) {
+
+                                } else {
+                                    nearby = false;
+                                }
+                            } else {
+                                if (p.getLocation().distance(Bukkit.getPlayer(fight.getParticipants().get(i)).getLocation()) < 500) {
+                                    nearby = true;
+                                }
                             }
                             if (fight.getParticipants().size() < 2) {
                                 nearby = true;

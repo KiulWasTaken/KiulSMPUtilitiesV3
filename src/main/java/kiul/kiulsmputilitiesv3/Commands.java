@@ -6,6 +6,9 @@ import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.crates.CrateTypeEnum;
 import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.ChatColor;
@@ -155,7 +158,8 @@ public class Commands implements TabExecutor {
                 }
                 break;
             case "recaps":
-                RecapInventory.open(p,0);
+                p.sendMessage(Component.text("recaps are currently disabled").color(NamedTextColor.RED).decorate(TextDecoration.ITALIC));
+//                RecapInventory.open(p,0);
                 break;
             case "translate":
                 p.sendMessage(C.t(args[0]));
