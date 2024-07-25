@@ -48,6 +48,10 @@ public class ItemCraft implements Listener {
         add(Material.DIAMOND_AXE);
         add(Material.DIAMOND_SHOVEL);
         add(Material.DIAMOND_SWORD);
+
+        add(Material.SHIELD);
+        add(Material.MACE);
+        add(Material.TRIDENT);
     }};
 
     @EventHandler

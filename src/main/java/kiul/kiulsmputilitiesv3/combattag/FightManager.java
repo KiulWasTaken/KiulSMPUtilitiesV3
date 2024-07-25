@@ -44,6 +44,9 @@ public class FightManager {
             if (fightObject.isPartaking(p.getUniqueId())) {
                 return fightObject;
             }
+            if (fightObject.getOfflineParticipants().contains(p.getUniqueId())) {
+                return fightObject;
+            }
         }
         return null;  // Player is not in any party
     }

@@ -28,6 +28,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 public final class KiulSMPUtilitiesV3 extends JavaPlugin {
 
@@ -45,12 +47,12 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CrateListeners(),this);
         getServer().getPluginManager().registerEvents(new RingAccessory(),this);
         getServer().getPluginManager().registerEvents(new TomeAccessory(),this);
-        getServer().getPluginManager().registerEvents(new PotionListeners(),this);
         getServer().getPluginManager().registerEvents(new ItemCraft(),this);
         getServer().getPluginManager().registerEvents(new ItemPickupAfterDeath(),this);
         getServer().getPluginManager().registerEvents(new StatDBListeners(),this);
         getServer().getPluginManager().registerEvents(new RecapInventory(),this);
         getServer().getPluginManager().registerEvents(new FeatureInventory(),this);
+        getServer().getPluginManager().registerEvents(new EggAccessory(),this);
 
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
@@ -71,6 +73,11 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
             }
         }
 
+        // Logger
+        Logger mongoLogger = Logger.getLogger( "org.mongodb.driver" );
+        mongoLogger.setLevel(Level.WARNING);
+        Logger mongoConnectionLogger = Logger.getLogger( "org.mongodb.driver.connection" );
+        mongoConnectionLogger.setLevel(Level.SEVERE);
 
         // Dependencies
 
@@ -111,11 +118,6 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         if (C.cratesEnabled) {
             CrateMethods.startRandomCrates(getServer().getWorld("world"));
         }
-        new BrewingRecipe(Material.GOLD_BLOCK, new CustomHastePotion());
-        new BrewingRecipe(Material.NETHERITE_SCRAP, new CustomPurityPotion());
-        new BrewingRecipe(Material.GUNPOWDER, new CustomPotionUpgrade());
-        new BrewingRecipe(Material.GLOWSTONE_DUST, new CustomPotionUpgrade());
-        new BrewingRecipe(Material.REDSTONE, new CustomPotionUpgrade());
 
         // Database
         StatDB.connect();
@@ -131,5 +133,6 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         ConfigData.get().set("accessories",C.accessoriesEnabled);
         ConfigData.get().set("crates",C.cratesEnabled);
         ConfigData.save();
+        AccessoryData.save();
     }
 }

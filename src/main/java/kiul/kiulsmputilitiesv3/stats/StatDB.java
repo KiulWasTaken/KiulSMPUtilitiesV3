@@ -1,8 +1,10 @@
 package kiul.kiulsmputilitiesv3.stats;
 
 import com.mongodb.*;
+import kiul.kiulsmputilitiesv3.C;
 import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
 
@@ -97,56 +99,66 @@ public class StatDB {
         return true;
     }
     public static void setupPlayer (UUID uuid) {
-        DBObject obj = new BasicDBObject("uuid", uuid.toString());
-        obj.put("stat_kills",0);
-        obj.put("stat_kills_odds",0);
-        obj.put("stat_kills_quick",0);
-        obj.put("stat_kills_drain",0);
-        obj.put("stat_trades",0);
-        obj.put("stat_run",0);
-        obj.put("stat_carts",0);
-        obj.put("stat_restocks",0);
-        stats.insert(obj,WriteConcern.SAFE);
-        updatePlayerPlacement("stat_kills");
-        updatePlayerPlacement("stat_kills_odds");
-        updatePlayerPlacement("stat_kills_quick");
-        updatePlayerPlacement("stat_kills_drain");
-        updatePlayerPlacement("stat_trades");
-        updatePlayerPlacement("stat_run");
-        updatePlayerPlacement("stat_carts");
-        updatePlayerPlacement("stat_restocks");
+                DBObject obj = new BasicDBObject("uuid", uuid.toString());
+                obj.put("stat_kills",0);
+                obj.put("stat_kills_odds",0);
+                obj.put("stat_kills_quick",0);
+                obj.put("stat_kills_drain",0);
+                obj.put("stat_trades",0);
+                obj.put("stat_run",0);
+                obj.put("stat_carts",0);
+                obj.put("stat_restocks",0);
+                stats.insert(obj,WriteConcern.SAFE);
+                updatePlayerPlacement("stat_kills");
+                updatePlayerPlacement("stat_kills_odds");
+                updatePlayerPlacement("stat_kills_quick");
+                updatePlayerPlacement("stat_kills_drain");
+                updatePlayerPlacement("stat_trades");
+                updatePlayerPlacement("stat_run");
+                updatePlayerPlacement("stat_carts");
+                updatePlayerPlacement("stat_restocks");
     }
     public static void updatePlayerPlacement (String key) {
-
-        HashMap<String, Integer> map = new HashMap<>();
-        LinkedHashMap<String, Integer> sortedMap = new LinkedHashMap<>();
-        ArrayList<Integer> list = new ArrayList<>();
-        for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
-            if (!key.contains("id")) {
-                key.replaceAll(" ","");
-                if (readPlayer(offlinePlayer.getUniqueId(), key) == null) {
-                    writePlayer(offlinePlayer.getUniqueId(),key,0);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                HashMap<String, Integer> map = new HashMap<>();
+                LinkedHashMap<String, Integer> sortedMap = new LinkedHashMap<>();
+                ArrayList<Integer> list = new ArrayList<>();
+                for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+                    if (!key.contains("id")) {
+                        key.replaceAll(" ", "");
+                        if (readPlayer(offlinePlayer.getUniqueId(), key) == null) {
+                            writePlayer(offlinePlayer.getUniqueId(), key, 0);
+                        }
+                        map.put(offlinePlayer.getUniqueId().toString(), (int) readPlayer(offlinePlayer.getUniqueId(), key));
+                    }
                 }
-                map.put(offlinePlayer.getUniqueId().toString(), (int) readPlayer(offlinePlayer.getUniqueId(), key));
-            }
-        }
 
-        for (Map.Entry<String, Integer> entry : map.entrySet()) {
-            list.add(entry.getValue());
-        }
-        Collections.sort(list);
-        for (Integer str : list) {
-            for (Map.Entry<String, Integer> entry : map.entrySet()) {
-                if (entry.getValue().equals(str)) {
-                    sortedMap.put(entry.getKey(), str);
+                for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                    list.add(entry.getValue());
                 }
+                Collections.sort(list);
+                Collections.reverse(list);
+                for (Integer str : list) {
+                    for (Map.Entry<String, Integer> entry : map.entrySet()) {
+                        if (entry.getValue().equals(str)) {
+                            sortedMap.put(entry.getKey(), str);
+                        }
+                    }
+                }
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        ArrayList<String> uuids = new ArrayList<>(sortedMap.keySet().stream().toList());
+                        for (int i = 0; i < sortedMap.size(); i++) {
+                            writePlayer(UUID.fromString(uuids.get(i)), key + "_placement", i + 1);
+                        }
+                    }
+                }.runTask(C.plugin);
+
             }
-        }
-        System.out.println(sortedMap);
-        ArrayList<String> uuids = new ArrayList<>(sortedMap.keySet().stream().toList());
-        for (int i = 0; i < sortedMap.size(); i++) {
-            writePlayer(UUID.fromString(uuids.get(i)),key+"_placement",i+1);
-        }
+        }.runTaskAsynchronously(C.plugin);
     }
     public static Object readPlayer(UUID uuid, String objectPath){
         //Lets build a minimal object to get all objects in the
@@ -201,26 +213,33 @@ public class StatDB {
         return found.keySet();
     }
     public static void writePlayer (UUID uuid, String objectPath, Object objectToStore) {
-        // Query for the document with the specified UUID
-        DBObject query = new BasicDBObject("uuid", uuid.toString());
-        DBObject found = stats.findOne(query);
+        new BukkitRunnable() {
+            @Override
+            public void run() {
 
-        // Create a new document with the UUID and specified object
-        DBObject document = new BasicDBObject("uuid", uuid.toString());
-        document.put(objectPath, objectToStore);
 
-        // If an existing document is found, update it; otherwise, insert a new document
+                // Query for the document with the specified UUID
+                DBObject query = new BasicDBObject("uuid", uuid.toString());
+                DBObject found = stats.findOne(query);
 
-        if (found != null) {
-            // Update the existing document with the new values
-            DBObject update = new BasicDBObject("$set", document);
-            stats.update(found, update);
-        } else {
-            // Insert a new document with the specified UUID and object
-            stats.insert(document);
-        }
-        if (objectPath.contains("stat") && !objectPath.contains("placement")) {
-            updatePlayerPlacement(objectPath);
-        }
+                // Create a new document with the UUID and specified object
+                DBObject document = new BasicDBObject("uuid", uuid.toString());
+                document.put(objectPath, objectToStore);
+
+                // If an existing document is found, update it; otherwise, insert a new document
+
+                if (found != null) {
+                    // Update the existing document with the new values
+                    DBObject update = new BasicDBObject("$set", document);
+                    stats.update(found, update);
+                } else {
+                    // Insert a new document with the specified UUID and object
+                    stats.insert(document);
+                }
+                if (objectPath.contains("stat") && !objectPath.contains("placement")) {
+                    updatePlayerPlacement(objectPath);
+                }
+            }
+        }.runTaskAsynchronously(C.plugin);
     }
 }

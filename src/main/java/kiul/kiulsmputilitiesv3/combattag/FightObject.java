@@ -11,6 +11,7 @@ import java.util.*;
 public class FightObject {
 
     private ArrayList<UUID> participants;
+    private ArrayList<UUID> offlineParticipants;
     private ArrayList<String> everParticipated;
     private HashMap<String,Integer> hits;
     private HashMap<String,Double> damageDealt;
@@ -32,6 +33,7 @@ public class FightObject {
         this.dieTimestamp = new TreeMap<>();
         this.hits = new HashMap<>();
         this.killer = new HashMap<>();
+        this.offlineParticipants = new ArrayList<>();
 
         for (int i = 0; i < participants.size(); i++) {
             UUID uuids = participants.get(i);
@@ -56,6 +58,10 @@ public class FightObject {
     }
     public long getStartTime() {return startTime;}
     public long getDuration() {return System.currentTimeMillis()-startTime;}
+
+    public ArrayList<UUID> getOfflineParticipants() {
+        return offlineParticipants;
+    }
 
     public ArrayList<String> getEverParticipated() {
         return everParticipated;
@@ -97,9 +103,9 @@ public class FightObject {
         getDamageTaken().put(p.getUniqueId().toString(),0.0);
         getHits().put(p.getUniqueId().toString(),0);
     }
-    public void removeParticipant(Player p, boolean die) {
+    public void removeParticipant(UUID uuid, boolean die) {
         if (die) {
-            getDieTimestamp().put(p.getUniqueId().toString(),System.currentTimeMillis());
+            getDieTimestamp().put(uuid.toString(),System.currentTimeMillis());
         } else {
             if (participants.size() <= 2) {
                 for (int i = 0; i < participants.size(); i++) {
@@ -107,14 +113,15 @@ public class FightObject {
                     getLeaveTimestamp().put(uuids.toString(),System.currentTimeMillis()+i);
                 }
                 participants.clear();
+                offlineParticipants.clear();
                 C.fightManager.disbandFight(this);
                 return;
             } else {
-                getLeaveTimestamp().put(p.getUniqueId().toString(),System.currentTimeMillis());
+                getLeaveTimestamp().put(uuid.toString(), System.currentTimeMillis());
             }
         }
 
-        participants.remove(p.getUniqueId());
+        participants.remove(uuid);
         if (participants.size() <= 1 || getParticipatingTeams().size() < 2) {
             C.fightManager.disbandFight(this);
         }

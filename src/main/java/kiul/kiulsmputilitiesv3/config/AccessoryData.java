@@ -1,8 +1,10 @@
 package kiul.kiulsmputilitiesv3.config;
 
+import kiul.kiulsmputilitiesv3.C;
 import org.bukkit.Bukkit;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -32,11 +34,16 @@ public class AccessoryData {
 
 
         public static void save(){
-            try {
-                userDataFile.save(file);
-            } catch (IOException e) {
-                System.out.println("Failed to save, accessory data file.");
-            }
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    try {
+                        userDataFile.save(file);
+                    } catch (IOException e) {
+                        System.out.println("Failed to save persistentData File.");
+                    }
+                }
+            }.runTaskAsynchronously(C.plugin);
         }
 
         public static void reload(){

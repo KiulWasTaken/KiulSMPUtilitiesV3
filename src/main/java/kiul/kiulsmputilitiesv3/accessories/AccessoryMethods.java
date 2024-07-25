@@ -162,7 +162,7 @@ public class AccessoryMethods {
                         if (!isMe && AccessoryData.get().getBoolean(onlinePlayer.getUniqueId()+".sounds.all")) {
                             if (pTeam != null) {
                                 if (onlinePlayerTeam != null) {
-                                    if (C.getPlayerTeam(onlinePlayer) == C.getPlayerTeam(p)) {
+                                    if (C.getPlayerTeam(onlinePlayer).getName() == C.getPlayerTeam(p).getName()) {
                                         if (!AccessoryData.get().getBoolean(onlinePlayer.getUniqueId() + ".sounds.teammates")) {
                                             return;
                                         }

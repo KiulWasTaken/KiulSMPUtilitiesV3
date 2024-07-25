@@ -586,34 +586,38 @@ public class CrateMethods {
             @Override
             public void run() {
                 if (!C.restarting && C.cratesEnabled) {
-                    if (Math.random() < 0.016 && Bukkit.getOnlinePlayers().size() > 10) {
-                        double[] chance = {0.3, 0.6, 0.85, 0.9, 1};
-                        int event = Arrays.binarySearch(chance, Math.random());
-                        if (event < 0) event = -event - 1;
-                        switch (event) {
-                            case 0:
-                                createCrate(world, "gold",false);
 
-                                break;
-                            case 1:
-                                createCrate(world, "oxidized",false);
-                                // event 1
-                                break;
-                            case 2:
-                                createCrate(world, "end",false);
-                                // event 2
-                                break;
-                            case 3:
-                                createCrate(world, "nether",false);
-                                // event 3
-                                break;
-                            case 4:
-                                // blackbox
-                                createCrate(world, "nether",false);
-                                // event 4
-                                break;
+                    if (Bukkit.getOnlinePlayers().size() >= 10) {
+                        double magicNumber = 0.001 * Bukkit.getOnlinePlayers().size() - 10;
+                        if (Math.random() < 0.016+magicNumber) {
+                            double[] chance = {0.3, 0.6, 0.85, 0.9, 1};
+                            int event = Arrays.binarySearch(chance, Math.random());
+                            if (event < 0) event = -event - 1;
+                            switch (event) {
+                                case 0:
+                                    createCrate(world, "gold", false);
+
+                                    break;
+                                case 1:
+                                    createCrate(world, "oxidized", false);
+                                    // event 1
+                                    break;
+                                case 2:
+                                    createCrate(world, "end", false);
+                                    // event 2
+                                    break;
+                                case 3:
+                                    createCrate(world, "nether", false);
+                                    // event 3
+                                    break;
+                                case 4:
+                                    // blackbox
+                                    createCrate(world, "nether", false);
+                                    // event 4
+                                    break;
+                            }
+                            cancel();
                         }
-                        cancel();
                     }
                 } else {
                     cancel();

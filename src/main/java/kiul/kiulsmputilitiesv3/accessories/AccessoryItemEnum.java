@@ -162,7 +162,14 @@ public enum AccessoryItemEnum {
             ,C.t("&#4B24CEa &#4E26D6r&#5028DBa&#5129DFn&#532AE3d&#542CE7o&#562DEBm &#532AE3p&#5129DFo&#5028DBs&#4E26D6i&#4C25D2t&#4B24CEi&#4923CAv&#4821C6e &#441FBEp&#431DBAo&#411CB6t&#3D19ABi&#3E19ADo&#3C18A9n &#3915A1e&#38149Df&#361399f&#361297e&#37149Bc&#3915A0t")
             ,C.t("&#3C18A8t&#3E19ACh&#3F1AB0a&#411CB4t &#441EBCw&#451FC0i&#4721C5l&#4922C9l &#4C25D1n&#4D26D5o&#4F27D9t &#522AE1o&#542BE6v&#552DEAe&#552CE8r&#532BE4r&#522AE0i&#5028DCd&#4F27D8e &#4B24D0e&#4A23CBx&#4822C7i&#4720C3s&#451FBFt&#431EBBi&#421CB7n&#3D19ABg")
             ,C.t("&#3D19ABb&#3B17A6u&#3A16A2f&#38159Ef&#37139As&#351296.")},
-            "tome_opal",300,1.0,0.0,0.0, null,null);
+            "tome_opal",300,1.0,0.0,0.0, null,null),
+    egg(C.t("&7[&d✸&7] "+"Dragon Egg"),null,
+            new String[]{ChatColor.GRAY+"while above 5❤, damage taken that would have",ChatColor.GRAY+"killed you instead leaves you on 1❤."
+            ,C.t("&#D173EAL&#D276EBE&#D47AECF&#D57DECT&#D680ED-&#D783EEC&#D987EFL&#DA8AEFI&#DB8DF0C&#DD91F1K &#E19BF3t&#E29EF4o &#E4A4F5a&#E6A8F6c&#E7ABF7c&#E8AEF8e&#EAB2F8s&#EBB5F9s &#EDBBFBp&#EFBFFBo&#F0C2FCr&#EFBFFBt&#EDBBFBa&#ECB8FAb&#EBB5F9l&#EAB2F8e &#E7ABF7s&#E6A8F6t&#E4A4F5o&#E3A1F5r&#E29EF4a&#E19BF3g&#DF97F2e &#DD91F1f&#DB8DF0r&#DA8AEFo&#D987EFm ")
+            ,C.t("&#D680EDy&#D57DECo&#D47AECu&#D276EBr &#D276EBh&#D47AECo&#D57DECt&#D681EDb&#D884EEa&#D988EFr&#DA8BEF. &#DD92F1S&#DE95F2t&#E099F3o&#E19CF3r&#E3A0F4a&#E4A3F5g&#E5A7F6e &#E8ADF7i&#E9B1F8s &#ECB8FAp&#EDBBFAe&#EFBFFBr&#F0C2FCs&#EFBFFBi&#EDBBFBs&#ECB8FAt&#EBB5F9e&#EAB2F8n&#E8AEF8t &#E6A8F6a&#E4A4F5f&#E3A1F5t&#E29EF4e&#E19BF3r &#DE94F2d&#DD91F1r&#DB8DF0o&#DA8AEFp&#D987EF/&#D783EEd&#D680EDe&#D57DECa&#D47AECt&#D276EBh&#D173EA.")
+            ,""
+            ,C.t("&cDropping this item will cause it to announce coordinates in global chat.")},
+            "egg",300,1.0,0.0,0.0, null,null);
     private String displayName;
     private URL URL;
     private String[] lore;
@@ -215,7 +222,11 @@ public enum AccessoryItemEnum {
         List<String> lore = new ArrayList<>(Arrays.stream(getLore()).toList());
         Random random = new Random();
         String itemUUID = UUID.randomUUID().toString().replace("-","").substring(0,8);
+
         ItemStack itemStack = C.createItemStack(getDisplayName(),getMaterial(),1,getLore(),null,null,getLocalName(),getURL());
+        if (getURL() == null) {
+            itemStack = C.createItemStack(getDisplayName(),Material.DRAGON_EGG,1,getLore(),null,null,getLocalName(),null);
+        }
         NamespacedKey key = new NamespacedKey(C.plugin, itemUUID);
         ItemMeta itemMeta = itemStack.getItemMeta();
 

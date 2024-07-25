@@ -3,7 +3,6 @@ package kiul.kiulsmputilitiesv3;
 import com.google.j2objc.annotations.Property;
 import kiul.kiulsmputilitiesv3.combattag.FightManager;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
-import kiul.kiulsmputilitiesv3.potions.BrewingRecipe;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -66,7 +65,6 @@ public class C {
 
     /* static lists */
 
-    public static ArrayList<BrewingRecipe> brewingRecipes = new ArrayList<>();
 
     public static HashMap<BrewerInventory, BukkitTask> brewingTasks = new HashMap<>();
     public static ArrayList<Player> loggingOut = new ArrayList<>();
@@ -214,6 +212,9 @@ public class C {
     }
     public static Team getPlayerTeam (Player p ) {
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+        if (p == null) {
+            return null;
+        }
         for (Team team : sb.getTeams()) {
             if (team.hasEntry(p.getDisplayName())) {
                 return team;

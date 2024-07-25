@@ -100,6 +100,7 @@ public class LogoutListeners implements Listener {
 
     @EventHandler
     public void killNPC(EntityDamageByEntityEvent e) {
+        if (!C.combatLogEnabled) {return;}
         if (e.getEntity() instanceof Villager && !(e.getDamager() instanceof Player)) {
             if (NPCOwner.get(e.getEntity()) != null) {
                 e.setCancelled(true);
@@ -122,11 +123,6 @@ public class LogoutListeners implements Listener {
 
                             try {
                                 for (ItemStack itemStack : InventoryToBase64.itemStackArrayFromBase64(PersistentData.get().getString(NPCOwner.get(e.getEntity()) + ".inventory"))) {
-                                    if (itemStack != null) {
-                                        world.dropItemNaturally(location, itemStack);
-                                    }
-                                }
-                                for (ItemStack itemStack : InventoryToBase64.itemStackArrayFromBase64(PersistentData.get().getString(NPCOwner.get(e.getEntity()) + ".armour"))) {
                                     if (itemStack != null) {
                                         world.dropItemNaturally(location, itemStack);
                                     }
@@ -166,9 +162,13 @@ public class LogoutListeners implements Listener {
 
     @EventHandler
     public void punishCombatLogger (PlayerJoinEvent e) {
+        if (!C.combatLogEnabled) {
+            PersistentData.get().set(e.getPlayer().getUniqueId() + ".flagged",false);
+            return;}
         if (PersistentData.get().getBoolean(e.getPlayer().getUniqueId() + ".flagged")) {
             e.getPlayer().getInventory().clear();
             e.getPlayer().setHealth(0);
+            PersistentData.get().set(e.getPlayer().getUniqueId() + ".flagged",false);
         }
         if (PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc") != null) {
             if (Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc"))) != null) {

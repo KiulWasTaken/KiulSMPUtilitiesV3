@@ -24,33 +24,34 @@ public class FightMethods {
                 boolean nearby = false;
                 if (fight != null && fight.isPartaking(p.getUniqueId())) {
                     for (int i = 0; i < fight.getParticipants().size(); i++) {
+                        if (Bukkit.getPlayer(fight.getParticipants().get(i)) == null) {
+                            fight.removeParticipant(fight.getParticipants().get(i),false);
+                            fight.getOfflineParticipants().add(fight.getParticipants().get(i));
+                            break;
+                        }
                         if (Bukkit.getPlayer(fight.getParticipants().get(i)) != null && Bukkit.getPlayer(fight.getParticipants().get(i)) != p) {
                             if (p.getWorld() != Bukkit.getPlayer(fight.getParticipants().get(i)).getWorld()) {
-                                if (Bukkit.getPlayer(fight.getParticipants().get(i)).getWorld().getEnvironment().equals(World.Environment.NETHER) || Bukkit.getPlayer(fight.getParticipants().get(i)).getWorld().getEnvironment().equals(World.Environment.THE_END)) {
-
-                                } else {
-                                    nearby = false;
-                                }
+                                nearby = false;
                             } else {
                                 if (p.getLocation().distance(Bukkit.getPlayer(fight.getParticipants().get(i)).getLocation()) < 500) {
                                     nearby = true;
                                 }
                             }
-                            if (fight.getParticipants().size() < 2) {
-                                nearby = true;
+                            if (!nearby) {
+                                HashMap<Team, List<Player>> team = C.sortTeams(fight.getParticipants());
+                                int numEnemies = fight.getParticipants().size() - team.get(C.getPlayerTeam(p)).size();
+                                if (numEnemies > team.get(C.getPlayerTeam(p)).size()) {
+                                    StatDB.writePlayer(p.getUniqueId(), "stat_run", (int) StatDB.readPlayer(p.getUniqueId(), "stat_run") + 1);
+                                }
+                                fight.removeParticipant(p.getUniqueId(),false);
+                                cancel();
+                                return;
                             }
                         }
+
                     }
-                    if (!nearby) {
-                        HashMap<Team, List<Player>> team = C.sortTeams(fight.getParticipants());
-                        int numEnemies = fight.getParticipants().size() - team.get(C.getPlayerTeam(p)).size();
-                        if (numEnemies > team.get(C.getPlayerTeam(p)).size()) {
-                            StatDB.writePlayer(p.getUniqueId(), "stat_run", (int) StatDB.readPlayer(p.getUniqueId(), "stat_run") + 1);
-                        }
-                        fight.removeParticipant(p,false);
-                        cancel();
-                        return;
-                    }
+
+
                 } else {
                     cancel();
                     return;

@@ -50,9 +50,6 @@ public class AccessoryListeners implements Listener {
         Player p = e.getPlayer();
         UUID uuid = p.getUniqueId();
         p.sendMessage(Component.text("§f§a§i§r§x§a§e§r§o")); // disables worldmap caves
-        if (StatDB.playerExists(uuid)) {
-            StatDB.setupPlayer(uuid);
-        }
         AccessoryData.get().options().copyDefaults(true);
         AccessoryData.get().addDefault(uuid+".accessory.identifier",null);
         AccessoryData.get().addDefault(uuid+".accessory.item",null);
@@ -147,7 +144,7 @@ public class AccessoryListeners implements Listener {
             e.getItemDrop().setInvulnerable(true);
             e.getItemDrop().setUnlimitedLifetime(true);
             e.getItemDrop().setVisualFire(false);
-            if (e.getItemDrop().getItemStack().getType().equals(Material.DRAGON_EGG)) {
+            if (e.getItemDrop().getItemStack().getType() == Material.DRAGON_EGG) {
                 e.getItemDrop().setPickupDelay(12000);
                 Bukkit.broadcastMessage("");
                 Bukkit.broadcastMessage(ChatColor.LIGHT_PURPLE + "" + ChatColor.BOLD + "EVENT" + ChatColor.RESET + ChatColor.GRAY + " » " + ChatColor.WHITE + "The " + ChatColor.LIGHT_PURPLE + "Dragon Egg" + ChatColor.WHITE + " Has been dropped at the coordinates: " + e.getItemDrop().getLocation().getBlockX() + ", " + e.getItemDrop().getLocation().getBlockY() + ", " + e.getItemDrop().getLocation().getBlockZ());
@@ -162,7 +159,7 @@ public class AccessoryListeners implements Listener {
                     public void run() {
                         if (!e.getItemDrop().isDead()) {
                             tick++;
-                            if (System.currentTimeMillis() < unlockTime) {
+                            if (System.currentTimeMillis() < unlockTime && !stand.isDead()) {
                                 stand.teleport(e.getItemDrop().getLocation().add(0, 1, 0));
                                 stand.setMarker(true);
                                 stand.setVisible(false);
@@ -176,7 +173,6 @@ public class AccessoryListeners implements Listener {
                             } else {
                                 stand.remove();
                                 e.getItemDrop().setPickupDelay(20);
-                                cancel();
                             }
 
 
@@ -185,7 +181,9 @@ public class AccessoryListeners implements Listener {
                                 tick = 0;
                             }
                         } else {
-                            stand.remove();
+                            if (!stand.isDead()) {
+                                stand.remove();
+                            }
                             cancel();
                         }
                     }

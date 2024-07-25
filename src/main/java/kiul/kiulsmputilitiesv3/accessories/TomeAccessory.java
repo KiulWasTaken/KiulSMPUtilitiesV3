@@ -4,7 +4,6 @@ import com.destroystokyo.paper.event.entity.ExperienceOrbMergeEvent;
 import com.destroystokyo.paper.event.player.PlayerPickupExperienceEvent;
 import jdk.jfr.Enabled;
 import kiul.kiulsmputilitiesv3.C;
-import kiul.kiulsmputilitiesv3.potions.CustomHastePotion;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;

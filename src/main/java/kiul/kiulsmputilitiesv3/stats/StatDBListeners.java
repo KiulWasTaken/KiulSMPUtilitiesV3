@@ -96,21 +96,25 @@ public class StatDBListeners implements Listener {
     @EventHandler(priority = EventPriority.MONITOR)
     public void killPlayer (EntityDamageByEntityEvent e) {
         if (e.getEntity() instanceof Player killed && e.getDamager() instanceof Player killer && e.getFinalDamage() >= killed.getHealth()) {
-            if ((new EntityResurrectEvent(killed).isCancelled()) && C.getPlayerTeam(killer) != C.getPlayerTeam(killed)) {
-                StatDB.writePlayer(killer.getUniqueId(),"stat_kills",(int)StatDB.readPlayer(killer.getUniqueId(),"stat_kills")+1);
-                FightObject fight = C.fightManager.findFightForMember(killer);
-                if (fight == null) {return;}
-                if (fight.isPartaking(killed.getUniqueId())) {
-                    HashMap<Team, List<Player>> team = C.sortTeams(fight.getParticipants());
-                    int numEnemies = fight.getParticipants().size()-team.get(C.getPlayerTeam(killer)).size();
-                    if (numEnemies > team.get(C.getPlayerTeam(killer)).size()) {
-                        StatDB.writePlayer(killer.getUniqueId(),"stat_kills_odds",(int)StatDB.readPlayer(killer.getUniqueId(),"stat_kills_odds")+1);
+            if ((new EntityResurrectEvent(killed).isCancelled()) && C.getPlayerTeam(killer).getName() != C.getPlayerTeam(killed).getName()) {
+                if (isStacked(killed)) {
+                    StatDB.writePlayer(killer.getUniqueId(), "stat_kills", (int) StatDB.readPlayer(killer.getUniqueId(), "stat_kills") + 1);
+                    FightObject fight = C.fightManager.findFightForMember(killer);
+                    if (fight == null) {
+                        return;
                     }
-                    if (fight.getDuration() < 1000*60*60*5) {
-                        StatDB.writePlayer(killer.getUniqueId(),"stat_kills_quick",(int)StatDB.readPlayer(killer.getUniqueId(),"stat_kills_quick")+1);
-                    }
-                    if (fight.getDuration() > 1000*60*60*30) {
-                        StatDB.writePlayer(killer.getUniqueId(),"stat_kills_drain",(int)StatDB.readPlayer(killer.getUniqueId(),"stat_kills_drain")+1);
+                    if (fight.isPartaking(killed.getUniqueId())) {
+                        HashMap<Team, List<Player>> team = C.sortTeams(fight.getParticipants());
+                        int numEnemies = fight.getParticipants().size() - team.get(C.getPlayerTeam(killer)).size();
+                        if (numEnemies > team.get(C.getPlayerTeam(killer)).size()) {
+                            StatDB.writePlayer(killer.getUniqueId(), "stat_kills_odds", (int) StatDB.readPlayer(killer.getUniqueId(), "stat_kills_odds") + 1);
+                        }
+                        if (fight.getDuration() < 1000 * 60 * 60 * 5) {
+                            StatDB.writePlayer(killer.getUniqueId(), "stat_kills_quick", (int) StatDB.readPlayer(killer.getUniqueId(), "stat_kills_quick") + 1);
+                        }
+                        if (fight.getDuration() > 1000 * 60 * 60 * 30) {
+                            StatDB.writePlayer(killer.getUniqueId(), "stat_kills_drain", (int) StatDB.readPlayer(killer.getUniqueId(), "stat_kills_drain") + 1);
+                        }
                     }
                 }
             }
