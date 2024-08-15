@@ -5,23 +5,18 @@ import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.itemhistory.ItemMethods;
 import org.bukkit.ChatColor;
 import org.bukkit.Material;
-import org.bukkit.Statistic;
-import org.bukkit.block.data.type.Grindstone;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.enchantment.EnchantItemEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.PrepareAnvilEvent;
 import org.bukkit.event.inventory.SmithItemEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.GrindstoneInventory;
-import org.bukkit.inventory.ItemStack;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 
 public class ItemCraft implements Listener {
@@ -56,7 +51,7 @@ public class ItemCraft implements Listener {
 
     @EventHandler
     public void craftItemEvent (CraftItemEvent e) {
-        if (!C.itemHistoryEnabled) {return;}
+        if (!C.ITEM_HISTORY_ENABLED) {return;}
         if (historyItems.contains(e.getRecipe().getResult().getType())) {
             if ((e.getView().getBottomInventory().firstEmpty() != -1)) {
                 LocalDate currentDate = LocalDate.now();
@@ -67,7 +62,7 @@ public class ItemCraft implements Listener {
 
     @EventHandler
     public void smithDate (SmithItemEvent e) {
-        if (!C.itemHistoryEnabled) {return;}
+        if (!C.ITEM_HISTORY_ENABLED) {return;}
         if (historyItems.contains(e.getInventory().getRecipe().getResult().getType())) {
             LocalDate currentDate = LocalDate.now();
             ItemMethods.addLore(e.getInventory().getResult(),ChatColor.GRAY + "↑ - " + ((Player)e.getView().getPlayer()).getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
@@ -76,7 +71,7 @@ public class ItemCraft implements Listener {
 
     @EventHandler
     public void combineDate (InventoryClickEvent e) {
-        if (!C.itemHistoryEnabled) {return;}
+        if (!C.ITEM_HISTORY_ENABLED) {return;}
         if (e.getInventory() instanceof AnvilInventory && e.getSlot() == 2) {
             if (historyItems.contains(e.getCurrentItem().getType())) {
                 LocalDate currentDate = LocalDate.now();
@@ -86,7 +81,7 @@ public class ItemCraft implements Listener {
     }
     @EventHandler
     public void enchantDate (EnchantItemEvent e) {
-        if (!C.itemHistoryEnabled) {return;}
+        if (!C.ITEM_HISTORY_ENABLED) {return;}
         if (historyItems.contains(e.getInventory().getItem(0).getType())) {
             LocalDate currentDate = LocalDate.now();
             ItemMethods.addLore(e.getInventory().getItem(0),ChatColor.GRAY + "" + ChatColor.BOLD+ "\uD83D\uDCD6" + ChatColor.RESET+ChatColor.GRAY+ " - " + ((Player)e.getView().getPlayer()).getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
@@ -95,7 +90,7 @@ public class ItemCraft implements Listener {
 
     @EventHandler
     public void grindstoneClear (InventoryClickEvent e) {
-        if (!C.itemHistoryEnabled) {return;}
+        if (!C.ITEM_HISTORY_ENABLED) {return;}
         if (e.getInventory() instanceof GrindstoneInventory && e.getSlot() == 2) {
             if (historyItems.contains(e.getCurrentItem().getType())) {
                 List<String> lore = new ArrayList<>();

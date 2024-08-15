@@ -1,8 +1,6 @@
 package kiul.kiulsmputilitiesv3;
 
 import kiul.kiulsmputilitiesv3.accessories.*;
-import kiul.kiulsmputilitiesv3.claims.ClaimListeners;
-import kiul.kiulsmputilitiesv3.claims.ClaimMethods;
 import kiul.kiulsmputilitiesv3.combatlog.LogoutListeners;
 import kiul.kiulsmputilitiesv3.combatlog.MovementListeners;
 import kiul.kiulsmputilitiesv3.combattag.FightLogicListeners;
@@ -16,18 +14,13 @@ import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemCraft;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemPickupAfterDeath;
-import kiul.kiulsmputilitiesv3.potions.*;
 import kiul.kiulsmputilitiesv3.stats.StatDB;
 import kiul.kiulsmputilitiesv3.stats.StatDBListeners;
 import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.RecipeChoice;
-import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.plugin.java.JavaPlugin;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -104,18 +97,18 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
             ConfigData.get().addDefault("accessories", true);
             ConfigData.get().addDefault("crates", true);
         }
-        C.combatLogEnabled = ConfigData.get().getBoolean("combatlog");
-        C.combatTagEnabled = ConfigData.get().getBoolean("combattag");
-        C.potionsEnabled = ConfigData.get().getBoolean("potions");
-        C.itemHistoryEnabled = ConfigData.get().getBoolean("itemhistory");
-        C.accessoriesEnabled = ConfigData.get().getBoolean("accessories");
-        C.cratesEnabled = ConfigData.get().getBoolean("crates");
+        C.COMBAT_LOG_ENABLED = ConfigData.get().getBoolean("combatlog");
+        C.COMBAT_TAG_ENABLED = ConfigData.get().getBoolean("combattag");
+        C.POTIONS_ENABLED = ConfigData.get().getBoolean("potions");
+        C.ITEM_HISTORY_ENABLED = ConfigData.get().getBoolean("itemhistory");
+        C.ACCESSORIES_ENABLED = ConfigData.get().getBoolean("accessories");
+        C.CRATES_ENABLED = ConfigData.get().getBoolean("crates");
         PersistentData.setup();
         AccessoryData.setup();
         ClaimData.setup();
 
         // Plugin Methods
-        if (C.cratesEnabled) {
+        if (C.CRATES_ENABLED) {
             CrateMethods.startRandomCrates(getServer().getWorld("world"));
         }
 
@@ -126,12 +119,12 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
-        ConfigData.get().set("combatlog",C.combatLogEnabled);
-        ConfigData.get().set("combattag",C.combatTagEnabled);
-        ConfigData.get().set("potions",C.potionsEnabled);
-        ConfigData.get().set("itemhistory",C.itemHistoryEnabled);
-        ConfigData.get().set("accessories",C.accessoriesEnabled);
-        ConfigData.get().set("crates",C.cratesEnabled);
+        ConfigData.get().set("combatlog",C.COMBAT_LOG_ENABLED);
+        ConfigData.get().set("combattag",C.COMBAT_TAG_ENABLED);
+        ConfigData.get().set("potions",C.POTIONS_ENABLED);
+        ConfigData.get().set("itemhistory",C.ITEM_HISTORY_ENABLED);
+        ConfigData.get().set("accessories",C.ACCESSORIES_ENABLED);
+        ConfigData.get().set("crates",C.CRATES_ENABLED);
         ConfigData.save();
         AccessoryData.save();
     }

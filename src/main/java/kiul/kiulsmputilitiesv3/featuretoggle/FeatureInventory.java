@@ -38,22 +38,22 @@ public class FeatureInventory implements Listener {
             String itemName = C.t(item.getDisplayName());
             switch (item.getlocalName()) {
                 case "potions":
-                    lore.add(ChatColor.DARK_GRAY+"Status" + ChatColor.GRAY+ " » "+ChatColor.BOLD+(C.potionsEnabled ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
+                    lore.add(ChatColor.DARK_GRAY+"Status" + ChatColor.GRAY+ " » "+ChatColor.BOLD+(C.POTIONS_ENABLED ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
                     break;
                 case "combattag":
-                    lore.add(ChatColor.DARK_GRAY+"Status" + ChatColor.GRAY+ " » "+ChatColor.BOLD+(C.combatTagEnabled ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
+                    lore.add(ChatColor.DARK_GRAY+"Status" + ChatColor.GRAY+ " » "+ChatColor.BOLD+(C.COMBAT_TAG_ENABLED ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
                     break;
                 case "combatlog":
-                    lore.add(ChatColor.DARK_GRAY+"Status" + ChatColor.GRAY+ " » "+ChatColor.BOLD+(C.combatLogEnabled ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
+                    lore.add(ChatColor.DARK_GRAY+"Status" + ChatColor.GRAY+ " » "+ChatColor.BOLD+(C.COMBAT_LOG_ENABLED ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
                     break;
                 case "crates":
-                    lore.add(ChatColor.DARK_GRAY+"Status" + ChatColor.GRAY+ " » "+ChatColor.BOLD+(C.cratesEnabled ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
+                    lore.add(ChatColor.DARK_GRAY+"Status" + ChatColor.GRAY+ " » "+ChatColor.BOLD+(C.CRATES_ENABLED ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
                     break;
                 case "accessories":
-                    lore.add(ChatColor.DARK_GRAY+"Status" + ChatColor.GRAY+ " » "+ChatColor.BOLD+(C.accessoriesEnabled ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
+                    lore.add(ChatColor.DARK_GRAY+"Status" + ChatColor.GRAY+ " » "+ChatColor.BOLD+(C.ACCESSORIES_ENABLED ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
                     break;
                 case "itemhistory":
-                    lore.add(ChatColor.DARK_GRAY+"Status" + ChatColor.GRAY+ " » "+ChatColor.BOLD+(C.itemHistoryEnabled ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
+                    lore.add(ChatColor.DARK_GRAY+"Status" + ChatColor.GRAY+ " » "+ChatColor.BOLD+(C.ITEM_HISTORY_ENABLED ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
                     break;
             }
             String[] arr = new String[lore.size()];
@@ -85,28 +85,28 @@ public class FeatureInventory implements Listener {
             if (e.getCurrentItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) {
                 switch (e.getCurrentItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"),PersistentDataType.STRING)) {
                     case "potions":
-                        C.potionsEnabled = !C.potionsEnabled;
-                        p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (C.potionsEnabled ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
+                        C.POTIONS_ENABLED = !C.POTIONS_ENABLED;
+                        p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (C.POTIONS_ENABLED ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
                         break;
                     case "combattag":
-                        C.combatTagEnabled = !C.combatTagEnabled;
-                        p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (C.combatTagEnabled ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
+                        C.COMBAT_TAG_ENABLED = !C.COMBAT_TAG_ENABLED;
+                        p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (C.COMBAT_TAG_ENABLED ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
                         break;
                     case "combatlog":
-                        C.combatLogEnabled = !C.combatLogEnabled;
-                        p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (C.combatLogEnabled ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
+                        C.COMBAT_LOG_ENABLED = !C.COMBAT_LOG_ENABLED;
+                        p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (C.COMBAT_LOG_ENABLED ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
                         break;
                     case "crates":
-                        C.cratesEnabled = !C.cratesEnabled;
-                        p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (C.cratesEnabled ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
+                        C.CRATES_ENABLED = !C.CRATES_ENABLED;
+                        p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (C.CRATES_ENABLED ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
                         break;
                     case "accessories":
-                        C.accessoriesEnabled = !C.accessoriesEnabled;
-                        p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (C.accessoriesEnabled ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
+                        C.ACCESSORIES_ENABLED = !C.ACCESSORIES_ENABLED;
+                        p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (C.ACCESSORIES_ENABLED ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
                         break;
                     case "itemhistory":
-                        C.itemHistoryEnabled = !C.itemHistoryEnabled;
-                        p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (C.itemHistoryEnabled ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
+                        C.ITEM_HISTORY_ENABLED = !C.ITEM_HISTORY_ENABLED;
+                        p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (C.ITEM_HISTORY_ENABLED ? ChatColor.GREEN+"Enabled":ChatColor.RED+"Disabled"));
                         break;
                 }
                 open(p,true);

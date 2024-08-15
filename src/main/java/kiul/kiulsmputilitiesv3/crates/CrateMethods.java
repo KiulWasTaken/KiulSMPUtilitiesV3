@@ -12,7 +12,6 @@ import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.EnchantmentStorageMeta;
 import org.bukkit.inventory.meta.FireworkMeta;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
@@ -498,6 +497,7 @@ public class CrateMethods {
                                                                     if (item.getMaxStackSize() == 1) {
                                                                         item.setAmount(1);
                                                                     }
+                                                                    item.getItemMeta().setMaxStackSize(item.getAmount());
                                                                     Item droppedItem = world.dropItem(location,item);
                                                                     for (Player onlinePlayers : Bukkit.getOnlinePlayers()) {
                                                                         onlinePlayers.hideEntity(C.plugin,droppedItem);
@@ -585,7 +585,7 @@ public class CrateMethods {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (!C.restarting && C.cratesEnabled) {
+                if (!C.restarting && C.CRATES_ENABLED) {
 
                     if (Bukkit.getOnlinePlayers().size() >= 10) {
                         double magicNumber = 0.001 * Bukkit.getOnlinePlayers().size() - 10;

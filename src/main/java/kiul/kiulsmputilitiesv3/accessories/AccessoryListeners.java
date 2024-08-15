@@ -24,15 +24,11 @@ import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.event.entity.ItemSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
-import org.bukkit.event.inventory.InventoryType;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
-import org.bukkit.inventory.meta.tags.CustomItemTagContainer;
-import org.bukkit.inventory.meta.tags.ItemTagType;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -49,7 +45,8 @@ public class AccessoryListeners implements Listener {
     public void accessoryConfigSetup (PlayerJoinEvent e) {
         Player p = e.getPlayer();
         UUID uuid = p.getUniqueId();
-        p.sendMessage(Component.text("§f§a§i§r§x§a§e§r§o")); // disables worldmap caves
+        p.sendMessage(Component.text("§f§a§i§r§x§a§e§r§o"));// disables worldmap caves
+        p.sendMessage(Component.text("§x§a§e§r§o§w§m§n§e§t§h§e§r§i§s§f§a§i§r"));// enables cave mode in nether (?)
         AccessoryData.get().options().copyDefaults(true);
         AccessoryData.get().addDefault(uuid+".accessory.identifier",null);
         AccessoryData.get().addDefault(uuid+".accessory.item",null);
@@ -61,7 +58,7 @@ public class AccessoryListeners implements Listener {
         AccessoryData.get().addDefault(uuid+".sounds.self",true);
         AccessoryData.get().addDefault(uuid+".sounds.all",true);
         AccessoryData.save();
-        if (!C.accessoriesEnabled) {return;}
+        if (!C.ACCESSORIES_ENABLED) {return;}
         if (AccessoryData.get().get(uuid+".accessory.identifier") != null) {
             AccessoryMethods.instantiateTrackingSignalTask(p);
         }
@@ -102,7 +99,7 @@ public class AccessoryListeners implements Listener {
 
     @EventHandler
     public void reforgeAccessory (InventoryClickEvent e) {
-        if (!C.accessoriesEnabled) {return;}
+        if (!C.ACCESSORIES_ENABLED) {return;}
         Player p = (Player) e.getWhoClicked();
         if (e.getInventory() instanceof CraftingInventory) {
             if (e.getCurrentItem() == null) {return;}
@@ -139,7 +136,7 @@ public class AccessoryListeners implements Listener {
 
     @EventHandler
     public void makeItemInvulnerable (PlayerDropItemEvent e) {
-        if (!C.accessoriesEnabled) {return;}
+        if (!C.ACCESSORIES_ENABLED) {return;}
         if (e.getItemDrop().getItemStack().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) {
             e.getItemDrop().setInvulnerable(true);
             e.getItemDrop().setUnlimitedLifetime(true);
@@ -193,7 +190,7 @@ public class AccessoryListeners implements Listener {
     }
     @EventHandler
     public void preventDeath (EntityDamageEvent e) {
-        if (!C.accessoriesEnabled) {return;}
+        if (!C.ACCESSORIES_ENABLED) {return;}
         if (e.getEntity() instanceof Item i && ((Item) e.getEntity()).getItemStack().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) {
             e.setCancelled(true);
             if (e.getDamageSource().getDamageType().equals(DamageType.OUT_OF_WORLD)) {
@@ -206,7 +203,7 @@ public class AccessoryListeners implements Listener {
 
     @EventHandler
     public void preventDie (ItemSpawnEvent e) {
-        if (!C.accessoriesEnabled) {return;}
+        if (!C.ACCESSORIES_ENABLED) {return;}
         if (e.getEntity().getItemStack().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) {
             e.getEntity().setInvulnerable(true);
             e.getEntity().setUnlimitedLifetime(true);

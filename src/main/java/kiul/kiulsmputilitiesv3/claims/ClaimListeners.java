@@ -14,12 +14,8 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
-import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
-
-import java.util.ArrayList;
 
 import static kiul.kiulsmputilitiesv3.claims.ClaimMethods.*;
 
@@ -92,7 +88,7 @@ public class ClaimListeners implements Listener {
             if (!C.playerIsOnTeam(playersInClaims.get(e.getPlayer()).getOwningTeam(),e.getPlayer())) {
                 e.getBlock().setMetadata("unauth",new FixedMetadataValue(C.plugin,"block"));
                 BlockState oldBlock = e.getBlockReplacedState();
-                scheduleBlockRespawn(e.getBlock(),20 * C.blockRegenTimeSeconds,oldBlock.getType(),e.getBlock().getLocation());
+                scheduleBlockRespawn(e.getBlock(),20 * C.BLOCK_REGEN_SECONDS,oldBlock.getType(),e.getBlock().getLocation());
             }
         } else {
             for (Region claimRegions : activeClaims.values()) {
@@ -101,7 +97,7 @@ public class ClaimListeners implements Listener {
                         e.getBlock().setMetadata("unauth",new FixedMetadataValue(C.plugin,"block"));
                         if (playersInClaims.containsValue(e.getPlayer())) {
                             BlockState oldBlock = e.getBlockReplacedState();
-                            scheduleBlockRespawn(e.getBlock(),20 * C.blockRegenTimeSeconds,oldBlock.getType(),e.getBlock().getLocation());
+                            scheduleBlockRespawn(e.getBlock(),20 * C.BLOCK_REGEN_SECONDS,oldBlock.getType(),e.getBlock().getLocation());
                         } else {
                             playersInClaims.put(e.getPlayer(), claimRegions);
                         }
@@ -117,7 +113,7 @@ public class ClaimListeners implements Listener {
             if (playersInClaims.containsKey(e.getPlayer())) {
                 if (!C.playerIsOnTeam(playersInClaims.get(e.getPlayer()).getOwningTeam(), e.getPlayer())) {
                     e.setDropItems(false);
-                    scheduleBlockRespawn(e.getBlock(), 20 * C.blockRegenTimeSeconds, e.getBlock().getType(), e.getBlock().getLocation());
+                    scheduleBlockRespawn(e.getBlock(), 20 * C.BLOCK_REGEN_SECONDS, e.getBlock().getType(), e.getBlock().getLocation());
                 }
             } else {
                 for (Region claimRegions : activeClaims.values()) {
@@ -125,7 +121,7 @@ public class ClaimListeners implements Listener {
                         if (!C.playerIsOnTeam(claimRegions.getOwningTeam(), e.getPlayer())) {
                             if (playersInClaims.containsValue(e.getPlayer())) {
                                 e.setDropItems(false);
-                                scheduleBlockRespawn(e.getBlock(), 20 * C.blockRegenTimeSeconds, e.getBlock().getType(), e.getBlock().getLocation());
+                                scheduleBlockRespawn(e.getBlock(), 20 * C.BLOCK_REGEN_SECONDS, e.getBlock().getType(), e.getBlock().getLocation());
                             } else {
                                 playersInClaims.put(e.getPlayer(), claimRegions);
                             }

@@ -3,7 +3,6 @@ package kiul.kiulsmputilitiesv3.combattag;
 import kiul.kiulsmputilitiesv3.C;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
@@ -12,19 +11,13 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityToggleGlideEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
-import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerRiptideEvent;
-import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.jetbrains.annotations.Nullable;
 
 import java.util.ArrayList;
 import java.util.UUID;
-
-import static kiul.kiulsmputilitiesv3.combattag.FightMethods.fastPearlThrow;
-import static kiul.kiulsmputilitiesv3.combattag.FightMethods.lastPearlThrow;
 
 public class FightLogicListeners implements Listener {
 
@@ -35,7 +28,7 @@ public class FightLogicListeners implements Listener {
      **/
     @EventHandler
     public void startFight(EntityDamageByEntityEvent e) {
-        if (!C.combatTagEnabled) {return;}
+        if (!C.COMBAT_TAG_ENABLED) {return;}
         if (e.getEntity() instanceof Player) {
             Player p1 = null;
             if (e.getDamager() instanceof ExplosiveMinecart cart) {
@@ -141,7 +134,7 @@ public class FightLogicListeners implements Listener {
 
     @EventHandler
     public void removeFromFightOnDeath (PlayerDeathEvent e) {
-        if (!C.combatTagEnabled) {return;}
+        if (!C.COMBAT_TAG_ENABLED) {return;}
         Player p = e.getEntity();
         FightObject fightObject = C.fightManager.findFightForMember(p);
         if (fightObject != null) {
@@ -203,7 +196,7 @@ public class FightLogicListeners implements Listener {
 
     @EventHandler
     public void useTridentCoolDown (PlayerRiptideEvent e) {
-        if (!C.combatTagEnabled) {return;}
+        if (!C.COMBAT_TAG_ENABLED) {return;}
         Player p = e.getPlayer();
         if (C.fightManager.playerIsInFight(p)) {
             p.setCooldown(Material.TRIDENT,600);
@@ -214,7 +207,7 @@ public class FightLogicListeners implements Listener {
     }
     @EventHandler
     public void useWindChargeCoolDown (ProjectileLaunchEvent e) {
-        if (!C.combatTagEnabled) {return;}
+        if (!C.COMBAT_TAG_ENABLED) {return;}
         if (e.getEntity() instanceof WindCharge && e.getEntity().getShooter() instanceof Player p) {
                 if (C.fightManager.playerIsInFight(p)) {
                     new BukkitRunnable() {
@@ -230,7 +223,7 @@ public class FightLogicListeners implements Listener {
 
     @EventHandler
     public void damagedTridentCoolDown (EntityDamageByEntityEvent e) {
-        if (!C.combatTagEnabled) {return;}
+        if (!C.COMBAT_TAG_ENABLED) {return;}
         if (e.getEntity() instanceof Player) {
             Player p1 = null;
             if (e.getDamager() instanceof ExplosiveMinecart cart) {
@@ -347,7 +340,7 @@ public class FightLogicListeners implements Listener {
 
     @EventHandler
     public void damagedRocketCoolDown (EntityDamageByEntityEvent e) {
-        if (!C.combatTagEnabled) {return;}
+        if (!C.COMBAT_TAG_ENABLED) {return;}
         if (e.getDamager() instanceof Player damager && e.getEntity() instanceof Player damaged) {
             if (C.fightManager.playerIsInFight(damaged)) {
                 if (damaged.getInventory().getChestplate() != null) {

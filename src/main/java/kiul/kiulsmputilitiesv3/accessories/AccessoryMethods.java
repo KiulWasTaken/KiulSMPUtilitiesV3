@@ -8,7 +8,6 @@ import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -99,7 +98,7 @@ public class AccessoryMethods {
                     }
                     AccessoryData.get().set(p.getUniqueId() + ".accessory.identifier", null);
                     AccessoryData.get().set(p.getUniqueId() + ".accessory.item", null);
-                    AccessoryData.get().set(p.getUniqueId() + ".accessory.cooldown", System.currentTimeMillis()+C.accessoryCooldownTimeMinutes*1000*60);
+                    AccessoryData.get().set(p.getUniqueId() + ".accessory.cooldown", System.currentTimeMillis()+C.ACCESSORY_COOLDOWN_MINUTES *1000*60);
                     AccessoryData.save();
 
                     p.playSound(p, Sound.BLOCK_ANVIL_LAND, 0.1f, 2f);
@@ -151,7 +150,7 @@ public class AccessoryMethods {
 
             @Override
             public void run() {
-                if (p.isOnline() && AccessoryData.get().get(p.getUniqueId()+".accessory.identifier") != null && C.accessoriesEnabled) {
+                if (p.isOnline() && AccessoryData.get().get(p.getUniqueId()+".accessory.identifier") != null && C.ACCESSORIES_ENABLED) {
                     for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                         Team onlinePlayerTeam = C.getPlayerTeam(onlinePlayer);
                         Team pTeam = C.getPlayerTeam(p);

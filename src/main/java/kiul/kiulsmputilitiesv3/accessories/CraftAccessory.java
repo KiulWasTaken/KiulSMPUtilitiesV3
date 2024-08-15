@@ -1,7 +1,6 @@
 package kiul.kiulsmputilitiesv3.accessories;
 
 import kiul.kiulsmputilitiesv3.C;
-import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.event.EventHandler;
@@ -30,7 +29,7 @@ public class CraftAccessory implements Listener {
 
     @EventHandler
     public void craftEvent (PrepareItemCraftEvent e) {
-        if (!C.accessoriesEnabled) {return;}
+        if (!C.ACCESSORIES_ENABLED) {return;}
         List<ItemStack> items = Arrays.stream(e.getInventory().getMatrix()).toList();
         AccessoryItemEnum accessoryItemEnum = null;
 

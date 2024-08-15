@@ -4,8 +4,6 @@ import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.InventoryToBase64;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
 import org.bukkit.*;
-import org.bukkit.attribute.Attribute;
-import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -25,66 +23,106 @@ import java.util.concurrent.TimeUnit;
 
 public class LogoutListeners implements Listener {
 
-    private HashMap<Villager, UUID> NPCOwner = new HashMap<>();
-
-    private HashMap<Chunk,Player> markedChunks = new HashMap<>();
+    public static HashMap<Villager, UUID> NPCOwner = new HashMap<>();
 
 
     @EventHandler
     public void spawnDummy(PlayerQuitEvent e) {
-        if (!C.combatLogEnabled) {return;}
+        if (!C.COMBAT_LOG_ENABLED) {return;}
+        if (e.getReason() == PlayerQuitEvent.QuitReason.KICKED) {return;}
+        if (e.getPlayer().getGameMode() != GameMode.SURVIVAL) {return;}
+        // Spawn NPC and update its displayname to communicate the time until it despawns.
+        Location location = e.getPlayer().getLocation();
+        World world = location.getWorld();
+        int delay = 0;
+        if (e.getReason() != PlayerQuitEvent.QuitReason.DISCONNECTED) {
+            // if the player disconnected by ALT+F4 or connection issue, allow them time to reconnect.
+            delay = 20*C.CONNECTION_ISSUE_PROTECTION_SECONDS;
 
-        if (!C.loggingOut.contains(e.getPlayer())) {
-            // Spawn NPC and update its displayname to communicate the time until it despawns.
-            Location location = e.getPlayer().getLocation();
-            World world = location.getWorld();
-            Villager npc = (Villager) world.spawnEntity(location, EntityType.VILLAGER);
-            npc.setMetadata(e.getPlayer().getDisplayName(), new FixedMetadataValue(C.plugin, "rat"));
-            npc.setAI(false);
-            npc.setProfession(Villager.Profession.NITWIT);
-            npc.setBreed(false);
-            npc.setAdult();
-            npc.setHealth(e.getPlayer().getHealth());
-            npc.setCanPickupItems(false);
-            npc.setRemoveWhenFarAway(false);
-            npc.setCustomNameVisible(true);
-            npc.getLocation().getChunk().setForceLoaded(true);
-            npc.setCustomName(ChatColor.RED + e.getPlayer().getDisplayName() + ChatColor.GRAY + " - " + ChatColor.YELLOW + "1 : 30");
-            NPCOwner.put(npc, e.getPlayer().getUniqueId());
+            ArmorStand timer = (ArmorStand) world.spawnEntity(location.add(0,2,0),EntityType.ARMOR_STAND);
+            timer.setMarker(true);
+            timer.setCustomNameVisible(true);
+            timer.setInvulnerable(true);
+            timer.setInvisible(true);
 
-            long npcSpawnTime = System.currentTimeMillis();
+            ArmorStand description = (ArmorStand) world.spawnEntity(location.add(0,1.8,0),EntityType.ARMOR_STAND);
+            description.setMarker(true);
+            description.setCustomNameVisible(true);
+            description.setInvulnerable(true);
+            description.setInvisible(true);
+            description.setCustomName(ChatColor.GRAY+"Allowing Time To Reconnect (Connection Issue)");
+            long initialTime = System.currentTimeMillis();
             new BukkitRunnable() {
-                long despawnTime = npcSpawnTime + (C.npcDespawnTimeSeconds * 1000);
-
+                int tick = 0;
                 @Override
                 public void run() {
-                    if (!npc.isDead()) {
-                        if (System.currentTimeMillis() < despawnTime) {
-                            npc.setCustomName(ChatColor.RED + e.getPlayer().getDisplayName() + ChatColor.GRAY + " - " + ChatColor.YELLOW + String.format("%02d : %02d",
-                                    TimeUnit.MILLISECONDS.toMinutes(despawnTime - System.currentTimeMillis()),
-                                    TimeUnit.MILLISECONDS.toSeconds(despawnTime - System.currentTimeMillis()) -
-                                            TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(despawnTime - System.currentTimeMillis()))
-                            ));
-                        } else {
-                            npc.getLocation().getChunk().setForceLoaded(false);
-                            NPCOwner.remove(npc);
-                            npc.remove();
-                            cancel();
+                    if (tick >= C.CONNECTION_ISSUE_PROTECTION_SECONDS) {
+                        description.remove();
+                        timer.remove();
+                        cancel();
+                        return;
+                    }
+                    int[] timestamps = C.splitTimestamp(initialTime+C.CONNECTION_ISSUE_PROTECTION_SECONDS*1000L);
+                    timer.setCustomName(ChatColor.RED+String.format("%02d:%02d:%02d", timestamps[0], timestamps[1], timestamps[2]));
+
+                    tick ++;
+                }
+            }.runTaskTimer(C.plugin,0,20);
+        }
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+
+
+                Villager npc = (Villager) world.spawnEntity(location, EntityType.VILLAGER);
+                npc.setMetadata(e.getPlayer().getDisplayName(), new FixedMetadataValue(C.plugin, "rat"));
+                npc.setAI(false);
+                npc.setProfession(Villager.Profession.NITWIT);
+                npc.setBreed(false);
+                npc.setAdult();
+                npc.setHealth(e.getPlayer().getHealth());
+                npc.setCanPickupItems(false);
+                npc.setRemoveWhenFarAway(false);
+                npc.setCustomNameVisible(true);
+                npc.getLocation().getChunk().setForceLoaded(true);
+                npc.setCustomName(ChatColor.RED + e.getPlayer().getDisplayName() + ChatColor.GRAY + " - " + ChatColor.YELLOW + "1 : 30");
+                NPCOwner.put(npc, e.getPlayer().getUniqueId());
+
+                long npcSpawnTime = System.currentTimeMillis();
+                new BukkitRunnable() {
+                    long despawnTime = npcSpawnTime + (C.NPC_DESPAWN_SECONDS * 1000);
+
+                    @Override
+                    public void run() {
+                        if (!npc.isDead()) {
+                            if (System.currentTimeMillis() < despawnTime) {
+                                npc.setCustomName(ChatColor.RED + e.getPlayer().getDisplayName() + ChatColor.GRAY + " - " + ChatColor.YELLOW + String.format("%02d : %02d",
+                                        TimeUnit.MILLISECONDS.toMinutes(despawnTime - System.currentTimeMillis()),
+                                        TimeUnit.MILLISECONDS.toSeconds(despawnTime - System.currentTimeMillis()) -
+                                                TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(despawnTime - System.currentTimeMillis()))
+                                ));
+                            } else {
+                                npc.getLocation().getChunk().setForceLoaded(false);
+                                NPCOwner.remove(npc);
+                                npc.remove();
+                                cancel();
+                            }
                         }
                     }
-                }
-            }.runTaskTimer(C.plugin, 0, 20);
+                }.runTaskTimer(C.plugin, 0, 20);
 
 
-            // Save the player's inventory before they log out so that you can drop it later if/when their NPC dies.
-            PersistentData.get().set(e.getPlayer().getUniqueId() + ".inventory", InventoryToBase64.itemStackArrayToBase64(e.getPlayer().getInventory().getContents()));
-            PersistentData.get().set(e.getPlayer().getUniqueId() + ".armour", InventoryToBase64.itemStackArrayToBase64(e.getPlayer().getInventory().getArmorContents()));
-            PersistentData.get().set(e.getPlayer().getUniqueId() + ".npc", npc.getUniqueId().toString());
-            PersistentData.get().set(e.getPlayer().getUniqueId() + ".flagged", false);
-            PersistentData.save();
-        } else {
-            C.loggingOut.remove(e.getPlayer());
-        }
+                // Save the player's inventory before they log out so that you can drop it later if/when their NPC dies.
+                PersistentData.get().set(e.getPlayer().getUniqueId() + ".inventory", InventoryToBase64.itemStackArrayToBase64(e.getPlayer().getInventory().getContents()));
+                PersistentData.get().set(e.getPlayer().getUniqueId() + ".armour", InventoryToBase64.itemStackArrayToBase64(e.getPlayer().getInventory().getArmorContents()));
+                PersistentData.get().set(e.getPlayer().getUniqueId() + ".npc", npc.getUniqueId().toString());
+                PersistentData.get().set(e.getPlayer().getUniqueId() + ".flagged", false);
+                PersistentData.save();
+
+            }
+        }.runTaskLater(C.plugin,delay);
+
 
     }
 
@@ -100,7 +138,7 @@ public class LogoutListeners implements Listener {
 
     @EventHandler
     public void killNPC(EntityDamageByEntityEvent e) {
-        if (!C.combatLogEnabled) {return;}
+        if (!C.COMBAT_LOG_ENABLED) {return;}
         if (e.getEntity() instanceof Villager && !(e.getDamager() instanceof Player)) {
             if (NPCOwner.get(e.getEntity()) != null) {
                 e.setCancelled(true);
@@ -162,7 +200,7 @@ public class LogoutListeners implements Listener {
 
     @EventHandler
     public void punishCombatLogger (PlayerJoinEvent e) {
-        if (!C.combatLogEnabled) {
+        if (!C.COMBAT_LOG_ENABLED) {
             PersistentData.get().set(e.getPlayer().getUniqueId() + ".flagged",false);
             return;}
         if (PersistentData.get().getBoolean(e.getPlayer().getUniqueId() + ".flagged")) {

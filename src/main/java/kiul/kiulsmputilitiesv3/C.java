@@ -1,8 +1,6 @@
 package kiul.kiulsmputilitiesv3;
 
-import com.google.j2objc.annotations.Property;
 import kiul.kiulsmputilitiesv3.combattag.FightManager;
-import kiul.kiulsmputilitiesv3.config.ConfigData;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -13,19 +11,14 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.profile.PlayerProfile;
-import org.bukkit.profile.PlayerTextures;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
 import java.awt.Color;
-import java.lang.reflect.InvocationTargetException;
-import java.lang.reflect.Method;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.text.DateFormat;
 import java.text.DecimalFormat;
-import java.text.SimpleDateFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.regex.Matcher;
@@ -44,12 +37,12 @@ public class C {
     }
 
     /* config booleans */
-    public static boolean combatLogEnabled;
-    public static boolean combatTagEnabled;
-    public static boolean potionsEnabled;
-    public static boolean itemHistoryEnabled;
-    public static boolean accessoriesEnabled;
-    public static boolean cratesEnabled;
+    public static boolean COMBAT_LOG_ENABLED;
+    public static boolean COMBAT_TAG_ENABLED;
+    public static boolean POTIONS_ENABLED;
+    public static boolean ITEM_HISTORY_ENABLED;
+    public static boolean ACCESSORIES_ENABLED;
+    public static boolean CRATES_ENABLED;
 
     /* static utilities */
     public static Plugin plugin = KiulSMPUtilitiesV3.getPlugin(KiulSMPUtilitiesV3.class);
@@ -71,9 +64,10 @@ public class C {
     public static ArrayList<Player> logoutTimer = new ArrayList<>();
 
     /* Configurable */
-    public static int blockRegenTimeSeconds = 90;
-    public static int npcDespawnTimeSeconds = 90;
-    public static int accessoryCooldownTimeMinutes = 0;
+    public static int BLOCK_REGEN_SECONDS = 90;
+    public static int NPC_DESPAWN_SECONDS = 90;
+    public static int ACCESSORY_COOLDOWN_MINUTES = 0;
+    public static int CONNECTION_ISSUE_PROTECTION_SECONDS = 15;
 
     /* Global Utility Methods */
 

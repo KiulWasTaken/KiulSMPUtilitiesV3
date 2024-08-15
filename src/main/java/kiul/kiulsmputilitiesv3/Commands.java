@@ -1,7 +1,6 @@
 package kiul.kiulsmputilitiesv3;
 
 import kiul.kiulsmputilitiesv3.accessories.AccessoryMethods;
-import kiul.kiulsmputilitiesv3.combattag.RecapInventory;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.crates.CrateTypeEnum;
@@ -37,7 +36,7 @@ public class Commands implements TabExecutor {
 
             long currentTimeMillis = System.currentTimeMillis();
             new BukkitRunnable() {
-                long despawnTime = currentTimeMillis + (C.npcDespawnTimeSeconds * 1000);
+                long despawnTime = currentTimeMillis + (C.NPC_DESPAWN_SECONDS * 1000);
                 ArmorStand stand = (ArmorStand) p.getWorld().spawnEntity(p.getLocation().add(0,2.2,0), EntityType.ARMOR_STAND);
 
                 @Override
@@ -66,8 +65,8 @@ public class Commands implements TabExecutor {
 
                         } else {
                             C.logoutTimer.remove(p);
-                            C.loggingOut.add(p);
                             p.sendMessage(C.chatColour + "you can now leave the server safely.");
+                            p.kick();
                             stand.remove();
                             cancel();
                         }
@@ -92,7 +91,7 @@ public class Commands implements TabExecutor {
                 }
                 break;
             case "accessory":
-                if (!C.accessoriesEnabled) {break;}
+                if (!C.ACCESSORIES_ENABLED) {break;}
                 AccessoryMethods.equipAccessory(p);
                 break;
             case "kmenu":
