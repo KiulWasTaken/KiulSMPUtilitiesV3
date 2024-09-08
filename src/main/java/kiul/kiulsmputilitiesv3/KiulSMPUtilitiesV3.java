@@ -81,6 +81,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getCommand("give-ingredient").setExecutor(new Commands());
         getCommand("toggle-sounds").setExecutor(new Commands());
         getCommand("test-crate").setExecutor(new Commands());
+        getCommand("spawn-crate").setExecutor(new Commands());
         getCommand("populate-crate").setExecutor(new Commands());
         getCommand("translate").setExecutor(new Commands());
         getCommand("recaps").setExecutor(new Commands());

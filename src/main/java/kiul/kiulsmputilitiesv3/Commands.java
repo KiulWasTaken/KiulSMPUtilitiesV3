@@ -149,6 +149,10 @@ public class Commands implements TabExecutor {
                 if (p.hasPermission("kiulsmp.debug")) {
                     CrateMethods.createCrate(p.getWorld(), args[0],true);
                 }
+            case "spawn-crate":
+                if (p.hasPermission("kiulsmp.debug")) {
+                    CrateMethods.createCrate(p.getWorld(), args[0],false);
+                }
                 break;
             case "populate-crate":
                 if (p.hasPermission("kiulsmp.debug")) {
@@ -174,7 +178,7 @@ public class Commands implements TabExecutor {
         ArrayList<String> argsList = new ArrayList<>();
 
         switch (label) {
-            case "test-crate":
+            case "test-crate","spawn-crate":
                 for (CrateTypeEnum crateTypeEnum : CrateTypeEnum.values()) {
                     argsList.add(crateTypeEnum.getIdentifier());
                 }

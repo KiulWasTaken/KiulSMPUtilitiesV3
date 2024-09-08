@@ -5,6 +5,7 @@ import kiul.kiulsmputilitiesv3.InventoryToBase64;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
 import org.bukkit.*;
 import org.bukkit.entity.*;
+import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
@@ -78,6 +79,7 @@ public class LogoutListeners implements Listener {
                 Villager npc = (Villager) world.spawnEntity(location, EntityType.VILLAGER);
                 npc.setMetadata(e.getPlayer().getDisplayName(), new FixedMetadataValue(C.plugin, "rat"));
                 npc.setAI(false);
+                npc.setSilent(true);
                 npc.setProfession(Villager.Profession.NITWIT);
                 npc.setBreed(false);
                 npc.setAdult();
@@ -86,7 +88,19 @@ public class LogoutListeners implements Listener {
                 npc.setRemoveWhenFarAway(false);
                 npc.setCustomNameVisible(true);
                 npc.getLocation().getChunk().setForceLoaded(true);
+                npc.setHealth(e.getPlayer().getHealth());
                 npc.setCustomName(ChatColor.RED + e.getPlayer().getDisplayName() + ChatColor.GRAY + " - " + ChatColor.YELLOW + "1 : 30");
+
+                npc.getEquipment().setArmorContents(e.getPlayer().getEquipment().getArmorContents());
+                npc.getEquipment().setItemInMainHand(e.getPlayer().getEquipment().getItemInMainHand());
+                npc.getEquipment().setItemInOffHand(e.getPlayer().getEquipment().getItemInOffHand());
+                npc.getEquipment().setBootsDropChance(0);
+                npc.getEquipment().setLeggingsDropChance(0);
+                npc.getEquipment().setChestplateDropChance(0);
+                npc.getEquipment().setHelmetDropChance(0);
+                npc.getEquipment().setItemInMainHandDropChance(0);
+                npc.getEquipment().setItemInOffHandDropChance(0);
+
                 NPCOwner.put(npc, e.getPlayer().getUniqueId());
 
                 long npcSpawnTime = System.currentTimeMillis();
@@ -127,30 +141,33 @@ public class LogoutListeners implements Listener {
     }
 
     @EventHandler
-    public void damageNPC (EntityDamageEvent e) {
-        if (!e.getCause().equals(EntityDamageEvent.DamageCause.ENTITY_ATTACK)) {
-            if (NPCOwner.get(e.getEntity())!= null) {
-                e.setCancelled(true);
-                return;
-            }
-        }
-    }
-
-    @EventHandler
     public void killNPC(EntityDamageByEntityEvent e) {
         if (!C.COMBAT_LOG_ENABLED) {return;}
-        if (e.getEntity() instanceof Villager && !(e.getDamager() instanceof Player)) {
-            if (NPCOwner.get(e.getEntity()) != null) {
-                e.setCancelled(true);
-                return;
+        if (e.getEntity() instanceof Villager) {
+            if ((e.getDamager().getType() == EntityType.ARROW || e.getDamager().getType() == EntityType.SPECTRAL_ARROW || e.getDamager().getType() == EntityType.PLAYER || e.getDamager().getType() == EntityType.TNT_MINECART)) {
+                boolean allowDamage = false;
+                if ((e.getDamager() instanceof Projectile arrow)) {
+                    if (arrow.getShooter() instanceof Player) {
+                        allowDamage = true;
+                    }
+                }
+                if (e.getDamager() instanceof Player) {
+                    allowDamage = true;
+                }
+                if (e.getDamager() instanceof ExplosiveMinecart) {
+                    allowDamage = true;
+                }
+                if (!allowDamage) {
+                    if (NPCOwner.get(e.getEntity()) != null) {
+                        e.setCancelled(true);
+                        return;
+                    }
+                }
             }
         }
             if (e.getDamager() instanceof Player) {
                 if (e.getEntity() instanceof Villager) {
-                    if (NPCOwner.get(e.getEntity()) != null) {
-                        e.setDamage(2);
-                    }
-                    if (((Villager) e.getEntity()).getHealth() <= e.getFinalDamage()) {
+                    if (((Villager) e.getEntity()).getHealth() <= e.getFinalDamage() && ((Villager) e.getEntity()).getEquipment().getItemInMainHand().getType() != Material.TOTEM_OF_UNDYING && ((Villager) e.getEntity()).getEquipment().getItemInOffHand().getType() != Material.TOTEM_OF_UNDYING ) {
                         if (NPCOwner.get(e.getEntity()) != null) {
                             PersistentData.get().set(NPCOwner.get(e.getEntity()) + ".flagged", true);
                             PersistentData.save();
@@ -210,9 +227,11 @@ public class LogoutListeners implements Listener {
         }
         if (PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc") != null) {
             if (Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc"))) != null) {
+                e.getPlayer().setHealth(((LivingEntity)Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc")))).getHealth());
                 Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc"))).remove();
                 PersistentData.get().set(e.getPlayer().getUniqueId() + ".npc", null);
                 PersistentData.save();
+
             }
         }
     }

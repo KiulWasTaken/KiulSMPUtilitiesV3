@@ -17,3 +17,4 @@ commands:
   give-ingredient:
   recaps:
   kmenu:
+  spawn-crate:
