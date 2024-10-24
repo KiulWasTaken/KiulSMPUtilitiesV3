@@ -30,13 +30,21 @@ public class Commands implements TabExecutor {
         Player p = (Player) commandSender;
 
         if (label.equalsIgnoreCase("safelog") || label.equalsIgnoreCase("logout")) {
+
+            int combatMultiplier = 1;
+
+            if (C.fightManager.playerIsInFight(p)) {
+                combatMultiplier = 2;
+            }
+
             p.sendMessage(C.chatColour + "you are now logging out, do not move.");
             C.logoutTimer.add(p);
 
 
             long currentTimeMillis = System.currentTimeMillis();
+            int finalCombatMultiplier = combatMultiplier;
             new BukkitRunnable() {
-                long despawnTime = currentTimeMillis + (C.NPC_DESPAWN_SECONDS * 1000);
+                long despawnTime = currentTimeMillis + (C.NPC_DESPAWN_SECONDS * 1000 * finalCombatMultiplier);
                 ArmorStand stand = (ArmorStand) p.getWorld().spawnEntity(p.getLocation().add(0,2.2,0), EntityType.ARMOR_STAND);
 
                 @Override
@@ -76,7 +84,7 @@ public class Commands implements TabExecutor {
                         cancel();
                     }
                 }
-            }.runTaskTimer(C.plugin, 0, 20);
+            }.runTaskTimer(C.plugin, 0, 5);
         }
 
         switch (label) {

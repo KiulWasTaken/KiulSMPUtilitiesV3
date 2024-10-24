@@ -9,7 +9,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 import java.util.*;
 
 public class StatDB {
-    public static DBCollection stats;
+    /*public static DBCollection stats;
     public static DB kiulnetDB;
     public static MongoClient client;
     public static void connect() {
@@ -241,5 +241,5 @@ public class StatDB {
                 }
             }
         }.runTaskAsynchronously(C.plugin);
-    }
+    }*/
 }

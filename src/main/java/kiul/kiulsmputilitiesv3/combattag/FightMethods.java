@@ -40,9 +40,9 @@ public class FightMethods {
                             if (!nearby) {
                                 HashMap<Team, List<Player>> team = C.sortTeams(fight.getParticipants());
                                 int numEnemies = fight.getParticipants().size() - team.get(C.getPlayerTeam(p)).size();
-                                if (numEnemies > team.get(C.getPlayerTeam(p)).size()) {
-                                    StatDB.writePlayer(p.getUniqueId(), "stat_run", (int) StatDB.readPlayer(p.getUniqueId(), "stat_run") + 1);
-                                }
+//                                if (numEnemies > team.get(C.getPlayerTeam(p)).size()) {
+//                                    StatDB.writePlayer(p.getUniqueId(), "stat_run", (int) StatDB.readPlayer(p.getUniqueId(), "stat_run") + 1);
+//                                }
                                 fight.removeParticipant(p.getUniqueId(),false);
                                 cancel();
                                 return;

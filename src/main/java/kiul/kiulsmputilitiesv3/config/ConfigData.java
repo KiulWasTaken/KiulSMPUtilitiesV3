@@ -33,7 +33,7 @@ public class ConfigData {
 
 
 
-        public static void save(){
+        public static void saveAsync(){
 
             new BukkitRunnable() {
                 @Override
@@ -46,6 +46,13 @@ public class ConfigData {
                 }
             }.runTaskAsynchronously(C.plugin);
         }
+    public static void save() {
+        try {
+            arenaDataFile.save(file);
+        } catch (IOException e) {
+            System.out.println("Failed to save persistentData File.");
+        }
+    }
 
         public static void reload(){
             arenaDataFile = YamlConfiguration.loadConfiguration(file);

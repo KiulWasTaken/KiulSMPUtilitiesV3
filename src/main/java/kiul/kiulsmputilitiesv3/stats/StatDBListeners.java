@@ -30,7 +30,7 @@ import java.util.List;
 
 public class StatDBListeners implements Listener {
 
-    HashMap<Material,Integer> valuedTypes = new HashMap<>() {{
+    /*HashMap<Material,Integer> valuedTypes = new HashMap<>() {{
        put(Material.NETHERITE_HELMET,2);
        put(Material.NETHERITE_CHESTPLATE,2);
        put(Material.NETHERITE_LEGGINGS,2);
@@ -172,5 +172,5 @@ public class StatDBListeners implements Listener {
 
             }
         }
-    }
+    }*/
 }

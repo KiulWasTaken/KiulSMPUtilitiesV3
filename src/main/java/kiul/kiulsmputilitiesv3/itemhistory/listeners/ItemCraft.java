@@ -9,11 +9,13 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.enchantment.EnchantItemEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.SmithItemEvent;
 import org.bukkit.inventory.AnvilInventory;
 import org.bukkit.inventory.GrindstoneInventory;
+import org.bukkit.inventory.ItemStack;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
@@ -50,32 +52,79 @@ public class ItemCraft implements Listener {
     }};
 
     @EventHandler
-    public void craftItemEvent (CraftItemEvent e) {
-        if (!C.ITEM_HISTORY_ENABLED) {return;}
+    public void craftItemEvent(CraftItemEvent e) {
+        if (!C.ITEM_HISTORY_ENABLED) {
+            return;
+        }
         if (historyItems.contains(e.getRecipe().getResult().getType())) {
             if ((e.getView().getBottomInventory().firstEmpty() != -1)) {
                 LocalDate currentDate = LocalDate.now();
-                ItemMethods.addLore(e.getInventory().getResult(),ChatColor.GRAY + "\uD83D\uDEE0 - " + ((Player)e.getView().getPlayer()).getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
+                ItemMethods.addLore(e.getInventory().getResult(), ChatColor.GRAY + "\uD83D\uDEE0 - " + ((Player) e.getView().getPlayer()).getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
             }
         }
     }
 
     @EventHandler
-    public void smithDate (SmithItemEvent e) {
-        if (!C.ITEM_HISTORY_ENABLED) {return;}
+    public void smithDate(SmithItemEvent e) {
+        if (!C.ITEM_HISTORY_ENABLED) {
+            return;
+        }
         if (historyItems.contains(e.getInventory().getRecipe().getResult().getType())) {
             LocalDate currentDate = LocalDate.now();
-            ItemMethods.addLore(e.getInventory().getResult(),ChatColor.GRAY + "↑ - " + ((Player)e.getView().getPlayer()).getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
+            ItemMethods.addLore(e.getInventory().getResult(), ChatColor.GRAY + "↑ - " + ((Player) e.getView().getPlayer()).getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
         }
     }
 
     @EventHandler
-    public void combineDate (InventoryClickEvent e) {
-        if (!C.ITEM_HISTORY_ENABLED) {return;}
+    public void combineDate(InventoryClickEvent e) {
+        if (!C.ITEM_HISTORY_ENABLED) {
+            return;
+        }
         if (e.getInventory() instanceof AnvilInventory && e.getSlot() == 2) {
             if (historyItems.contains(e.getCurrentItem().getType())) {
                 LocalDate currentDate = LocalDate.now();
                 ItemMethods.addLore(e.getCurrentItem(), ChatColor.GRAY + "\uD83D\uDD27 - " + ((Player) e.getView().getPlayer()).getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
+            }
+        }
+    }
+
+    @EventHandler
+    public void findDateInventoryCheck(InventoryClickEvent e) {
+        if (!C.ITEM_HISTORY_ENABLED) {
+            return;
+        }
+        if (e.getClickedInventory() == e.getView().getTopInventory()) {
+            if (historyItems.contains(e.getCurrentItem().getType())) {
+                if (e.getCurrentItem().getLore() != null) {
+                    for (String loreString : e.getCurrentItem().getLore()) {
+                        if (ChatColor.stripColor(loreString).contains("\uD83D\uDEE0") || ChatColor.stripColor(loreString).contains("\uD83D\uDD0D")) {
+                            return;
+                        }
+                    }
+                }
+                LocalDate currentDate = LocalDate.now();
+                ItemMethods.addLore(e.getCurrentItem(), ChatColor.GRAY + "" + ChatColor.BOLD + "\uD83D\uDD0D - " + ChatColor.RESET+ChatColor.GRAY+ ((Player) e.getView().getPlayer()).getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
+            }
+        }
+    }
+
+    @EventHandler
+    public void findDatePickupCheck(EntityPickupItemEvent e) {
+        if (e.getEntity() instanceof Player p) {
+            ItemStack item = e.getItem().getItemStack();
+            if (!C.ITEM_HISTORY_ENABLED) {
+                return;
+            }
+            if (historyItems.contains(item.getType())) {
+                if (item.getLore() != null) {
+                    for (String loreString : item.getLore()) {
+                        if (ChatColor.stripColor(loreString).contains("\uD83D\uDEE0") || ChatColor.stripColor(loreString).contains("\uD83D\uDD0D")) {
+                            return;
+                        }
+                    }
+                }
+                LocalDate currentDate = LocalDate.now();
+                ItemMethods.addLore(item, ChatColor.GRAY + "" + ChatColor.BOLD + "\uD83D\uDD0D - " + ChatColor.RESET + ChatColor.GRAY + p.getDisplayName() + ChatColor.DARK_GRAY + " (" + C.dtf.format(currentDate) + ")");
             }
         }
     }
@@ -93,7 +142,13 @@ public class ItemCraft implements Listener {
         if (!C.ITEM_HISTORY_ENABLED) {return;}
         if (e.getInventory() instanceof GrindstoneInventory && e.getSlot() == 2) {
             if (historyItems.contains(e.getCurrentItem().getType())) {
-                List<String> lore = new ArrayList<>();
+                List<String> lore = e.getCurrentItem().getLore();
+                for (int i = 0; i < lore.size(); i++) {
+                    String loreLine = lore.get(i);
+                    if (ChatColor.stripColor(loreLine).contains("\uD83D\uDD27") || ChatColor.stripColor(loreLine).contains("\uD83D\uDCD6")) {
+                        lore.remove(i);
+                    }
+                }
                 e.getCurrentItem().setLore(lore);
             }
         }

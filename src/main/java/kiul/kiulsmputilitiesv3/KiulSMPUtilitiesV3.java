@@ -114,7 +114,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         }
 
         // Database
-        StatDB.connect();
+//        StatDB.connect();
     }
 
     @Override

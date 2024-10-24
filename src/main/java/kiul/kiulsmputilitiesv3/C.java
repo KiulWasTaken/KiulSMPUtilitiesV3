@@ -65,7 +65,7 @@ public class C {
 
     /* Configurable */
     public static int BLOCK_REGEN_SECONDS = 90;
-    public static int NPC_DESPAWN_SECONDS = 90;
+    public static int NPC_DESPAWN_SECONDS = 45;
     public static int ACCESSORY_COOLDOWN_MINUTES = 0;
     public static int CONNECTION_ISSUE_PROTECTION_SECONDS = 15;
 

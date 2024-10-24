@@ -4,6 +4,8 @@ import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.InventoryToBase64;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeModifier;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
@@ -29,7 +31,10 @@ public class LogoutListeners implements Listener {
 
     @EventHandler
     public void spawnDummy(PlayerQuitEvent e) {
+        Player p = e.getPlayer();
+        int combatMultiplier = 1;
         if (!C.COMBAT_LOG_ENABLED) {return;}
+        if (C.fightManager.playerIsInFight(e.getPlayer())) {combatMultiplier = 2;}
         if (e.getReason() == PlayerQuitEvent.QuitReason.KICKED) {return;}
         if (e.getPlayer().getGameMode() != GameMode.SURVIVAL) {return;}
         // Spawn NPC and update its displayname to communicate the time until it despawns.
@@ -71,6 +76,7 @@ public class LogoutListeners implements Listener {
             }.runTaskTimer(C.plugin,0,20);
         }
 
+        int finalCombatMultiplier = combatMultiplier;
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -83,12 +89,15 @@ public class LogoutListeners implements Listener {
                 npc.setProfession(Villager.Profession.NITWIT);
                 npc.setBreed(false);
                 npc.setAdult();
+                for (AttributeModifier attributeModifier : p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getModifiers()) {
+                    npc.getAttribute(Attribute.GENERIC_MAX_HEALTH).addModifier(attributeModifier);
+                }
+                npc.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(e.getPlayer().getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
                 npc.setHealth(e.getPlayer().getHealth());
                 npc.setCanPickupItems(false);
                 npc.setRemoveWhenFarAway(false);
                 npc.setCustomNameVisible(true);
                 npc.getLocation().getChunk().setForceLoaded(true);
-                npc.setHealth(e.getPlayer().getHealth());
                 npc.setCustomName(ChatColor.RED + e.getPlayer().getDisplayName() + ChatColor.GRAY + " - " + ChatColor.YELLOW + "1 : 30");
 
                 npc.getEquipment().setArmorContents(e.getPlayer().getEquipment().getArmorContents());
@@ -105,7 +114,7 @@ public class LogoutListeners implements Listener {
 
                 long npcSpawnTime = System.currentTimeMillis();
                 new BukkitRunnable() {
-                    long despawnTime = npcSpawnTime + (C.NPC_DESPAWN_SECONDS * 1000);
+                    long despawnTime = npcSpawnTime + (C.NPC_DESPAWN_SECONDS * 1000 * finalCombatMultiplier);
 
                     @Override
                     public void run() {
@@ -133,7 +142,9 @@ public class LogoutListeners implements Listener {
                 PersistentData.get().set(e.getPlayer().getUniqueId() + ".npc", npc.getUniqueId().toString());
                 PersistentData.get().set(e.getPlayer().getUniqueId() + ".flagged", false);
                 PersistentData.save();
-
+                if (Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc"))) == null) {
+                    npc.remove();
+                }
             }
         }.runTaskLater(C.plugin,delay);
 
@@ -219,15 +230,20 @@ public class LogoutListeners implements Listener {
     public void punishCombatLogger (PlayerJoinEvent e) {
         if (!C.COMBAT_LOG_ENABLED) {
             PersistentData.get().set(e.getPlayer().getUniqueId() + ".flagged",false);
-            return;}
+            PersistentData.save();
+            return;
+        }
         if (PersistentData.get().getBoolean(e.getPlayer().getUniqueId() + ".flagged")) {
             e.getPlayer().getInventory().clear();
             e.getPlayer().setHealth(0);
             PersistentData.get().set(e.getPlayer().getUniqueId() + ".flagged",false);
+            PersistentData.save();
         }
         if (PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc") != null) {
             if (Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc"))) != null) {
-                e.getPlayer().setHealth(((LivingEntity)Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc")))).getHealth());
+                if (((LivingEntity)Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc")))).getHealth() < e.getPlayer().getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()) {
+                    e.getPlayer().setHealth(((LivingEntity) Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc")))).getHealth());
+                }
                 Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc"))).remove();
                 PersistentData.get().set(e.getPlayer().getUniqueId() + ".npc", null);
                 PersistentData.save();

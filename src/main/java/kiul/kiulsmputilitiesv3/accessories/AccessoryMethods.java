@@ -21,6 +21,7 @@ import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.concurrent.TimeUnit;
 
@@ -47,12 +48,14 @@ public class AccessoryMethods {
 
     public static void equipAccessory (Player p) {
         if (AccessoryData.get().getLong(p.getUniqueId() + ".accessory.cooldown") < System.currentTimeMillis()) {
-            if (AccessoryData.get().get(p.getUniqueId() + ".accessory.identifier") == null) {
+            if (((ArrayList<String>)AccessoryData.get().get(p.getUniqueId() + ".accessory.equipped")).size() < 5 && !((ArrayList<String>)AccessoryData.get().get(p.getUniqueId() + ".accessory.equipped")).contains(p.getInventory().getItemInMainHand().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING))) {
+                // substitute 5 out for an individual maxAmount var later.
                 if (p.getInventory().getItemInMainHand().getType() != Material.AIR) {
                     for (AccessoryItemEnum item : AccessoryItemEnum.values()) {
                         if (item.getLocalName().equalsIgnoreCase(p.getInventory().getItemInMainHand().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING))) {
-                            AccessoryData.get().set(p.getUniqueId() + ".accessory.identifier", item.getLocalName());
-                            AccessoryData.get().set(p.getUniqueId() + ".accessory.item", InventoryToBase64.itemStackToBase64(p.getInventory().getItemInMainHand()));
+                            ArrayList<String> equippedAccessoryIdentifiers = ((ArrayList<String>)AccessoryData.get().get(p.getUniqueId() + ".accessory.equipped"));
+                            equippedAccessoryIdentifiers.add(item.getLocalName());
+                            AccessoryData.get().set(p.getUniqueId() + ".accessory.equipped", equippedAccessoryIdentifiers);
                             AccessoryData.get().set(p.getUniqueId() + ".accessory.range", item.getRange());
                             AccessoryData.get().set(p.getUniqueId() + ".accessory.tracking-multiplier", item.getTrackingMultiplier());
                             AccessoryData.save();
@@ -69,11 +72,13 @@ public class AccessoryMethods {
                                 TomeAccessory.peridotEffect(p);
                             }
 
-
-                            instantiateTrackingSignalTask(p);
+                            if (trackingSignalTask.get(p) == null) {
+                                instantiateTrackingSignalTask(p);
+                            }
                             AdvancementMethods.grantAdvancement(p, AdvancementEnum.ACTIVATE_ACCESSORY.getIdentifier());
                             p.spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(p.getInventory().getItemInMainHand().getItemMeta().getDisplayName() + ChatColor.GRAY + " - " + ChatColor.GREEN + "ACTIVE"));
-                            p.getInventory().getItemInMainHand().setAmount(0);
+                            itemMeta.setEnchantmentGlintOverride(true);
+                            p.getInventory().getItemInMainHand().setItemMeta(itemMeta);
                             p.playSound(p, Sound.BLOCK_ANVIL_LAND, 0.1f, 2f);
 
                             return;
@@ -81,9 +86,10 @@ public class AccessoryMethods {
                     }
                 }
             } else {
+                ArrayList<String> equippedAccessoryIdentifiers = ((ArrayList<String>)AccessoryData.get().get(p.getUniqueId() + ".accessory.equipped"));
                 if (p.getInventory().getItemInMainHand().getType() == Material.AIR) {
                     for (AccessoryItemEnum accessoryItemEnum : AccessoryItemEnum.values()) {
-                        if (accessoryItemEnum.getLocalName().equalsIgnoreCase(getActiveAccessoryIdentifier(p))) {
+                        if (equippedAccessoryIdentifiers.contains(accessoryItemEnum.getLocalName())) {
                             if (accessoryItemEnum.getAttribute() != null) {
                                 for (AttributeModifier attributeModifiers : p.getAttribute(accessoryItemEnum.getAttribute()).getModifiers()) {
                                     p.getAttribute(accessoryItemEnum.getAttribute()).removeModifier(attributeModifiers);
@@ -91,14 +97,15 @@ public class AccessoryMethods {
                             }
                         }
                     }
-                    try {
-                        p.getInventory().setItemInMainHand(InventoryToBase64.itemStackFromBase64(AccessoryData.get().getString(p.getUniqueId() + ".accessory.item")));
-                    } catch (IOException err) {
-                        err.printStackTrace();
-                    }
-                    AccessoryData.get().set(p.getUniqueId() + ".accessory.identifier", null);
+                    ItemStack itemStack = p.getInventory().getItemInMainHand();
+                    ItemMeta itemMeta = itemStack.getItemMeta();
+                    itemMeta.setEnchantmentGlintOverride(false);
+                    p.getInventory().getItemInMainHand().setItemMeta(itemMeta);
+
+                    equippedAccessoryIdentifiers.remove(p.getInventory().getItemInMainHand().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING));
+                    AccessoryData.get().set(p.getUniqueId() + ".accessory.equipped", equippedAccessoryIdentifiers);
                     AccessoryData.get().set(p.getUniqueId() + ".accessory.item", null);
-                    AccessoryData.get().set(p.getUniqueId() + ".accessory.cooldown", System.currentTimeMillis()+C.ACCESSORY_COOLDOWN_MINUTES *1000*60);
+                    AccessoryData.get().set(p.getUniqueId() + ".accessory.cooldown", System.currentTimeMillis()+C.ACCESSORY_COOLDOWN_MINUTES*1000*60);
                     AccessoryData.save();
 
                     p.playSound(p, Sound.BLOCK_ANVIL_LAND, 0.1f, 2f);

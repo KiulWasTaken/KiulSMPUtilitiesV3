@@ -33,6 +33,7 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -48,7 +49,7 @@ public class AccessoryListeners implements Listener {
         p.sendMessage(Component.text("§f§a§i§r§x§a§e§r§o"));// disables worldmap caves
         p.sendMessage(Component.text("§x§a§e§r§o§w§m§n§e§t§h§e§r§i§s§f§a§i§r"));// enables cave mode in nether (?)
         AccessoryData.get().options().copyDefaults(true);
-        AccessoryData.get().addDefault(uuid+".accessory.identifier",null);
+        AccessoryData.get().addDefault(uuid+".accessory.equipped",new ArrayList<String>()); // stores identifiers of all equipped accessories
         AccessoryData.get().addDefault(uuid+".accessory.item",null);
         AccessoryData.get().addDefault(uuid+".accessory.range",0);
         AccessoryData.get().addDefault(uuid+".accessory.tracking-multiplier",1.0);

@@ -33,19 +33,26 @@ public class PersistentData {
 
 
 
-        public static void save(){
-            new BukkitRunnable() {
-                @Override
-                public void run() {
-                    try {
-                        arenaDataFile.save(file);
-                    } catch (IOException e) {
-                        System.out.println("Failed to save persistentData File.");
-                    }
-                }
-            }.runTaskAsynchronously(C.plugin);
+    public static void saveAsync(){
 
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                try {
+                    arenaDataFile.save(file);
+                } catch (IOException e) {
+                    System.out.println("Failed to save persistentData File.");
+                }
+            }
+        }.runTaskAsynchronously(C.plugin);
+    }
+    public static void save() {
+        try {
+            arenaDataFile.save(file);
+        } catch (IOException e) {
+            System.out.println("Failed to save persistentData File.");
         }
+    }
 
         public static void reload(){
             arenaDataFile = YamlConfiguration.loadConfiguration(file);
