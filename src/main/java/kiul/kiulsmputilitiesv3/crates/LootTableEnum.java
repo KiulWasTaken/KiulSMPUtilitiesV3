@@ -16,6 +16,7 @@ public enum LootTableEnum {
     gold_totem("gold",Material.TOTEM_OF_UNDYING,1,1,0.8,1),
     gold_gem("gold",Material.PLAYER_HEAD,1,1,0.5,-1),
 
+
     oxidized_core("oxidized",Material.HEAVY_CORE,1,1,1,3),
     oxidized_key("oxidized",Material.OMINOUS_TRIAL_KEY,4,8,0.7,-1),
     oxidized_eGaps("oxidized",Material.ENCHANTED_GOLDEN_APPLE,1,4,0.5,1),
@@ -28,6 +29,8 @@ public enum LootTableEnum {
     oxidized_boltTrim("oxidized",Material.BOLT_ARMOR_TRIM_SMITHING_TEMPLATE,1,1,0.1,1),
     oxidized_flowTrim("oxidized",Material.FLOW_ARMOR_TRIM_SMITHING_TEMPLATE,1,1,0.1,1),
     oxidized_gem("oxidized",Material.PLAYER_HEAD,1,1,0.2,-1),
+
+
     end_bottles("end",Material.EXPERIENCE_BOTTLE,52,64,0.3,1),
     end_eGap("end",Material.ENCHANTED_GOLDEN_APPLE,2,4,0.5,1),
     end_breathe("end",Material.DRAGON_BREATH,8,24,0.5,1),
@@ -40,6 +43,8 @@ public enum LootTableEnum {
     end_eyeTrim("end",Material.EYE_ARMOR_TRIM_SMITHING_TEMPLATE,1,1,0.5,1),
     end_spireTrim("end",Material.SPIRE_ARMOR_TRIM_SMITHING_TEMPLATE,1,1,0.5,1),
     end_gem("end",Material.PLAYER_HEAD,1,1,0.5,-1),
+
+
     nether_scrap("nether",Material.NETHERITE_SCRAP,4,8,1,1),
     nether_goldBlock("nether",Material.GOLD_BLOCK,24,48,1,1),
     nether_nIngot("nether",Material.NETHERITE_INGOT,1,4,0.5,1),

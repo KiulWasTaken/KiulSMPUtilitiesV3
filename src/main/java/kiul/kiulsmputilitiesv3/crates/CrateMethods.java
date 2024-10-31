@@ -1,5 +1,6 @@
 package kiul.kiulsmputilitiesv3.crates;
 
+import com.mongodb.Block;
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.accessories.IngredientItemEnum;
 import net.md_5.bungee.api.ChatMessageType;
@@ -17,6 +18,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.util.Vector;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -298,6 +300,8 @@ public class CrateMethods {
                 } else {
                     nameplate.remove();
                         Random random = new Random();
+                        Vector squareCornerA = crateSpawnLocation.clone().add(10,10,10).toVector();
+                        Vector squareCornerB = crateSpawnLocation.clone().add(-10,-10,-10).toVector();
                         String color = ChatColor.getLastColors(crateType.getDisplayName());
                         ArmorStand crate = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0.5, -2.4, 0.5), EntityType.ARMOR_STAND);
                         crate.setInvulnerable(true);
@@ -307,26 +311,28 @@ public class CrateMethods {
                         crate.setPersistent(true);
                         crate.addEquipmentLock(EquipmentSlot.HEAD, ArmorStand.LockType.REMOVING_OR_CHANGING);
                         crate.setHelmet(new ItemStack(crateType.getCrateType()));
-                    int particleCount = 48;
+                        BlockDisplay borderDisplay = (BlockDisplay) world.spawnEntity(crateSpawnLocation.clone(),EntityType.BLOCK_DISPLAY);
+                        borderDisplay.setDisplayHeight(20);
+                        borderDisplay.setDisplayWidth(20);
+                        borderDisplay.setGlowing(true);
+                        borderDisplay.setBlock(Material.BARRIER.createBlockData());
+                        borderDisplay.setVisibleByDefault(false);
                     new BukkitRunnable() {
-                        int i = 0;
                         public void run() {
                             if (!crate.isDead()) {
-                                if (i > particleCount)
-                                    i = 0;
-                                double angle = (2 * Math.PI * i) / particleCount;
-                                double xOffset = 15 * Math.cos(angle);
-                                double zOffset = 15 * Math.sin(angle);
-                                Location particleLocation = crateSpawnLocation.clone().add(xOffset, 7, zOffset);
-                                Location particleLocation1 = crateSpawnLocation.clone().add(-xOffset, 7, -zOffset);
-                                crateSpawnLocation.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, particleLocation, 1, 0.1, 0.1, 0.1, 0);
-                                crateSpawnLocation.getWorld().spawnParticle(Particle.TOTEM_OF_UNDYING, particleLocation1, 1, 0.1, 0.1, 0.1, 0);
-                                i++;
+                                for (Player p : Bukkit.getOnlinePlayers()) {
+                                    if (p.getLocation().toVector().isInAABB(squareCornerA,squareCornerB)) {
+                                        p.showEntity(C.plugin,borderDisplay);
+                                    } else {
+                                        p.hideEntity(C.plugin,borderDisplay);
+                                    }
+                                }
                             } else {
+                                borderDisplay.remove();
                                 cancel();
                             }
                         }
-                    }.runTaskTimer(C.plugin, 0L, 1L);
+                    }.runTaskTimer(C.plugin, 0L, 10L);
                         crate.setRotation(random.nextFloat(0, 180), 0);
                         String phases = "\uD83D\uDD12";
                         crate.setCustomName(color + phases.repeat(crateType.getUnlockPhases()));
@@ -359,7 +365,7 @@ public class CrateMethods {
                                                         CrateMethods.crateInventoryMap.remove(crate);
                                                         crateSpawnLocation.getChunk().setForceLoaded(false);
 
-                                                        HashSet<String> uniqueSet = new HashSet<>(CrateMethods.playersWhoGotLoot);
+                                                        HashSet<String> uniqueSet = new HashSet<>(playersWhoGotLoot);
                                                         List<String> uniqueList = new ArrayList<>(uniqueSet);
                                                         Bukkit.broadcastMessage("");
                                                         Bukkit.broadcastMessage(C.eventPrefix + ChatColor.WHITE + "Players " + ChatColor.RED + uniqueList.toString() + ChatColor.WHITE + " Looted the crate!");
@@ -423,8 +429,8 @@ public class CrateMethods {
                                             }
                                         }
 
-                                        for (Entity nearbyEntities : crateSpawnLocation.getWorld().getNearbyEntities(crateSpawnLocation, 15, 15, 15)) {
-                                            if (nearbyEntities instanceof Player p) {
+                                        for (Player p : Bukkit.getOnlinePlayers()) {
+                                            if (p.getLocation().toVector().isInAABB(squareCornerA,squareCornerB)) {
                                                 if (C.getPlayerTeam(p) != null) {
                                                     Team team = C.getPlayerTeam(p);
 
