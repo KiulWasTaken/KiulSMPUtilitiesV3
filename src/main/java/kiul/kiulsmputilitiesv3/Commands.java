@@ -2,8 +2,10 @@ package kiul.kiulsmputilitiesv3;
 
 import kiul.kiulsmputilitiesv3.accessories.AccessoryMethods;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
+import kiul.kiulsmputilitiesv3.config.ConfigData;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.crates.CrateTypeEnum;
+import kiul.kiulsmputilitiesv3.end_fight.CloseEndDimension;
 import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -88,6 +90,9 @@ public class Commands implements TabExecutor {
         }
 
         switch (label) {
+            case "close-end":
+                CloseEndDimension.deleteEndPortalBlocks(p.getWorld());
+                break;
             case "give-accessory":
                 if (p.hasPermission("kiulsmp.debug")) {
                     AccessoryMethods.giveAccessory(p, args[0]);
@@ -99,7 +104,7 @@ public class Commands implements TabExecutor {
                 }
                 break;
             case "accessory":
-                if (!C.ACCESSORIES_ENABLED) {break;}
+                if (!ConfigData.get().getBoolean("accessories")) {break;}
                 AccessoryMethods.equipAccessory(p);
                 break;
             case "kmenu":

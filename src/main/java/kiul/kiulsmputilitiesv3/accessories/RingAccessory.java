@@ -3,6 +3,7 @@ package kiul.kiulsmputilitiesv3.accessories;
 import io.papermc.paper.event.player.PlayerPurchaseEvent;
 import io.papermc.paper.event.player.PlayerTradeEvent;
 import kiul.kiulsmputilitiesv3.C;
+import kiul.kiulsmputilitiesv3.config.ConfigData;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
@@ -28,7 +29,7 @@ public class RingAccessory implements Listener {
 
     @EventHandler
     public void baseEffect (PlayerInteractEntityEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).contains("ring") && !AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).contains("ruby")) {
             if (e.getRightClicked() instanceof Villager v) {
                 if (e.getPlayer().hasPotionEffect(PotionEffectType.HERO_OF_THE_VILLAGE)) {
@@ -43,7 +44,7 @@ public class RingAccessory implements Listener {
     HashMap<MerchantRecipe,Villager> customVillagerGUI = new HashMap<>();
     @EventHandler
     public void rubyCreateGUI (PlayerInteractEntityEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (e.getRightClicked() instanceof Villager) {
             if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).equalsIgnoreCase("ring_ruby")) {
                 e.setCancelled(true);
@@ -76,7 +77,7 @@ public class RingAccessory implements Listener {
     }
     @EventHandler
     public void rubyTrade (PlayerPurchaseEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
             if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).equalsIgnoreCase("ring_ruby")) {
                 if (customVillagerGUI.containsKey(e.getTrade())) {
                     Villager v = customVillagerGUI.get(e.getTrade());
@@ -92,7 +93,7 @@ public class RingAccessory implements Listener {
     }
     @EventHandler
     public void peridotEffect (EntitySpawnEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (e.getEntity() instanceof ExperienceOrb exp) {
             if (exp.getSpawnReason().equals(ExperienceOrb.SpawnReason.VILLAGER_TRADE)) {
                 for (Entity nearbyEntity : exp.getNearbyEntities(5,5,5)) {
@@ -108,7 +109,7 @@ public class RingAccessory implements Listener {
 
     @EventHandler
     public void tanzaniteEffect (PlayerTradeEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).equalsIgnoreCase("ring_tanzanite")) {
 
             Villager villager = (Villager) e.getVillager();
@@ -121,7 +122,7 @@ public class RingAccessory implements Listener {
 
     @EventHandler
     public void opalEffect (PlayerPurchaseEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).equalsIgnoreCase("ring_opal")) {
             if (Math.random() < 0.3) {
                 e.setIncreaseTradeUses(false);

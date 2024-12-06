@@ -5,6 +5,7 @@ import kiul.kiulsmputilitiesv3.InventoryToBase64;
 import kiul.kiulsmputilitiesv3.advancements.AdvancementEnum;
 import kiul.kiulsmputilitiesv3.advancements.AdvancementMethods;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
+import kiul.kiulsmputilitiesv3.config.ConfigData;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -157,7 +158,7 @@ public class AccessoryMethods {
 
             @Override
             public void run() {
-                if (p.isOnline() && AccessoryData.get().get(p.getUniqueId()+".accessory.identifier") != null && C.ACCESSORIES_ENABLED) {
+                if (p.isOnline() && AccessoryData.get().get(p.getUniqueId()+".accessory.identifier") != null && ConfigData.get().getBoolean("accessories")) {
                     for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                         Team onlinePlayerTeam = C.getPlayerTeam(onlinePlayer);
                         Team pTeam = C.getPlayerTeam(p);

@@ -2,6 +2,7 @@ package kiul.kiulsmputilitiesv3.accessories;
 
 import com.destroystokyo.paper.event.player.PlayerPickupExperienceEvent;
 import kiul.kiulsmputilitiesv3.C;
+import kiul.kiulsmputilitiesv3.config.ConfigData;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
@@ -32,7 +33,7 @@ public class TomeAccessory implements Listener {
 
     @EventHandler
     public void baseEffect (PlayerExpChangeEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(e.getPlayer()).contains("tome")) {
             if (e.getAmount() > 0) {
                 e.setAmount((int) (e.getAmount() * 1.25));
@@ -42,7 +43,7 @@ public class TomeAccessory implements Listener {
 
     @EventHandler
     public void rubyPreventSteal (PlayerPickupExperienceEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (e.getExperienceOrb().hasMetadata("no")) {
             if (experiencePickupCooldown.containsKey(e.getPlayer())) {
                 if (experiencePickupCooldown.get(e.getPlayer()) <= System.currentTimeMillis()) {
@@ -56,7 +57,7 @@ public class TomeAccessory implements Listener {
 
     @EventHandler (priority = EventPriority.MONITOR)
     public void rubyEffect (EntityResurrectEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (!e.isCancelled() && e.getEntity().getLastDamageCause() instanceof EntityDamageByEntityEvent) {
             Entity entity = ((EntityDamageByEntityEvent) e.getEntity().getLastDamageCause()).getDamager();
             if (entity instanceof Player damager) {
@@ -78,7 +79,7 @@ public class TomeAccessory implements Listener {
 
     @EventHandler
     public void peridotEffectCooldown (PlayerItemDamageEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         Player p = e.getPlayer();
         if (AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_peridot")) {
             if (itemRepairCooldown.get(p) == null) {
@@ -93,7 +94,7 @@ public class TomeAccessory implements Listener {
     @EventHandler
     public void startPeridotEffect (PlayerJoinEvent e) {
         Player p = e.getPlayer();
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_peridot")) {
             peridotEffect(p);
         }
@@ -107,7 +108,7 @@ public class TomeAccessory implements Listener {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (!p.isOnline() || !AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_peridot") || !C.ACCESSORIES_ENABLED) {cancel();return;}
+                if (!p.isOnline() || !AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_peridot") || !ConfigData.get().getBoolean("accessories")) {cancel();return;}
                 if (itemRepairCooldown.get(p) != null) {
                     for (int i = 9; i <= 35; i++) {
                         ItemStack itemsToRepair = p.getInventory().getItem(i);
@@ -143,7 +144,7 @@ public class TomeAccessory implements Listener {
     @EventHandler
     public void tanzaniteEffect (PlayerPickupExperienceEvent e) {
         Player p = e.getPlayer();
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_tanzanite")) {
             Team team = C.getPlayerTeam(p);
             for (String teammateNames : team.getEntries()) {
@@ -180,7 +181,7 @@ public class TomeAccessory implements Listener {
 
     @EventHandler
     public void opalEffect (PlayerPickupExperienceEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         Player p = e.getPlayer();
         if (AccessoryMethods.getActiveAccessoryIdentifier(p).equals("tome_opal")) {
             int effect = (int)(Math.random()*(positivePotionEffects.size()+1));

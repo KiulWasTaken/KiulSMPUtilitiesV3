@@ -3,6 +3,7 @@ package kiul.kiulsmputilitiesv3.crates;
 import com.mongodb.Block;
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.accessories.IngredientItemEnum;
+import kiul.kiulsmputilitiesv3.config.ConfigData;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -591,7 +592,7 @@ public class CrateMethods {
         new BukkitRunnable() {
             @Override
             public void run() {
-                if (!C.restarting && C.CRATES_ENABLED) {
+                if (!C.restarting && !ConfigData.get().getBoolean("crates")) {
 
                     if (Bukkit.getOnlinePlayers().size() >= 10) {
                         double magicNumber = 0.001 * Bukkit.getOnlinePlayers().size() - 10;

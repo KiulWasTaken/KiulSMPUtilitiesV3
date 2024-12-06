@@ -1,6 +1,7 @@
 package kiul.kiulsmputilitiesv3.combattag;
 
 import kiul.kiulsmputilitiesv3.C;
+import kiul.kiulsmputilitiesv3.config.ConfigData;
 import org.bukkit.Bukkit;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
@@ -28,7 +29,7 @@ public class FightLogicListeners implements Listener {
      **/
     @EventHandler
     public void startFight(EntityDamageByEntityEvent e) {
-        if (!C.COMBAT_TAG_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("combattag")) {return;}
         if (e.getEntity() instanceof Player) {
             Player p1 = null;
             if (e.getDamager() instanceof ExplosiveMinecart cart) {
@@ -134,7 +135,7 @@ public class FightLogicListeners implements Listener {
 
     @EventHandler
     public void removeFromFightOnDeath (PlayerDeathEvent e) {
-        if (!C.COMBAT_TAG_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("combattag")) {return;}
         Player p = e.getEntity();
         FightObject fightObject = C.fightManager.findFightForMember(p);
         if (fightObject != null) {
@@ -196,7 +197,7 @@ public class FightLogicListeners implements Listener {
 
     @EventHandler
     public void useTridentCoolDown (PlayerRiptideEvent e) {
-        if (!C.COMBAT_TAG_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("combattag")) {return;}
         Player p = e.getPlayer();
         if (C.fightManager.playerIsInFight(p)) {
             p.setCooldown(Material.TRIDENT,600);
@@ -207,7 +208,7 @@ public class FightLogicListeners implements Listener {
     }
     @EventHandler
     public void useWindChargeCoolDown (ProjectileLaunchEvent e) {
-        if (!C.COMBAT_TAG_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("combattag")) {return;}
         if (e.getEntity() instanceof WindCharge && e.getEntity().getShooter() instanceof Player p) {
                 if (C.fightManager.playerIsInFight(p)) {
                     new BukkitRunnable() {
@@ -223,7 +224,7 @@ public class FightLogicListeners implements Listener {
 
     @EventHandler
     public void damagedTridentCoolDown (EntityDamageByEntityEvent e) {
-        if (!C.COMBAT_TAG_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("combattag")) {return;}
         if (e.getEntity() instanceof Player) {
             Player p1 = null;
             if (e.getDamager() instanceof ExplosiveMinecart cart) {
@@ -340,7 +341,7 @@ public class FightLogicListeners implements Listener {
 
     @EventHandler
     public void damagedRocketCoolDown (EntityDamageByEntityEvent e) {
-        if (!C.COMBAT_TAG_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("combattag")) {return;}
         if (e.getDamager() instanceof Player damager && e.getEntity() instanceof Player damaged) {
             if (C.fightManager.playerIsInFight(damaged)) {
                 if (damaged.getInventory().getChestplate() != null) {

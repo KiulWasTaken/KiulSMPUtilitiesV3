@@ -36,19 +36,29 @@ public class C {
         return ChatColor.translateAlternateColorCodes('&', matcher.appendTail(buffer).toString());
     }
 
-    /* config booleans */
-    public static boolean COMBAT_LOG_ENABLED;
-    public static boolean COMBAT_TAG_ENABLED;
-    public static boolean POTIONS_ENABLED;
-    public static boolean ITEM_HISTORY_ENABLED;
-    public static boolean ACCESSORIES_ENABLED;
-    public static boolean CRATES_ENABLED;
+    public static String GOLD = C.t("&#ebbc3d");
+    public static String LIGHT_RED = C.t("&#f5633b");
+    public static String RED = C.t("&#e33630");
+    public static String DARK_RED = C.t("&#a11813");
+    public static String GREEN = C.t("&#27a33a");
+    public static String YELLOW = C.t("&#b59a4e");
+    public static String BLUE = C.t("&#658bb5"); //old &#5f95ed
+    public static String GRAY = C.t("&#787878");
+    public static String PURPLE = C.t("&#6d2b94");
+    public static String PINK = C.t("&#c73e8b");
+    public static String LIGHT_GREEN = C.t("&#31e862");
+    public static String DARK_GREEN = C.t("&#218a3c");
+    public static String GRAY_BLUE = C.t("&#89adaf");
+    public static String GRAY_PINK = C.t("&#af89a4");
+    public static String GRAY_PURPLE = C.t("&#a989af");
+    /*#c73e8b pink
+#6d2b94 purple*/
 
     /* static utilities */
     public static Plugin plugin = KiulSMPUtilitiesV3.getPlugin(KiulSMPUtilitiesV3.class);
     public static String chatColour = ChatColor.GRAY + "" + ChatColor.ITALIC;
     public static String eventPrefix = ChatColor.GOLD+""+ChatColor.BOLD+"EVENT" + ChatColor.RESET+ChatColor.GRAY+" » ";
-    public static String pluginPrefix = C.t("&#F37BD2&lS&#EF75A8&lM&#EA6E7D&lP"+ChatColor.RESET+ChatColor.GRAY+" » ");
+    public static String pluginPrefix = C.t("&7[&#27a33a\uD83D\uDD31&7] "+ChatColor.RESET+ChatColor.GRAY+"");
     public static boolean restarting = false;
     public static DecimalFormat twoPointDecimal = new DecimalFormat("#.##");
     public static int claimCoreRange = 32;

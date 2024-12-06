@@ -2,6 +2,8 @@ name: Kiul-SMP-Utilities-V3
 version: '${project.version}'
 main: kiul.kiulsmputilitiesv3.KiulSMPUtilitiesV3
 api-version: '1.20'
+softdepend:
+  - PattyEssentialsV3
 commands:
   logout:
     aliases:
@@ -18,3 +20,4 @@ commands:
   recaps:
   kmenu:
   spawn-crate:
+  close-end:

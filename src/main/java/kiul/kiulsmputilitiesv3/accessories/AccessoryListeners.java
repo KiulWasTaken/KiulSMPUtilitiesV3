@@ -5,6 +5,7 @@ import kiul.kiulsmputilitiesv3.InventoryToBase64;
 import kiul.kiulsmputilitiesv3.advancements.AdvancementEnum;
 import kiul.kiulsmputilitiesv3.advancements.AdvancementMethods;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
+import kiul.kiulsmputilitiesv3.config.ConfigData;
 import kiul.kiulsmputilitiesv3.stats.StatDB;
 import net.kyori.adventure.text.Component;
 import org.bukkit.Bukkit;
@@ -59,7 +60,7 @@ public class AccessoryListeners implements Listener {
         AccessoryData.get().addDefault(uuid+".sounds.self",true);
         AccessoryData.get().addDefault(uuid+".sounds.all",true);
         AccessoryData.save();
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (AccessoryData.get().get(uuid+".accessory.identifier") != null) {
             AccessoryMethods.instantiateTrackingSignalTask(p);
         }
@@ -100,7 +101,7 @@ public class AccessoryListeners implements Listener {
 
     @EventHandler
     public void reforgeAccessory (InventoryClickEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         Player p = (Player) e.getWhoClicked();
         if (e.getInventory() instanceof CraftingInventory) {
             if (e.getCurrentItem() == null) {return;}
@@ -137,7 +138,7 @@ public class AccessoryListeners implements Listener {
 
     @EventHandler
     public void makeItemInvulnerable (PlayerDropItemEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (e.getItemDrop().getItemStack().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) {
             e.getItemDrop().setInvulnerable(true);
             e.getItemDrop().setUnlimitedLifetime(true);
@@ -191,7 +192,7 @@ public class AccessoryListeners implements Listener {
     }
     @EventHandler
     public void preventDeath (EntityDamageEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (e.getEntity() instanceof Item i && ((Item) e.getEntity()).getItemStack().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) {
             e.setCancelled(true);
             if (e.getDamageSource().getDamageType().equals(DamageType.OUT_OF_WORLD)) {
@@ -204,7 +205,7 @@ public class AccessoryListeners implements Listener {
 
     @EventHandler
     public void preventDie (ItemSpawnEvent e) {
-        if (!C.ACCESSORIES_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("accessories")) {return;}
         if (e.getEntity().getItemStack().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) {
             e.getEntity().setInvulnerable(true);
             e.getEntity().setUnlimitedLifetime(true);

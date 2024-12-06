@@ -5,12 +5,10 @@ import kiul.kiulsmputilitiesv3.combatlog.LogoutListeners;
 import kiul.kiulsmputilitiesv3.combatlog.MovementListeners;
 import kiul.kiulsmputilitiesv3.combattag.FightLogicListeners;
 import kiul.kiulsmputilitiesv3.combattag.RecapInventory;
-import kiul.kiulsmputilitiesv3.config.AccessoryData;
-import kiul.kiulsmputilitiesv3.config.ClaimData;
-import kiul.kiulsmputilitiesv3.config.ConfigData;
-import kiul.kiulsmputilitiesv3.config.PersistentData;
+import kiul.kiulsmputilitiesv3.config.*;
 import kiul.kiulsmputilitiesv3.crates.CrateListeners;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
+import kiul.kiulsmputilitiesv3.end_fight.CloseEndDimension;
 import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemCraft;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemPickupAfterDeath;
@@ -46,7 +44,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new RecapInventory(),this);
         getServer().getPluginManager().registerEvents(new FeatureInventory(),this);
         getServer().getPluginManager().registerEvents(new EggAccessory(),this);
-
+        getServer().getPluginManager().registerEvents(new CloseEndDimension(),this);
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
             if ((accessoryItem.getLocalName().contains("ring") || accessoryItem.getLocalName().contains("tome")) && accessoryItem.getLocalName().contains("base")) {
@@ -86,6 +84,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getCommand("translate").setExecutor(new Commands());
         getCommand("recaps").setExecutor(new Commands());
         getCommand("kmenu").setExecutor(new Commands());
+        getCommand("close-end").setExecutor(new Commands());
 
         // Config
         ConfigData.setup();
@@ -98,18 +97,13 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
             ConfigData.get().addDefault("accessories", true);
             ConfigData.get().addDefault("crates", true);
         }
-        C.COMBAT_LOG_ENABLED = ConfigData.get().getBoolean("combatlog");
-        C.COMBAT_TAG_ENABLED = ConfigData.get().getBoolean("combattag");
-        C.POTIONS_ENABLED = ConfigData.get().getBoolean("potions");
-        C.ITEM_HISTORY_ENABLED = ConfigData.get().getBoolean("itemhistory");
-        C.ACCESSORIES_ENABLED = ConfigData.get().getBoolean("accessories");
-        C.CRATES_ENABLED = ConfigData.get().getBoolean("crates");
         PersistentData.setup();
         AccessoryData.setup();
         ClaimData.setup();
+        WorldData.setup();
 
         // Plugin Methods
-        if (C.CRATES_ENABLED) {
+        if (ConfigData.get().getBoolean("crates")) {
             CrateMethods.startRandomCrates(getServer().getWorld("world"));
         }
 
@@ -120,13 +114,6 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
     @Override
     public void onDisable() {
         // Plugin shutdown logic
-        ConfigData.get().set("combatlog",C.COMBAT_LOG_ENABLED);
-        ConfigData.get().set("combattag",C.COMBAT_TAG_ENABLED);
-        ConfigData.get().set("potions",C.POTIONS_ENABLED);
-        ConfigData.get().set("itemhistory",C.ITEM_HISTORY_ENABLED);
-        ConfigData.get().set("accessories",C.ACCESSORIES_ENABLED);
-        ConfigData.get().set("crates",C.CRATES_ENABLED);
-        ConfigData.save();
         AccessoryData.save();
     }
 }

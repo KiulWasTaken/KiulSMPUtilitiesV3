@@ -2,6 +2,7 @@ package kiul.kiulsmputilitiesv3.combatlog;
 
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.InventoryToBase64;
+import kiul.kiulsmputilitiesv3.config.ConfigData;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -33,7 +34,7 @@ public class LogoutListeners implements Listener {
     public void spawnDummy(PlayerQuitEvent e) {
         Player p = e.getPlayer();
         int combatMultiplier = 1;
-        if (!C.COMBAT_LOG_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("combatlog")) {return;}
         if (C.fightManager.playerIsInFight(e.getPlayer())) {combatMultiplier = 2;}
         if (e.getReason() == PlayerQuitEvent.QuitReason.KICKED) {return;}
         if (e.getPlayer().getGameMode() != GameMode.SURVIVAL) {return;}
@@ -153,7 +154,7 @@ public class LogoutListeners implements Listener {
 
     @EventHandler
     public void killNPC(EntityDamageByEntityEvent e) {
-        if (!C.COMBAT_LOG_ENABLED) {return;}
+        if (!ConfigData.get().getBoolean("combatlog")) {return;}
         if (e.getEntity() instanceof Villager) {
             if ((e.getDamager().getType() == EntityType.ARROW || e.getDamager().getType() == EntityType.SPECTRAL_ARROW || e.getDamager().getType() == EntityType.PLAYER || e.getDamager().getType() == EntityType.TNT_MINECART)) {
                 boolean allowDamage = false;
@@ -228,7 +229,7 @@ public class LogoutListeners implements Listener {
 
     @EventHandler
     public void punishCombatLogger (PlayerJoinEvent e) {
-        if (!C.COMBAT_LOG_ENABLED) {
+        if (!ConfigData.get().getBoolean("combatlog")) {
             PersistentData.get().set(e.getPlayer().getUniqueId() + ".flagged",false);
             PersistentData.save();
             return;

@@ -79,5 +79,12 @@
             <version>1.21-R0.1-SNAPSHOT</version>
             <scope>provided</scope>
         </dependency>
+        <dependency>
+            <groupId>org.pat</groupId>
+            <artifactId>PattyEssentialsV3</artifactId>
+            <version>1.0</version>
+            <scope>system</scope>
+            <systemPath>C:/Users/josha/IdeaProjects/depends/PattyEssentialsV3-1.0.jar</systemPath>
+        </dependency>
     </dependencies>
 </project>
