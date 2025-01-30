@@ -162,6 +162,7 @@ public class Commands implements TabExecutor {
                 if (p.hasPermission("kiulsmp.debug")) {
                     CrateMethods.createCrate(p.getWorld(), args[0],true);
                 }
+                break;
             case "spawn-crate":
                 if (p.hasPermission("kiulsmp.debug")) {
                     CrateMethods.createCrate(p.getWorld(), args[0],false);

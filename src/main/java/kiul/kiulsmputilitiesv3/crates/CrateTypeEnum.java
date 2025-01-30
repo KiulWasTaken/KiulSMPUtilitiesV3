@@ -41,7 +41,7 @@ public enum CrateTypeEnum {
         add(new ItemStack(Material.ENDER_PEARL));
         add(new ItemStack(Material.EYE_ARMOR_TRIM_SMITHING_TEMPLATE));
         add(new ItemStack(Material.SPIRE_ARMOR_TRIM_SMITHING_TEMPLATE));
-    }},5),
+    }},2),
     Nether(C.t("&#CF2200M&#D1310EO&#D3401CL&#D3401CT&#D1310EE&#CF2200N"),"nether",(long)1000*60*120,2,2000,0,Material.GILDED_BLACKSTONE,new ArrayList<ItemStack>() {{
         add(new ItemStack(Material.NETHERITE_SCRAP));
         add(new ItemStack(Material.GOLD_BLOCK));
@@ -54,7 +54,7 @@ public enum CrateTypeEnum {
         add(new ItemStack(Material.GOLDEN_APPLE));
         add(new ItemStack(Material.RIB_ARMOR_TRIM_SMITHING_TEMPLATE));
         add(new ItemStack(Material.SNOUT_ARMOR_TRIM_SMITHING_TEMPLATE));
-    }},5),
+    }},2),
     BlackBox(C.t("&#252624B&#2C2D2BL&#333433A&#3A3B3AC&#3A3B3AK &#333433B&#2C2D2BO&#252624X"),"blackbox",(long)1000*60*180,3,4000,0,Material.BLACK_SHULKER_BOX,new ArrayList<ItemStack>() {{
 
     }},5);

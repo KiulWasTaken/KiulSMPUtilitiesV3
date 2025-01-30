@@ -1,5 +1,6 @@
 package kiul.kiulsmputilitiesv3.crates;
 
+import org.bukkit.Location;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Firework;
 import org.bukkit.entity.Item;
@@ -11,6 +12,7 @@ import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.inventory.InventoryAction;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.player.PlayerInteractAtEntityEvent;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 
@@ -25,6 +27,21 @@ public class CrateListeners implements Listener {
         if (e.getView().getTitle().equalsIgnoreCase("crate")) {
             if (e.getAction().equals(InventoryAction.MOVE_TO_OTHER_INVENTORY)) {
                 CrateMethods.playersWhoGotLoot.add(p.getDisplayName());
+            }
+        }
+    }
+
+    @EventHandler
+    public void damageInCrateFight(EntityDamageByEntityEvent e) {
+        if (e.getEntity() instanceof Player p) {
+            for (Location crateLocation : activeCratesLocation.keySet()) {
+                Vector cornerA = crateLocation.clone().add(10,10,10).toVector();
+                Vector cornerB = crateLocation.clone().add(-10,-10,-10).toVector();
+                Vector squareCornerA = Vector.getMinimum(cornerA, cornerB);
+                Vector squareCornerB = Vector.getMaximum(cornerA, cornerB);
+                if (p.getLocation().toVector().isInAABB(squareCornerA,squareCornerB)) {
+                    activeCratesLocation.put(crateLocation,activeCratesLocation.get(crateLocation)+e.getFinalDamage());
+                }
             }
         }
     }

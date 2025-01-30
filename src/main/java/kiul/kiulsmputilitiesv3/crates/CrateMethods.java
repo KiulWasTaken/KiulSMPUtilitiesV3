@@ -32,7 +32,7 @@ public class CrateMethods {
     public static HashMap<ArmorStand,Long> crateUnlockTime = new HashMap<>();
 
     public static ArrayList<String> playersWhoGotLoot = new ArrayList<>();
-    public static HashMap<Chunk,ArmorStand> standMap = new HashMap<>();
+    public static HashMap<Location,Double> activeCratesLocation = new HashMap<>();
 
     public static ArrayList<ArmorStand> locked = new ArrayList<>();
     public static ArrayList<ArmorStand> unlocking = new ArrayList<>();
@@ -245,7 +245,6 @@ public class CrateMethods {
         CrateTypeEnum crateType = getCrate(type);
 
         Location crateSpawnLocation = returnCrateLocation(world);
-        Bukkit.broadcastMessage(crateSpawnLocation.toString());
         long crateSpawnTime = System.currentTimeMillis()+crateType.getSpawnTime();
         if (debug) {
             crateSpawnTime = System.currentTimeMillis()+1000*60;
@@ -301,8 +300,10 @@ public class CrateMethods {
                 } else {
                     nameplate.remove();
                         Random random = new Random();
-                        Vector squareCornerA = crateSpawnLocation.clone().add(10,10,10).toVector();
-                        Vector squareCornerB = crateSpawnLocation.clone().add(-10,-10,-10).toVector();
+                        Vector cornerA = crateSpawnLocation.clone().add(10,10,10).toVector();
+                        Vector cornerB = crateSpawnLocation.clone().add(-10,-10,-10).toVector();
+                        Vector squareCornerMin = Vector.getMinimum(cornerA, cornerB);
+                        Vector squareCornerMax = Vector.getMaximum(cornerA, cornerB);
                         String color = ChatColor.getLastColors(crateType.getDisplayName());
                         ArmorStand crate = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0.5, -2.4, 0.5), EntityType.ARMOR_STAND);
                         crate.setInvulnerable(true);
@@ -312,28 +313,35 @@ public class CrateMethods {
                         crate.setPersistent(true);
                         crate.addEquipmentLock(EquipmentSlot.HEAD, ArmorStand.LockType.REMOVING_OR_CHANGING);
                         crate.setHelmet(new ItemStack(crateType.getCrateType()));
-                        BlockDisplay borderDisplay = (BlockDisplay) world.spawnEntity(crateSpawnLocation.clone(),EntityType.BLOCK_DISPLAY);
-                        borderDisplay.setDisplayHeight(20);
-                        borderDisplay.setDisplayWidth(20);
+                        Slime borderDisplay = (Slime) world.spawnEntity(crateSpawnLocation.clone(),EntityType.SLIME);
+                        borderDisplay.setSize(10);
                         borderDisplay.setGlowing(true);
-                        borderDisplay.setBlock(Material.BARRIER.createBlockData());
-                        borderDisplay.setVisibleByDefault(false);
-                    new BukkitRunnable() {
-                        public void run() {
-                            if (!crate.isDead()) {
-                                for (Player p : Bukkit.getOnlinePlayers()) {
-                                    if (p.getLocation().toVector().isInAABB(squareCornerA,squareCornerB)) {
-                                        p.showEntity(C.plugin,borderDisplay);
-                                    } else {
-                                        p.hideEntity(C.plugin,borderDisplay);
-                                    }
-                                }
-                            } else {
-                                borderDisplay.remove();
-                                cancel();
-                            }
-                        }
-                    }.runTaskTimer(C.plugin, 0L, 10L);
+                        borderDisplay.setCollidable(false);
+                        borderDisplay.setInvisible(true);
+                        borderDisplay.setVisibleByDefault(true);
+                        ArmorStand damageDisplay = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0, 2.5, 0), EntityType.ARMOR_STAND);
+                        damageDisplay.setMarker(true);
+                        damageDisplay.setInvulnerable(true);
+                        damageDisplay.setVisible(false);
+                        damageDisplay.setGravity(false);
+                        damageDisplay.setCustomNameVisible(true);
+                        damageDisplay.setPersistent(true);
+//                    new BukkitRunnable() {
+//                        public void run() {
+//                            if (!crate.isDead()) {
+//                                for (Player p : Bukkit.getOnlinePlayers()) {
+//                                    if (p.getLocation().toVector().isInAABB(squareCornerMin,squareCornerMax)) {
+//                                        p.showEntity(C.plugin,borderDisplay);
+//                                    } else {
+//                                        p.hideEntity(C.plugin,borderDisplay);
+//                                    }
+//                                }
+//                            } else {
+//                                borderDisplay.remove();
+//                                cancel();
+//                            }
+//                        }
+//                    }.runTaskTimer(C.plugin, 0L, 10L);
                         crate.setRotation(random.nextFloat(0, 180), 0);
                         String phases = "\uD83D\uDD12";
                         crate.setCustomName(color + phases.repeat(crateType.getUnlockPhases()));
@@ -388,6 +396,7 @@ public class CrateMethods {
                                 }
                             }.runTaskTimer(C.plugin, 0, 20);
                         } else {
+                            activeCratesLocation.put(crateSpawnLocation,0.0);
                             new BukkitRunnable() {
                                 HashMap<Team,Integer> teamScores = new HashMap<Team, Integer>();
                                 HashMap<Team,Long> teamCooldown = new HashMap<Team, Long>();
@@ -404,6 +413,7 @@ public class CrateMethods {
 
                                 @Override
                                 public void run() {
+                                    damageDisplay.setCustomName(color + "" + activeCratesLocation.get(crateSpawnLocation));
                                     if (!wait) {
                                         Iterator<Team> iterator = involvedTeams.iterator();
                                         int total = 0;
@@ -415,9 +425,9 @@ public class CrateMethods {
                                             for (String teamMemberNames : team.getEntries()) {
                                                 if (Bukkit.getPlayer(teamMemberNames) != null) {
 
-                                                    int blueLength = (int)(C.safeDivide(teamScores.get(team), maxScore) * 50);
-                                                    int redLength = (int)(C.safeDivide((total - teamScores.get(team)), maxScore) * 50);
-                                                    int grayLength = (int)(C.safeDivide((maxScore - total), maxScore) * 50);
+                                                    int blueLength = (int)Math.floor(C.safeDivide(teamScores.get(team), maxScore) * 50);
+                                                    int redLength = (int)Math.floor(C.safeDivide((total - teamScores.get(team)), maxScore) * 50);
+                                                    int grayLength = (int)Math.floor(C.safeDivide((maxScore - total), maxScore) * 50);
 
 // Ensure non-negative lengths
                                                     blueLength = Math.max(blueLength, 0);
@@ -431,7 +441,7 @@ public class CrateMethods {
                                         }
 
                                         for (Player p : Bukkit.getOnlinePlayers()) {
-                                            if (p.getLocation().toVector().isInAABB(squareCornerA,squareCornerB)) {
+                                            if (p.getLocation().toVector().isInAABB(squareCornerMin,squareCornerMax)) {
                                                 if (C.getPlayerTeam(p) != null) {
                                                     Team team = C.getPlayerTeam(p);
 
@@ -491,7 +501,13 @@ public class CrateMethods {
                                                             if (teamMember != null) {
                                                                 privateItemStacks.put(teamMember,new ArrayList<>());
                                                                 Location location = crateSpawnLocation.clone().add(0, 3,0); // Add the offsets to the center location
-                                                                for (int i = 0; i < crateType.getLootTableRolls(); i++) {
+
+                                                                /* increase the amount of times loot is rolled depending on how much damage has been dealt in the
+                                                                * vicinity of the crate since the KOTH event started. */
+                                                                int lootTableExtraRolls = (int)(Math.floor(activeCratesLocation.get(crateSpawnLocation))/100);
+                                                                if (lootTableExtraRolls > 5) {lootTableExtraRolls = 5;}
+
+                                                                for (int i = 0; i < crateType.getLootTableRolls()+lootTableExtraRolls; i++) {
                                                                     ItemStack item = CrateMethods.getLootTableItem(crateType.getLootTable(), crateType);
                                                                     i = i + CrateMethods.getRollConsumption(item, crateType);
                                                                     LootTableEnum lootTable = CrateMethods.getLootTable(item, crateType.getIdentifier());
@@ -515,6 +531,7 @@ public class CrateMethods {
                                                             }
                                                             tick++;
                                                             if (tick >= team.getSize()) {
+                                                                tick = 0;
                                                                 wait = false;
                                                                 for (Team teams : involvedTeams) {
                                                                     teamScores.put(teams,10);
@@ -525,6 +542,13 @@ public class CrateMethods {
                                                     }.runTaskTimer(C.plugin,0,10);
                                                     if (phasesRemaining < 1) {
                                                         crate.remove();
+                                                        damageDisplay.remove();
+                                                        new BukkitRunnable() {
+                                                            @Override
+                                                            public void run() {
+                                                                activeCratesLocation.remove(crateSpawnLocation);
+                                                            }
+                                                        }.runTaskLater(C.plugin,20);
                                                         cancel();
                                                     }
                                                 }

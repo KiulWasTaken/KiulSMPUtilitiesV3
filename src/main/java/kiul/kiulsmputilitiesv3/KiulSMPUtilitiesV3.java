@@ -96,6 +96,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
             ConfigData.get().addDefault("itemhistory", true);
             ConfigData.get().addDefault("accessories", true);
             ConfigData.get().addDefault("crates", true);
+            ConfigData.get().addDefault("scheduler", true);
         }
         PersistentData.setup();
         AccessoryData.setup();
