@@ -9,6 +9,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
 
@@ -133,10 +134,10 @@ public class FightMethods {
                     if (allPlayersSneaking) {
                         if (!timeAllSneaking.containsKey(fight)) {
                             timeAllSneaking.put(fight, System.currentTimeMillis());
-                            waitingUntil = System.currentTimeMillis() + 3500;
+                            waitingUntil = System.currentTimeMillis() + 2990;
                         } else {
-                            p.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>" + (waitingUntil - System.currentTimeMillis()) / 1000));
-                            if (System.currentTimeMillis() - timeAllSneaking.get(fight) > 4000) {
+                            p.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>" + (1+(waitingUntil - System.currentTimeMillis()) / 1000)));
+                            if (System.currentTimeMillis() - timeAllSneaking.get(fight) > 3000) {
                                 p.sendActionBar(MiniMessage.miniMessage().deserialize("<yellow>fight disbanded"));
                                 fight.disband();
                                 cancel();
@@ -150,5 +151,19 @@ public class FightMethods {
                 }
             }
         }.runTaskTimer(C.plugin,0,2);
+    }
+
+
+    public static int totalArmourDurability(Player p) {
+
+        int totalDamage = 0;
+
+        for (ItemStack armour : p.getInventory().getArmorContents()) {
+            if (armour != null) {
+                totalDamage += armour.getDurability();
+            }
+        }
+
+        return totalDamage;
     }
 }

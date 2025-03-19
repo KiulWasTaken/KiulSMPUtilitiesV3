@@ -8,14 +8,9 @@ import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityToggleGlideEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
-import org.bukkit.event.entity.ProjectileLaunchEvent;
-import org.bukkit.event.player.PlayerJoinEvent;
-import org.bukkit.event.player.PlayerMoveEvent;
-import org.bukkit.event.player.PlayerQuitEvent;
-import org.bukkit.event.player.PlayerRiptideEvent;
+import org.bukkit.event.entity.*;
+import org.bukkit.event.player.*;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -24,11 +19,14 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
 
+import static kiul.kiulsmputilitiesv3.combattag.FightMethods.totalArmourDurability;
+
 public class FightLogicListeners implements Listener {
 
 
-    HashMap<UUID, HashMap<Material,Integer>> itemCooldowns = new HashMap<>();
+    HashMap<UUID, HashMap<Material, Integer>> itemCooldowns = new HashMap<>();
     public static HashMap<UUID, Long> relogCooldown = new HashMap<>();
+    HashMap<Entity, Player> entityOwner = new HashMap<>();
 
     ArrayList<Material> itemsWithCooldowns = new ArrayList<>() {{
         add(Material.ELYTRA);
@@ -39,8 +37,8 @@ public class FightLogicListeners implements Listener {
     @EventHandler
     public void logoutInCombat(PlayerQuitEvent e) {
         Player p = e.getPlayer();
-        itemCooldowns.put(p.getUniqueId(),new HashMap<>());
-        relogCooldown.put(p.getUniqueId(),System.currentTimeMillis());
+        itemCooldowns.put(p.getUniqueId(), new HashMap<>());
+        relogCooldown.put(p.getUniqueId(), System.currentTimeMillis());
         for (Material material : itemsWithCooldowns) {
             if (p.getCooldown(material) > 0) {
                 itemCooldowns.get(p.getUniqueId()).put(material, p.getCooldown(material));
@@ -54,36 +52,131 @@ public class FightLogicListeners implements Listener {
         relogCooldown.remove(p.getUniqueId());
         if (itemCooldowns.get(p.getUniqueId()) == null) return;
         for (Material material : itemCooldowns.get(p.getUniqueId()).keySet()) {
-            p.setCooldown(material,itemCooldowns.get(p.getUniqueId()).get(material));
+            p.setCooldown(material, itemCooldowns.get(p.getUniqueId()).get(material));
         }
     }
 
     /**
-     *
      * FIGHT BEHAVIOUR
-     *
      **/
+
+    @EventHandler
+    public void playerPlaceEntity (EntityPlaceEvent e) {
+        Player p = e.getPlayer();
+        if (e.getEntity() instanceof ExplosiveMinecart cart) {
+            entityOwner.put(cart,p);
+        }
+    }
+
+
+    @EventHandler
+    public void onEntityDamageByEntity(VehicleDamageEvent event) {
+        // Check if the damaged entity is a minecart
+        if (event.getVehicle() instanceof ExplosiveMinecart) {
+            // Check if the damaging entity is a player
+            Player attacker;
+            ExplosiveMinecart minecart = (ExplosiveMinecart) event.getVehicle();
+            if (event.getAttacker() instanceof Player p) {
+                attacker = p;
+            } else if (event.getAttacker() instanceof Projectile arrow) {
+                if (arrow.getShooter() instanceof Player) {
+                    attacker = (Player) arrow.getShooter();
+                } else return;
+            } else return;
+            // Handle the event, for example, you can send a message when the player punches the minecart
+            entityOwner.put(minecart, attacker);
+        }
+    }
+    @EventHandler
+    public void playerHitMinecart (EntityCombustByEntityEvent e) {
+        if (e.getCombuster() instanceof Projectile arrow && e.getEntity() instanceof ExplosiveMinecart cart) {
+            Player attacker;
+            if (arrow.getShooter() instanceof Player) {
+                attacker = (Player) arrow.getShooter();
+            } else return;
+            entityOwner.put(cart,attacker);
+        }
+    }
+    @EventHandler
+    public void incrementStatsInFight(EntityDamageByEntityEvent e) {
+        if (!ConfigData.get().getBoolean("combattag")) {
+            return;
+        }
+        boolean isMarkedDown = false;
+        if (e.getEntity() instanceof Player p2) {
+            Player p1 = null;
+            FightObject fight = C.fightManager.findFightForMember(p2);
+            if (fight == null) return;
+            if (e.getDamager() instanceof ExplosiveMinecart cart) {
+                if (entityOwner.get(cart) != null) {
+                    Player damager = entityOwner.get(cart);
+                    p1 = damager;
+                    fight.increaseStat(fight.getExplosiveDamageDealtToPlayer(),p1,p2,e.getDamage());
+                    fight.increaseStat(fight.getExplosiveDamageTakenFromPlayer(),p2,p1,e.getDamage());
+                    isMarkedDown = true;
+                }
+            }
+
+            if (e.getDamager() instanceof Projectile arrow) {
+                if (arrow.getShooter() instanceof Player) {
+                    p1 = (Player) arrow.getShooter();
+                    fight.increaseStat(fight.getRangedDamageDealtToPlayer(),p1,p2,e.getDamage());
+                    fight.increaseStat(fight.getRangedDamageTakenFromPlayer(),p2,p1,e.getDamage());
+                    isMarkedDown = true;
+                }
+            }
+            if (e.getDamager() instanceof Player) {
+                p1 = (Player) e.getDamager();
+                if (p1.getInventory().getItemInMainHand().getType().equals(Material.MACE)) {
+                    fight.increaseStat(fight.getMaceDamageDealtToPlayer(),p1,p2,e.getDamage());
+                    fight.increaseStat(fight.getMaceDamageTakenFromPlayer(),p2,p1,e.getDamage());
+                } else {
+                    fight.increaseStat(fight.getMeleeDamageDealtToPlayer(),p1,p2,e.getDamage());
+                    fight.increaseStat(fight.getMaceDamageDealtToPlayer(),p2,p1,e.getDamage());
+                }
+                isMarkedDown = true;
+            }
+
+            fight.increaseStat(fight.getDamageDealt(),p1,e.getDamage());
+            fight.increaseStat(fight.getDamageTaken(),p2,e.getDamage());
+            if (!isMarkedDown) {
+                fight.increaseStat(fight.getUntypedDamageDealtToPlayer(),p1,p2,e.getDamage());
+                fight.increaseStat(fight.getUntypedDamageTakenFromPlayer(),p2,p1,e.getDamage());
+            }
+            if (p1 == null) {
+                return;
+            }
+            int p2preDurability = totalArmourDurability(p2);
+            Player finalP = p1;
+            Bukkit.getScheduler().scheduleSyncDelayedTask(C.plugin, new Runnable() {
+                @Override
+                public void run() {
+                    int p2postDurability = totalArmourDurability(p2);
+                    if (p2postDurability > p2preDurability) {
+                        int difference = p2postDurability - p2preDurability;
+                        // increase stats by difference
+                        fight.increaseStat(fight.getDurabilityDamageDealtToPlayer(), finalP, p2, difference);
+                        fight.increaseStat(fight.getDurabilityDamageTakenFromPlayer(), p2, finalP, difference);
+                    }
+                }
+            }, 1);
+        }
+
+    }
+
     @EventHandler
     public void startFight(EntityDamageByEntityEvent e) {
-        if (!ConfigData.get().getBoolean("combattag")) {return;}
+
+
+        if (!ConfigData.get().getBoolean("combattag")) {
+            return;
+        }
         if (e.getEntity() instanceof Player) {
             Player p1 = null;
             if (e.getDamager() instanceof ExplosiveMinecart cart) {
-                Bukkit.broadcastMessage("hurt by cart");
-                if (cart.getLastDamageCause() instanceof EntityDamageByEntityEvent lastDamageCause) {
-                    Bukkit.broadcastMessage("entitydamagebyEntity");
-                    if ((lastDamageCause.getDamager().getType() == EntityType.ARROW || lastDamageCause.getDamager().getType() == EntityType.SPECTRAL_ARROW || lastDamageCause.getDamager().getType() == EntityType.PLAYER)) {
-                        Bukkit.broadcastMessage("shot by arrow");
-                        Player damager = null;
-                        if ((lastDamageCause.getDamager() instanceof Projectile arrow)) {
-                            damager = (Player) arrow.getShooter();
-                        }
-                        if (lastDamageCause.getDamager() instanceof Player) {
-                            damager = (Player) lastDamageCause.getDamager();
-                        }
-                        Bukkit.broadcastMessage("from " + damager.getName());
-                        p1 = damager;
-                    }
+                if (entityOwner.get(cart) != null) {
+                    Player damager = entityOwner.get(cart);
+                    p1 = damager;
                 }
             }
             if (e.getDamager() instanceof AbstractArrow arrow) {
@@ -108,18 +201,6 @@ public class FightLogicListeners implements Listener {
             boolean p2inFight = C.fightManager.playerIsInFight(p2);
             FightObject p1FightObject = C.fightManager.findFightForMember(p1);
             FightObject p2FightObject = C.fightManager.findFightForMember(p2);
-            if (p1FightObject != null && p1FightObject.getParticipants().contains(p2.getUniqueId())) {
-                p1FightObject.getDamageDealt().put(p1.getUniqueId().toString(), p1FightObject.getDamageDealt().get(p1.getUniqueId().toString()) + e.getFinalDamage());
-                p1FightObject.getDamageTaken().put(p2.getUniqueId().toString(), p1FightObject.getDamageTaken().get(p2.getUniqueId().toString()) + e.getFinalDamage());
-                p1FightObject.getHits().put(p1.getUniqueId().toString(), p1FightObject.getHits().get(p1.getUniqueId().toString()) + 1);
-                return;
-            }
-            if (p2FightObject != null && p2FightObject.getParticipants().contains(p1.getUniqueId())) {
-                p2FightObject.getDamageDealt().put(p1.getUniqueId().toString(), p1FightObject.getDamageDealt().get(p1.getUniqueId().toString()) + e.getFinalDamage());
-                p2FightObject.getDamageTaken().put(p2.getUniqueId().toString(), p1FightObject.getDamageTaken().get(p2.getUniqueId().toString()) + e.getFinalDamage());
-                p2FightObject.getHits().put(p1.getUniqueId().toString(), p2FightObject.getHits().get(p1.getUniqueId().toString()) + 1);
-                return;
-            }
 
             if (!p1inFight && !p2inFight) {
                 ArrayList<UUID> participants = new ArrayList<>();
@@ -146,31 +227,14 @@ public class FightLogicListeners implements Listener {
 
             if (p1inFight && p2inFight) {
                 if (p1FightObject.getDuration() > p2FightObject.getDuration()) {
-                    for (UUID p2FightUUIDs : p2FightObject.getParticipants()) {
-                        p1FightObject.addParticipant(Bukkit.getPlayer(p2FightUUIDs));
-                        FightMethods.startDistanceCheck(Bukkit.getPlayer(p2FightUUIDs), p1FightObject);
-                        p1FightObject.getDamageDealt().put(p2FightUUIDs.toString(), p1FightObject.getDamageDealt().get(p2FightUUIDs.toString()));
-                        p1FightObject.getDamageTaken().put(p2FightUUIDs.toString(), p1FightObject.getDamageTaken().get(p2FightUUIDs.toString()));
-                        p1FightObject.getJoinTimestamp().put(p2FightUUIDs.toString(), p1FightObject.getJoinTimestamp().get(p2FightUUIDs.toString()));
-                        p1FightObject.getLeaveTimestamp().put(p2FightUUIDs.toString(), p1FightObject.getLeaveTimestamp().get(p2FightUUIDs.toString()));
-                        p1FightObject.getDieTimestamp().put(p2FightUUIDs.toString(), p1FightObject.getDieTimestamp().get(p2FightUUIDs.toString()));
-                    }
-                    C.fightManager.disbandFight(p2FightObject);
+                    p1FightObject.mergeFight(p2FightObject);
                 } else {
-                    for (UUID p1FightUUIDs : p1FightObject.getParticipants()) {
-                        p2FightObject.addParticipant(Bukkit.getPlayer(p1FightUUIDs));
-                        FightMethods.startDistanceCheck(Bukkit.getPlayer(p1FightUUIDs), p2FightObject);
-                        p2FightObject.getDamageDealt().put(p1FightUUIDs.toString(), p1FightObject.getDamageDealt().get(p1FightUUIDs.toString()));
-                        p2FightObject.getDamageTaken().put(p1FightUUIDs.toString(), p1FightObject.getDamageTaken().get(p1FightUUIDs.toString()));
-                        p2FightObject.getJoinTimestamp().put(p1FightUUIDs.toString(), p1FightObject.getJoinTimestamp().get(p1FightUUIDs.toString()));
-                        p2FightObject.getLeaveTimestamp().put(p1FightUUIDs.toString(), p1FightObject.getLeaveTimestamp().get(p1FightUUIDs.toString()));
-                        p2FightObject.getDieTimestamp().put(p1FightUUIDs.toString(), p1FightObject.getDieTimestamp().get(p1FightUUIDs.toString()));
-                    }
-                    C.fightManager.disbandFight(p1FightObject);
+                    p2FightObject.mergeFight(p1FightObject);
                 }
             }
         }
     }
+
 
 
     @EventHandler
