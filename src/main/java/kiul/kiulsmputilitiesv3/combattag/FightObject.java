@@ -10,13 +10,18 @@ import java.util.*;
 
 public class FightObject {
 
+    // participants
     private ArrayList<UUID> participants;
     private ArrayList<UUID> offlineParticipants;
     private ArrayList<String> everParticipated;
+
+    // stats
     private HashMap<String,Integer> hits;
     private HashMap<String,Double> damageDealt;
     private HashMap<String,Double> damageTaken;
     private HashMap<String,String> killer;
+
+    // timestamps
     private TreeMap<String,Long> joinTimestamp;
     private TreeMap<String,Long> leaveTimestamp;
     private TreeMap<String,Long> dieTimestamp;
@@ -127,4 +132,9 @@ public class FightObject {
         }
     }
 
+    public void disband() {
+        participants.clear();
+        offlineParticipants.clear();
+        C.fightManager.killFight(this);
+    }
 }

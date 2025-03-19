@@ -3,7 +3,8 @@ package kiul.kiulsmputilitiesv3.combattag;
 import com.sun.source.tree.Tree;
 import it.unimi.dsi.fastutil.Hash;
 import kiul.kiulsmputilitiesv3.C;
-import kiul.kiulsmputilitiesv3.config.PersistentData;
+import kiul.kiulsmputilitiesv3.config.RecapData;
+import kiul.kiulsmputilitiesv3.config.RecapData;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -27,7 +28,7 @@ import java.util.*;
 public class RecapInventory implements Listener {
 
     public static String b(String playerUUID,String path) {
-        Map<String,Object> map = PersistentData.get().getConfigurationSection(path).getValues(false);
+        Map<String,Object> map = RecapData.get().getConfigurationSection(path).getValues(false);
         for (String uuidStrings : map.keySet()) {
             if (map.get(uuidStrings) instanceof Integer) {
                 int value = (Integer) map.get(uuidStrings);
@@ -43,9 +44,9 @@ public class RecapInventory implements Listener {
     }
 
     public static String damageDealtDelta(String path,String pUUID) {
-        ArrayList<String> participants = (ArrayList<String>) PersistentData.get().getList(path + ".participants");
-        HashMap<String, Double> damageTaken = (HashMap) PersistentData.get().getConfigurationSection(path + ".damagetaken").getValues(false);
-        HashMap<String, Double> damageDealt = (HashMap) PersistentData.get().getConfigurationSection(path + ".damagedealt").getValues(false);
+        ArrayList<String> participants = (ArrayList<String>) RecapData.get().getList(path + ".participants");
+        HashMap<String, Double> damageTaken = (HashMap) RecapData.get().getConfigurationSection(path + ".damagetaken").getValues(false);
+        HashMap<String, Double> damageDealt = (HashMap) RecapData.get().getConfigurationSection(path + ".damagedealt").getValues(false);
         TreeMap<String,Double> damageDealtDelta = new TreeMap<>();
         for (String playerUUID : participants) {
             Double damageDealtDeltaValue = damageDealt.get(playerUUID) - damageTaken.get(playerUUID);
@@ -66,9 +67,9 @@ public class RecapInventory implements Listener {
         Inventory inventory = Bukkit.createInventory(p, invSize, "Fight Recaps");
         List<ItemStack> items = new ArrayList<>();
         p.sendMessage(Component.text("Reading data..").color(NamedTextColor.GRAY).decoration(TextDecoration.ITALIC,false));
-        if (PersistentData.get().getConfigurationSection("recaps").getKeys(false) != null) {
+        if (RecapData.get().getConfigurationSection("recaps").getKeys(false) != null) {
             new BukkitRunnable() {
-                List<String> configurationSection = new ArrayList<>(PersistentData.get().getConfigurationSection("recaps").getKeys(false));
+                List<String> configurationSection = new ArrayList<>(RecapData.get().getConfigurationSection("recaps").getKeys(false));
                 int i = 0;
 
                 @Override
@@ -77,22 +78,22 @@ public class RecapInventory implements Listener {
                         String fightUUID = configurationSection.get(i);
                         ArrayList<String> lore = new ArrayList<>();
                         String path = "recaps." + fightUUID;
-                        if (PersistentData.get().getList(path + ".participants").contains(p.getUniqueId().toString())) {
-                            ArrayList<String> participants = (ArrayList<String>) PersistentData.get().getList(path + ".participants");
-                            HashMap<String, Double> hits = (HashMap) PersistentData.get().getConfigurationSection(path + ".hits").getValues(false);
-                            HashMap<String, Double> damageTaken = (HashMap) PersistentData.get().getConfigurationSection(path + ".damagetaken").getValues(false);
-                            HashMap<String, Double> damageDealt = (HashMap) PersistentData.get().getConfigurationSection(path + ".damagedealt").getValues(false);
-                            HashMap<String, String> killer = (HashMap) PersistentData.get().getConfigurationSection(path + ".killer").getValues(false);
-                            TreeMap<String, Long> joinTime = new TreeMap<>((HashMap) PersistentData.get().getConfigurationSection(path + ".jointime").getValues(false));
-                            TreeMap<String, Long> leaveTime = new TreeMap<>((HashMap) PersistentData.get().getConfigurationSection(path + ".leavetime").getValues(false));
-                            TreeMap<String, Long> dieTime = new TreeMap<>((HashMap) PersistentData.get().getConfigurationSection(path + ".dietime").getValues(false));
+                        if (RecapData.get().getList(path + ".participants").contains(p.getUniqueId().toString())) {
+                            ArrayList<String> participants = (ArrayList<String>) RecapData.get().getList(path + ".participants");
+                            HashMap<String, Double> hits = (HashMap) RecapData.get().getConfigurationSection(path + ".hits").getValues(false);
+                            HashMap<String, Double> damageTaken = (HashMap) RecapData.get().getConfigurationSection(path + ".damagetaken").getValues(false);
+                            HashMap<String, Double> damageDealt = (HashMap) RecapData.get().getConfigurationSection(path + ".damagedealt").getValues(false);
+                            HashMap<String, String> killer = (HashMap) RecapData.get().getConfigurationSection(path + ".killer").getValues(false);
+                            TreeMap<String, Long> joinTime = new TreeMap<>((HashMap) RecapData.get().getConfigurationSection(path + ".jointime").getValues(false));
+                            TreeMap<String, Long> leaveTime = new TreeMap<>((HashMap) RecapData.get().getConfigurationSection(path + ".leavetime").getValues(false));
+                            TreeMap<String, Long> dieTime = new TreeMap<>((HashMap) RecapData.get().getConfigurationSection(path + ".dietime").getValues(false));
                             ArrayList<Long> timestamps = new ArrayList<>();
                             timestamps.addAll(joinTime.values());
                             timestamps.addAll(dieTime.values());
                             timestamps.addAll(leaveTime.values());
                             Collections.sort(timestamps);
-                            Long startTime = PersistentData.get().getLong(path + ".starttime");
-                            Long endTime = PersistentData.get().getLong(path + ".endtime");
+                            Long startTime = RecapData.get().getLong(path + ".starttime");
+                            Long endTime = RecapData.get().getLong(path + ".endtime");
                             Date time = new Date(startTime);
 
                             Double damageDealtDelta = (double)damageDealt.get(p.getUniqueId().toString()) - (double)damageTaken.get(p.getUniqueId().toString());
@@ -112,7 +113,7 @@ public class RecapInventory implements Listener {
                                 }
                                 if (C.getPlayerTeamOffline(playerInQuestion) == null) {
                                     teams.add(playerInQuestion.getName());
-                                    break;
+                                    continue;
                                 }
                                 if (!teams.contains(C.getPlayerTeamOffline(playerInQuestion))) {
                                     teams.add(C.getPlayerTeamOffline(playerInQuestion).getPrefix());

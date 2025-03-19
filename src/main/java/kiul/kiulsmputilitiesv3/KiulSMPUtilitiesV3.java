@@ -102,6 +102,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         AccessoryData.setup();
         ClaimData.setup();
         WorldData.setup();
+        RecapData.setup();
 
         // Plugin Methods
         if (ConfigData.get().getBoolean("crates")) {

@@ -14,13 +14,49 @@ import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
+import org.bukkit.event.player.PlayerQuitEvent;
 import org.bukkit.event.player.PlayerRiptideEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.UUID;
 
 public class FightLogicListeners implements Listener {
+
+
+    HashMap<UUID, HashMap<Material,Integer>> itemCooldowns = new HashMap<>();
+    public static HashMap<UUID, Long> relogCooldown = new HashMap<>();
+
+    ArrayList<Material> itemsWithCooldowns = new ArrayList<>() {{
+        add(Material.ELYTRA);
+        add(Material.TRIDENT);
+        add(Material.FIREWORK_ROCKET);
+    }};
+
+    @EventHandler
+    public void logoutInCombat(PlayerQuitEvent e) {
+        Player p = e.getPlayer();
+        itemCooldowns.put(p.getUniqueId(),new HashMap<>());
+        relogCooldown.put(p.getUniqueId(),System.currentTimeMillis());
+        for (Material material : itemsWithCooldowns) {
+            if (p.getCooldown(material) > 0) {
+                itemCooldowns.get(p.getUniqueId()).put(material, p.getCooldown(material));
+            }
+        }
+    }
+
+    @EventHandler
+    public void loginInCombat(PlayerJoinEvent e) {
+        Player p = e.getPlayer();
+        relogCooldown.remove(p.getUniqueId());
+        if (itemCooldowns.get(p.getUniqueId()) == null) return;
+        for (Material material : itemCooldowns.get(p.getUniqueId()).keySet()) {
+            p.setCooldown(material,itemCooldowns.get(p.getUniqueId()).get(material));
+        }
+    }
 
     /**
      *
@@ -33,8 +69,11 @@ public class FightLogicListeners implements Listener {
         if (e.getEntity() instanceof Player) {
             Player p1 = null;
             if (e.getDamager() instanceof ExplosiveMinecart cart) {
+                Bukkit.broadcastMessage("hurt by cart");
                 if (cart.getLastDamageCause() instanceof EntityDamageByEntityEvent lastDamageCause) {
+                    Bukkit.broadcastMessage("entitydamagebyEntity");
                     if ((lastDamageCause.getDamager().getType() == EntityType.ARROW || lastDamageCause.getDamager().getType() == EntityType.SPECTRAL_ARROW || lastDamageCause.getDamager().getType() == EntityType.PLAYER)) {
+                        Bukkit.broadcastMessage("shot by arrow");
                         Player damager = null;
                         if ((lastDamageCause.getDamager() instanceof Projectile arrow)) {
                             damager = (Player) arrow.getShooter();
@@ -42,6 +81,7 @@ public class FightLogicListeners implements Listener {
                         if (lastDamageCause.getDamager() instanceof Player) {
                             damager = (Player) lastDamageCause.getDamager();
                         }
+                        Bukkit.broadcastMessage("from " + damager.getName());
                         p1 = damager;
                     }
                 }
@@ -201,7 +241,7 @@ public class FightLogicListeners implements Listener {
         Player p = e.getPlayer();
         if (C.fightManager.playerIsInFight(p)) {
             p.setCooldown(Material.TRIDENT,600);
-            if (p.getInventory().contains(Material.ELYTRA) || p.getInventory().getChestplate().getType() == Material.ELYTRA) {
+            if (p.getInventory().contains(Material.ELYTRA) || (p.getInventory().getChestplate() != null && p.getInventory().getChestplate().getType() == Material.ELYTRA)) {
                 p.setCooldown(Material.TRIDENT, 900);
             }
         }
@@ -332,8 +372,10 @@ public class FightLogicListeners implements Listener {
             if (damager != null) {
                 if (p.isGliding()) {
                     p.setGliding(false);
+                    Damageable elytra = (Damageable) p.getInventory().getChestplate();
 
-                    p.setCooldown(Material.ELYTRA, 600);
+                    elytra.setDamage(elytra.getDamage()+(elytra.getMaxDamage()/3));
+                    p.setCooldown(Material.ELYTRA, 1200);
                 }
             }
         }

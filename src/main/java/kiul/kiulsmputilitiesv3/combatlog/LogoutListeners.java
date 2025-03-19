@@ -90,10 +90,10 @@ public class LogoutListeners implements Listener {
                 npc.setProfession(Villager.Profession.NITWIT);
                 npc.setBreed(false);
                 npc.setAdult();
-                for (AttributeModifier attributeModifier : p.getAttribute(Attribute.GENERIC_MAX_HEALTH).getModifiers()) {
-                    npc.getAttribute(Attribute.GENERIC_MAX_HEALTH).addModifier(attributeModifier);
+                for (AttributeModifier attributeModifier : p.getAttribute(Attribute.MAX_HEALTH).getModifiers()) {
+                    npc.getAttribute(Attribute.MAX_HEALTH).addModifier(attributeModifier);
                 }
-                npc.getAttribute(Attribute.GENERIC_MAX_HEALTH).setBaseValue(e.getPlayer().getAttribute(Attribute.GENERIC_MAX_HEALTH).getBaseValue());
+                npc.getAttribute(Attribute.MAX_HEALTH).setBaseValue(e.getPlayer().getAttribute(Attribute.MAX_HEALTH).getBaseValue());
                 npc.setHealth(e.getPlayer().getHealth());
                 npc.setCanPickupItems(false);
                 npc.setRemoveWhenFarAway(false);
@@ -242,7 +242,7 @@ public class LogoutListeners implements Listener {
         }
         if (PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc") != null) {
             if (Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc"))) != null) {
-                if (((LivingEntity)Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc")))).getHealth() < e.getPlayer().getAttribute(Attribute.GENERIC_MAX_HEALTH).getValue()) {
+                if (((LivingEntity)Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc")))).getHealth() < e.getPlayer().getAttribute(Attribute.MAX_HEALTH).getValue()) {
                     e.getPlayer().setHealth(((LivingEntity) Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc")))).getHealth());
                 }
                 Bukkit.getEntity(UUID.fromString(PersistentData.get().getString(e.getPlayer().getUniqueId() + ".npc"))).remove();

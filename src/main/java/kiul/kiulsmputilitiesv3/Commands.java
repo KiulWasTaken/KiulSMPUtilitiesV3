@@ -1,6 +1,7 @@
 package kiul.kiulsmputilitiesv3;
 
 import kiul.kiulsmputilitiesv3.accessories.AccessoryMethods;
+import kiul.kiulsmputilitiesv3.combattag.RecapInventory;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
@@ -175,8 +176,8 @@ public class Commands implements TabExecutor {
                 }
                 break;
             case "recaps":
-                p.sendMessage(Component.text("recaps are currently disabled").color(NamedTextColor.RED).decorate(TextDecoration.ITALIC));
-//                RecapInventory.open(p,0);
+                p.sendMessage(Component.text("recaps are currently unstable").color(NamedTextColor.RED).decorate(TextDecoration.ITALIC));
+                RecapInventory.open(p,0);
                 break;
             case "translate":
                 p.sendMessage(C.t(args[0]));
