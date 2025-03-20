@@ -209,42 +209,33 @@ public class FightObject {
 
     public void mergeFight (FightObject otherFight) {
         FightObject thisFight = this;
-        Bukkit.getScheduler().runTaskAsynchronously(C.plugin, () -> {
-            for (UUID otherFightParticipants : otherFight.getParticipants()) {
-                // Execute the operations for each participant
-                addParticipant(Bukkit.getPlayer(otherFightParticipants));
-                FightMethods.startDistanceCheck(Bukkit.getPlayer(otherFightParticipants), thisFight);
-                getDamageDealt().put(otherFightParticipants.toString(), otherFight.getDamageDealt().get(otherFightParticipants.toString()));
-                getDamageTaken().put(otherFightParticipants.toString(), otherFight.getDamageTaken().get(otherFightParticipants.toString()));
-                getJoinTimestamp().put(otherFightParticipants.toString(), otherFight.getJoinTimestamp().get(otherFightParticipants.toString()));
-                getLeaveTimestamp().put(otherFightParticipants.toString(), otherFight.getLeaveTimestamp().get(otherFightParticipants.toString()));
-                getDieTimestamp().put(otherFightParticipants.toString(), otherFight.getDieTimestamp().get(otherFightParticipants.toString()));
-                getDurabilityDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getDurabilityDamageDealtToPlayer().get(otherFightParticipants.toString()));
-                getDurabilityDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getDurabilityDamageTakenFromPlayer().get(otherFightParticipants.toString()));
-                getMeleeDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getMeleeDamageDealtToPlayer().get(otherFightParticipants.toString()));
-                getMeleeDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getMeleeDamageTakenFromPlayer().get(otherFightParticipants.toString()));
-                getMaceDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getMaceDamageDealtToPlayer().get(otherFightParticipants.toString()));
-                getMaceDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getMaceDamageTakenFromPlayer().get(otherFightParticipants.toString()));
-                getExplosiveDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getExplosiveDamageDealtToPlayer().get(otherFightParticipants.toString()));
-                getExplosiveDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getExplosiveDamageTakenFromPlayer().get(otherFightParticipants.toString()));
-                getRangedDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getRangedDamageDealtToPlayer().get(otherFightParticipants.toString()));
-                getRangedDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getRangedDamageTakenFromPlayer().get(otherFightParticipants.toString()));
-                getDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getDamageTakenFromPlayer().get(otherFightParticipants.toString()));
-                getDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getDamageDealtToPlayer().get(otherFightParticipants.toString()));
-                getUntypedDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getUntypedDamageDealtToPlayer().get(otherFightParticipants.toString()));
-                getUntypedDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getUntypedDamageTakenFromPlayer().get(otherFightParticipants.toString()));
-
-                getDurabilityDamageTaken().put(otherFightParticipants.toString(), otherFight.getDurabilityDamageTaken().get(otherFightParticipants.toString()));
-                getDurabilityDamageDealt().put(otherFightParticipants.toString(), otherFight.getDurabilityDamageDealt().get(otherFightParticipants.toString()));
-
-            }
-
-            // After the loop is finished, schedule the disbanding task on the main thread
-            Bukkit.getScheduler().runTask(C.plugin, () -> {
-                C.fightManager.disbandFight(otherFight);
-            });
-        });
-        
+        for (UUID otherFightParticipants : otherFight.getParticipants()) {
+            // Execute the operations for each participant
+            addParticipant(Bukkit.getPlayer(otherFightParticipants));
+            getDamageDealt().put(otherFightParticipants.toString(), otherFight.getDamageDealt().get(otherFightParticipants.toString()));
+            getDamageTaken().put(otherFightParticipants.toString(), otherFight.getDamageTaken().get(otherFightParticipants.toString()));
+            getJoinTimestamp().put(otherFightParticipants.toString(), otherFight.getJoinTimestamp().get(otherFightParticipants.toString()));
+            getLeaveTimestamp().put(otherFightParticipants.toString(), otherFight.getLeaveTimestamp().get(otherFightParticipants.toString()));
+            getDieTimestamp().put(otherFightParticipants.toString(), otherFight.getDieTimestamp().get(otherFightParticipants.toString()));
+            getDurabilityDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getDurabilityDamageDealtToPlayer().get(otherFightParticipants.toString()));
+            getDurabilityDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getDurabilityDamageTakenFromPlayer().get(otherFightParticipants.toString()));
+            getMeleeDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getMeleeDamageDealtToPlayer().get(otherFightParticipants.toString()));
+            getMeleeDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getMeleeDamageTakenFromPlayer().get(otherFightParticipants.toString()));
+            getMaceDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getMaceDamageDealtToPlayer().get(otherFightParticipants.toString()));
+            getMaceDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getMaceDamageTakenFromPlayer().get(otherFightParticipants.toString()));
+            getExplosiveDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getExplosiveDamageDealtToPlayer().get(otherFightParticipants.toString()));
+            getExplosiveDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getExplosiveDamageTakenFromPlayer().get(otherFightParticipants.toString()));
+            getRangedDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getRangedDamageDealtToPlayer().get(otherFightParticipants.toString()));
+            getRangedDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getRangedDamageTakenFromPlayer().get(otherFightParticipants.toString()));
+            getDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getDamageTakenFromPlayer().get(otherFightParticipants.toString()));
+            getDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getDamageDealtToPlayer().get(otherFightParticipants.toString()));
+            getUntypedDamageDealtToPlayer().put(otherFightParticipants.toString(), otherFight.getUntypedDamageDealtToPlayer().get(otherFightParticipants.toString()));
+            getUntypedDamageTakenFromPlayer().put(otherFightParticipants.toString(), otherFight.getUntypedDamageTakenFromPlayer().get(otherFightParticipants.toString()));
+            getDurabilityDamageTaken().put(otherFightParticipants.toString(), otherFight.getDurabilityDamageTaken().get(otherFightParticipants.toString()));
+            getDurabilityDamageDealt().put(otherFightParticipants.toString(), otherFight.getDurabilityDamageDealt().get(otherFightParticipants.toString()));
+            FightMethods.startDistanceCheck(Bukkit.getPlayer(otherFightParticipants), thisFight);
+        }
+        C.fightManager.disbandFight(otherFight);
     }
     
     public void increaseStat (HashMap<String, HashMap<String, Double>> statMap,Player primary,Player secondary, double amount) {
@@ -255,7 +246,7 @@ public class FightObject {
             statMap.get(primary.getUniqueId().toString()).put(secondary.getUniqueId().toString(),amount);
             return;
         }
-        statMap.get(primary.getUniqueId().toString()).put(secondary.getUniqueId().toString(),statMap.get(primary.getUniqueId()).get(secondary.getUniqueId().toString())+amount);
+        statMap.get(primary.getUniqueId().toString()).put(secondary.getUniqueId().toString(),statMap.get(primary.getUniqueId().toString()).get(secondary.getUniqueId().toString())+amount);
         
     }
     public void increaseStat (HashMap<String, Double> statMap,Player primary, double amount) {

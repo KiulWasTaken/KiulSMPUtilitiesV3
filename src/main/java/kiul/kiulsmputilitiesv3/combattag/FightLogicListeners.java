@@ -225,7 +225,7 @@ public class FightLogicListeners implements Listener {
                 }
             }
 
-            if (p1inFight && p2inFight) {
+            if (p1FightObject != p2FightObject) {
                 if (p1FightObject.getDuration() > p2FightObject.getDuration()) {
                     p1FightObject.mergeFight(p2FightObject);
                 } else {
