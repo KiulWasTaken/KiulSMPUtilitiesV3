@@ -11,6 +11,7 @@ import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.Plugin;
 import org.bukkit.profile.PlayerProfile;
+import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
@@ -55,6 +56,7 @@ public class C {
 #6d2b94 purple*/
 
     /* static utilities */
+    public static BukkitTask smpScheduler;
     public static Plugin plugin = KiulSMPUtilitiesV3.getPlugin(KiulSMPUtilitiesV3.class);
     public static String chatColour = ChatColor.GRAY + "" + ChatColor.ITALIC;
     public static String eventPrefix = ChatColor.GOLD+""+ChatColor.BOLD+"EVENT" + ChatColor.RESET+ChatColor.GRAY+" » ";

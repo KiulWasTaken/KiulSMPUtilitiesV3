@@ -12,6 +12,7 @@ import kiul.kiulsmputilitiesv3.end_fight.CloseEndDimension;
 import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemCraft;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemPickupAfterDeath;
+import kiul.kiulsmputilitiesv3.scheduler.SMPScheduler;
 import kiul.kiulsmputilitiesv3.stats.StatDB;
 import kiul.kiulsmputilitiesv3.stats.StatDBListeners;
 import org.bukkit.*;
@@ -88,7 +89,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
 
         // Config
         ConfigData.setup();
-        if (ConfigData.get().get("combatlog") == null) {
+        if (ConfigData.get().get("scheduler") == null) {
             ConfigData.get().options().copyDefaults(true);
             ConfigData.get().addDefault("combatlog", true);
             ConfigData.get().addDefault("combattag", true);
@@ -103,7 +104,11 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         ClaimData.setup();
         WorldData.setup();
         RecapData.setup();
-
+        ScheduleConfig.setup();
+        SMPScheduler.initializeScheduleConfig();
+        if (ConfigData.get().getBoolean("scheduler")) {
+            SMPScheduler.initializeScheduler();
+        }
         // Plugin Methods
         if (ConfigData.get().getBoolean("crates")) {
             CrateMethods.startRandomCrates(getServer().getWorld("world"));

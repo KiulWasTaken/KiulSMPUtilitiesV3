@@ -2,7 +2,9 @@ package kiul.kiulsmputilitiesv3.featuretoggle;
 
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
+import kiul.kiulsmputilitiesv3.config.ScheduleConfig;
 import kiul.kiulsmputilitiesv3.end_fight.CloseEndDimension;
+import kiul.kiulsmputilitiesv3.scheduler.SMPScheduler;
 import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -16,6 +18,7 @@ import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 
 public class FeatureInventory implements Listener {
@@ -81,6 +84,28 @@ public class FeatureInventory implements Listener {
 
 
                 break;
+                case "scheduler":
+                    lore.add("");
+                    if (ScheduleConfig.get().get("start_time") != null) {
+                        HashMap<String, int[]> eventTimes = SMPScheduler.getTimeUntilEvents();
+                        for (String event : eventTimes.keySet()) {
+                            String[] properName = event.split("\\_");
+                            String[] finalName = new String[2];
+                            finalName[0] = properName[0].substring(0, 1).toUpperCase() + properName[0].substring(1);
+                            finalName[1] = properName[1].substring(0, 1).toUpperCase() + properName[1].substring(1);
+                            int[] timestamps = eventTimes.get(event);
+                            String times = timestamps[0] + " Hours And " + timestamps[1] + " Minutes";
+                            lore.add(C.t("&#89adaf" + finalName[0] + " " + finalName[1] + "&f In " + times));
+
+                        }
+                    } else {
+                        ConfigData.get().set("scheduler",false);
+                        ConfigData.save();
+                        lore.add(C.t("&#89adafscheduler has not been initialized"));
+                        lore.add(C.t("&#89adafmore info will appear when you enable it."));
+                    }
+                    lore.add("");
+                    break;
             }
 
             if (item.isToggleable()) {
@@ -111,6 +136,8 @@ public class FeatureInventory implements Listener {
             if (e.getCurrentItem() == null) {return;}
             if (e.getCurrentItem().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) {
                 String localName = e.getCurrentItem().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING);
+                ConfigData.get().set(localName,!ConfigData.get().getBoolean(localName));
+                ConfigData.save();
                 switch (localName) {
                     case "close_end":
                         ItemStack itemStack = e.getCurrentItem();
@@ -191,13 +218,36 @@ public class FeatureInventory implements Listener {
                                 itemMeta.setLore(itemMetaLore);
                                 itemStack.setItemMeta(itemMeta);
                             }
+                            return;
                         }
-                        return;
-//                    case "":
-//                        break;
+                        break;
+                    case "scheduler":
+                        if (!ConfigData.get().getBoolean("scheduler")) {
+                            // save timestamp
+                            ScheduleConfig.get().set("toggle_time",System.currentTimeMillis());
+                            ScheduleConfig.save();
+                            if (C.smpScheduler != null) {
+                                C.smpScheduler.cancel();
+                            }
+                        } else {
+                            if (ScheduleConfig.get().get("toggle_time") != null && ScheduleConfig.get().get("start_time") != null) {
+                                long timestamp = ScheduleConfig.get().getLong("toggle_time");
+                                long startTime = ScheduleConfig.get().getLong("start_time");
+                                long currentTime = System.currentTimeMillis();
+                                startTime += currentTime-timestamp;
+                                ScheduleConfig.get().set("start_time",startTime);
+                                ScheduleConfig.save();
+                                SMPScheduler.initializeScheduler();
+                                // add currentTime-timestamp to start_time
+                            } else {
+                                ScheduleConfig.get().set("start_time",System.currentTimeMillis());
+                                ScheduleConfig.save();
+                                SMPScheduler.initializeScheduler();
+                            }
+                        }
+                        break;
                 }
-                ConfigData.get().set(localName,!ConfigData.get().getBoolean(localName));
-                ConfigData.save();
+
                 p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (ConfigData.get().getBoolean(localName) ? C.GREEN+"Enabled":C.RED+"Disabled"));
 
                 open(p,true);

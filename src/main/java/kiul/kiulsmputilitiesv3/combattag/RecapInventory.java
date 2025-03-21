@@ -124,7 +124,7 @@ public class RecapInventory implements Listener {
                                 String groupName = teams.get(j);
 
                                 if (j != teams.size()-1) {
-                                    displayName += groupName + ChatColor.RESET+ "vs. ";
+                                    displayName += groupName + ChatColor.RESET+ " vs. ";
                                 } else {
                                     displayName += groupName;
                                 }
