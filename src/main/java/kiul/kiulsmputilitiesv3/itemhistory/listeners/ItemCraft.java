@@ -15,6 +15,7 @@ import org.bukkit.event.inventory.CraftItemEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.SmithItemEvent;
 import org.bukkit.inventory.AnvilInventory;
+import org.bukkit.inventory.CraftingInventory;
 import org.bukkit.inventory.GrindstoneInventory;
 import org.bukkit.inventory.ItemStack;
 
@@ -94,7 +95,7 @@ public class ItemCraft implements Listener {
         if (!ConfigData.get().getBoolean("itemhistory")) {
             return;
         }
-        if (e.getClickedInventory() == e.getView().getTopInventory()) {
+        if (e.getClickedInventory() == e.getView().getTopInventory() && !(e.getView().getTopInventory() instanceof CraftingInventory)) {
             if (historyItems.contains(e.getCurrentItem().getType())) {
                 if (e.getCurrentItem().getLore() != null) {
                     for (String loreString : e.getCurrentItem().getLore()) {

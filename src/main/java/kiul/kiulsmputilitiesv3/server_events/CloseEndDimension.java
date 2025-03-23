@@ -1,11 +1,10 @@
-package kiul.kiulsmputilitiesv3.end_fight;
+package kiul.kiulsmputilitiesv3.server_events;
 
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
 import kiul.kiulsmputilitiesv3.config.WorldData;
 import org.bukkit.*;
 import org.bukkit.block.Block;
-import org.bukkit.block.BlockFace;
 import org.bukkit.block.data.type.EndPortalFrame;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
@@ -16,8 +15,6 @@ import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.pat.pattyEssentialsV3.Enums.MenuEnum;
-import org.pat.pattyEssentialsV3.Listeners.ClickInv;
-import org.pat.pattyEssentialsV3.Utils;
 
 
 import java.util.ArrayList;

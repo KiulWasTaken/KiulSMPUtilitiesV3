@@ -34,16 +34,13 @@ public class AccessoryData {
 
 
         public static void save(){
-            new BukkitRunnable() {
-                @Override
-                public void run() {
+
                     try {
                         userDataFile.save(file);
                     } catch (IOException e) {
                         System.out.println("Failed to save persistentData File.");
                     }
-                }
-            }.runTaskAsynchronously(C.plugin);
+
         }
 
         public static void reload(){

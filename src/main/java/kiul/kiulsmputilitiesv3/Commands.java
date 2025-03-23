@@ -6,7 +6,7 @@ import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.crates.CrateTypeEnum;
-import kiul.kiulsmputilitiesv3.end_fight.CloseEndDimension;
+import kiul.kiulsmputilitiesv3.server_events.CloseEndDimension;
 import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;

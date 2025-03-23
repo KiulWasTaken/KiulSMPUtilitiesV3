@@ -3,7 +3,8 @@ package kiul.kiulsmputilitiesv3.scheduler;
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
 import kiul.kiulsmputilitiesv3.config.ScheduleConfig;
-import kiul.kiulsmputilitiesv3.end_fight.CloseEndDimension;
+import kiul.kiulsmputilitiesv3.server_events.CloseEndDimension;
+import kiul.kiulsmputilitiesv3.server_events.FinalFight;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -125,6 +126,7 @@ public class SMPScheduler {
                                             CloseEndDimension.increaseEndBorder();
                                             break;
                                         case "final_fight":
+                                            FinalFight.beginShrinkWorldBorder(3600,150);
                                             // final fight method 😨
                                             break;
                                     }

@@ -43,7 +43,9 @@ public class LogoutListeners implements Listener {
         World world = location.getWorld();
         int delay = 0;
         if (e.getReason() != PlayerQuitEvent.QuitReason.DISCONNECTED) {
+            return;
             // if the player disconnected by ALT+F4 or connection issue, allow them time to reconnect.
+            /*
             delay = 20*C.CONNECTION_ISSUE_PROTECTION_SECONDS;
 
             ArmorStand timer = (ArmorStand) world.spawnEntity(location.add(0,2,0),EntityType.ARMOR_STAND);
@@ -74,7 +76,7 @@ public class LogoutListeners implements Listener {
 
                     tick ++;
                 }
-            }.runTaskTimer(C.plugin,0,20);
+            }.runTaskTimer(C.plugin,0,20);*/
         }
 
         int finalCombatMultiplier = combatMultiplier;

@@ -29,7 +29,7 @@ public class FightMethods {
             public void run() {
 
                 boolean nearby = false;
-                if (fight != null && fight.isPartaking(p.getUniqueId())) {
+                if (fight != null && fight.isPartaking(p.getUniqueId()) && !fight.getParticipants().isEmpty()) {
                     for (int i = 0; i < fight.getParticipants().size(); i++) {
 
                         Player fightParticipant = Bukkit.getPlayer(fight.getParticipants().get(i));
