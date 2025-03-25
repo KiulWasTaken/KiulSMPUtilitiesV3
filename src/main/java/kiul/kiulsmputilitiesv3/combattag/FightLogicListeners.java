@@ -7,6 +7,7 @@ import org.bukkit.Material;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
@@ -26,7 +27,7 @@ public class FightLogicListeners implements Listener {
 
     HashMap<UUID, HashMap<Material, Integer>> itemCooldowns = new HashMap<>();
     public static HashMap<UUID, Long> relogCooldown = new HashMap<>();
-    HashMap<Entity, Player> entityOwner = new HashMap<>();
+    private HashMap<Entity, Player> entityOwner = new HashMap<>();
 
     ArrayList<Material> itemsWithCooldowns = new ArrayList<>() {{
         add(Material.ELYTRA);
@@ -164,10 +165,9 @@ public class FightLogicListeners implements Listener {
 
     }
 
-    @EventHandler
+    @EventHandler (priority = EventPriority.HIGHEST)
     public void startFight(EntityDamageByEntityEvent e) {
-
-
+        if (e.isCancelled()) return;
         if (!ConfigData.get().getBoolean("combattag")) {
             return;
         }

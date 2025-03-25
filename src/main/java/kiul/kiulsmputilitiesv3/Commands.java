@@ -4,23 +4,31 @@ import kiul.kiulsmputilitiesv3.accessories.AccessoryMethods;
 import kiul.kiulsmputilitiesv3.combattag.RecapInventory;
 import kiul.kiulsmputilitiesv3.config.AccessoryData;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
+import kiul.kiulsmputilitiesv3.config.ScheduleConfig;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.crates.CrateTypeEnum;
 import kiul.kiulsmputilitiesv3.server_events.CloseEndDimension;
 import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
+import kiul.kiulsmputilitiesv3.server_events.FinalFight;
+import kiul.kiulsmputilitiesv3.server_events.SuddenDeath;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.GameMode;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
+import org.bukkit.event.inventory.ClickType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.pat.pattyEssentialsV3.Enums.MenuEnum;
+import org.pat.pattyEssentialsV3.Listeners.ClickInv;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -164,6 +172,42 @@ public class Commands implements TabExecutor {
                     CrateMethods.createCrate(p.getWorld(), args[0],true);
                 }
                 break;
+            case "debug-event":
+                if (p.hasPermission("kiulsmp.debug")) {
+                    switch (args[0]) {
+                        case "grace_ends":
+                            ClickInv.clickCheck(null, MenuEnum.grace.getPath(), ClickType.LEFT, "Grace", MenuEnum.grace);
+                            break;
+                        case "netherite_enable":
+                            ClickInv.clickCheck(null, MenuEnum.netherite.getPath(), ClickType.LEFT, "netherite", MenuEnum.netherite);
+                            break;
+                        case "dragon_opens","end_opens":
+                            ClickInv.clickCheck(null, MenuEnum.endDimension.getPath(), ClickType.LEFT, "end", MenuEnum.endDimension);
+                            break;
+                        case "end_closes":
+                            ClickInv.clickCheck(null, MenuEnum.endDimension.getPath(), ClickType.LEFT, "Grace", MenuEnum.endDimension);
+                            CloseEndDimension.deleteEndPortalBlocks(Bukkit.getWorld("world"));
+                            CloseEndDimension.increaseEndBorder();
+                            break;
+                        case "final_fight":
+                            FinalFight.beginShrinkWorldBorder(3600,150);
+                            // final fight method 😨
+                            break;
+                        case "sudden_death":
+                            List<Player> suddenDeathPlayers = new ArrayList<>();
+                            for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                                if (onlinePlayer.getGameMode().equals(GameMode.SURVIVAL)) {
+                                    suddenDeathPlayers.add(onlinePlayer);
+                                }
+                            }
+                            C.suddenDeath = new SuddenDeath(suddenDeathPlayers,1,1);
+                            C.suddenDeath.start();
+                            break;
+                        default:
+                            p.sendMessage(C.failPrefix + "please enter the name of a valid scheduled event");
+                    }
+                }
+                break;
             case "spawn-crate":
                 if (p.hasPermission("kiulsmp.debug")) {
                     CrateMethods.createCrate(p.getWorld(), args[0],false);
@@ -212,6 +256,11 @@ public class Commands implements TabExecutor {
                 argsList.add("enemies");
                 argsList.add("teammates");
                 argsList.add("self");
+                return argsList;
+            case "debug-event":
+                for (String event : ScheduleConfig.get().getConfigurationSection("event").getKeys(false)) {
+                    argsList.add(event);
+                }
                 return argsList;
         }
         return null;

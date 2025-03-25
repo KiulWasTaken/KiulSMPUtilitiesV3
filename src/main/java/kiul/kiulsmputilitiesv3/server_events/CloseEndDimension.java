@@ -73,7 +73,9 @@ public class CloseEndDimension implements Listener {
     }
 
     public static void deleteEndPortalBlocks (World overworld) {
+        if (WorldData.get().getConfigurationSection("end.") == null) return;
         Set<String> keys = WorldData.get().getConfigurationSection("end.").getKeys(false);
+
         for (String key : keys) {
             Location frameLocation = new Location(overworld, WorldData.get().getDouble("end." + key + ".x"), WorldData.get().getDouble("end." + key + ".y"), WorldData.get().getDouble("end." + key + ".z"));
             if (frameLocation.getBlock().getType().equals(Material.END_PORTAL_FRAME)) {

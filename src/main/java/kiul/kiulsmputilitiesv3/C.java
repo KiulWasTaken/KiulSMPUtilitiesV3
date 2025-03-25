@@ -1,6 +1,7 @@
 package kiul.kiulsmputilitiesv3;
 
 import kiul.kiulsmputilitiesv3.combattag.FightManager;
+import kiul.kiulsmputilitiesv3.server_events.SuddenDeath;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -43,6 +44,9 @@ public class C {
     public static String DARK_RED = C.t("&#a11813");
     public static String GREEN = C.t("&#27a33a");
     public static String YELLOW = C.t("&#b59a4e");
+    public static String ICE_BLUE = C.t("&#a8caff");
+    public static String LIGHT_ICE_BLUE = C.t("&#c7ddff");
+    //5493f6
     public static String BLUE = C.t("&#658bb5"); //old &#5f95ed
     public static String GRAY = C.t("&#787878");
     public static String PURPLE = C.t("&#6d2b94");
@@ -56,6 +60,8 @@ public class C {
 #6d2b94 purple*/
 
     /* static utilities */
+    public static String failPrefix = C.t(DARK_RED+"❌ "+RED);
+    public static String successPrefix = C.t(DARK_GREEN+"✔ "+GREEN);
     public static BukkitTask smpScheduler;
     public static Plugin plugin = KiulSMPUtilitiesV3.getPlugin(KiulSMPUtilitiesV3.class);
     public static String chatColour = ChatColor.GRAY + "" + ChatColor.ITALIC;
@@ -65,7 +71,7 @@ public class C {
     public static DecimalFormat twoPointDecimal = new DecimalFormat("#.##");
     public static int claimCoreRange = 32;
     public static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("dd/MM/yy");
-
+    public static SuddenDeath suddenDeath = null;
     public static FightManager fightManager = new FightManager();
 
     /* static lists */

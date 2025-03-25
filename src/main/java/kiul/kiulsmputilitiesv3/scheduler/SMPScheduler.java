@@ -5,6 +5,7 @@ import kiul.kiulsmputilitiesv3.config.ConfigData;
 import kiul.kiulsmputilitiesv3.config.ScheduleConfig;
 import kiul.kiulsmputilitiesv3.server_events.CloseEndDimension;
 import kiul.kiulsmputilitiesv3.server_events.FinalFight;
+import kiul.kiulsmputilitiesv3.server_events.SuddenDeath;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.TextComponent;
@@ -12,6 +13,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -21,7 +23,9 @@ import org.pat.pattyEssentialsV3.Listeners.ClickInv;
 import org.pat.pattyEssentialsV3.PattyEssentialsV3;
 import org.pat.pattyEssentialsV3.Utils;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.stream.Collectors;
 
 public class SMPScheduler {
@@ -63,6 +67,8 @@ public class SMPScheduler {
             ScheduleConfig.get().set("event.end_opens.name", "<dark_purple>End Opens In ");
             ScheduleConfig.get().set("event.final_fight.time", 216);
             ScheduleConfig.get().set("event.final_fight.name", "<blue>Final Fight Border Closing In ");
+            ScheduleConfig.get().set("event.sudden_death.time", 217);
+            ScheduleConfig.get().set("event.sudden_death.name", "<#e33630>☠ <#f5633b>Sudden Death In ");
             ScheduleConfig.save();
         }
     }
@@ -72,9 +78,6 @@ public class SMPScheduler {
         for (String event : ScheduleConfig.get().getConfigurationSection("event").getKeys(false)) {
             long startTime = ScheduleConfig.get().getLong("start_time");
             if (startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000) - System.currentTimeMillis() > 0) {
-                long timeUntilEvent = startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000) - System.currentTimeMillis();
-                float progress = (float) System.currentTimeMillis() / (startTime + timeUntilEvent);
-                eventBossBars.get(event).progress(progress);
                 int[] times = C.splitTimestamp(startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000));
                 eventTimes.put(event,times);
 
@@ -95,6 +98,8 @@ public class SMPScheduler {
                             long timeUntilEvent = startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000) - System.currentTimeMillis();
                             if (timeUntilEvent < 24*60*60*1000) {
                                 float progress = (float) System.currentTimeMillis() /(startTime+timeUntilEvent);
+                                if (progress > 1) progress = 1f;
+                                if (progress < 0) progress = 0f;
                                 eventBossBars.get(event).progress(progress);
                                 int[] times = C.splitTimestamp(startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000));
                                 Component time = Component.text(times[0] + " Hours " + times[1] + " Minutes " + times[2] + " Seconds").color(NamedTextColor.WHITE);
@@ -103,7 +108,8 @@ public class SMPScheduler {
                                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                                     eventBossBars.get(event).addViewer(onlinePlayer);
                                 }
-                            } else {
+                            }
+                            if (timeUntilEvent < 0) {
                                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
                                     eventBossBars.get(event).removeViewer(onlinePlayer);
                                 }
@@ -128,6 +134,16 @@ public class SMPScheduler {
                                         case "final_fight":
                                             FinalFight.beginShrinkWorldBorder(3600,150);
                                             // final fight method 😨
+                                            break;
+                                        case "sudden_death":
+                                            List<Player> suddenDeathPlayers = new ArrayList<>();
+                                            for (Player p : Bukkit.getOnlinePlayers()) {
+                                                if (p.getGameMode().equals(GameMode.SURVIVAL)) {
+                                                    suddenDeathPlayers.add(p);
+                                                }
+                                            }
+                                            C.suddenDeath = new SuddenDeath(suddenDeathPlayers,5,4);
+                                            C.suddenDeath.start();
                                             break;
                                     }
                                 }

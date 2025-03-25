@@ -8,11 +8,12 @@ import kiul.kiulsmputilitiesv3.combattag.RecapInventory;
 import kiul.kiulsmputilitiesv3.config.*;
 import kiul.kiulsmputilitiesv3.crates.CrateListeners;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
-import kiul.kiulsmputilitiesv3.end_fight.CloseEndDimension;
 import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemCraft;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemPickupAfterDeath;
 import kiul.kiulsmputilitiesv3.scheduler.SMPScheduler;
+import kiul.kiulsmputilitiesv3.server_events.CloseEndDimension;
+import kiul.kiulsmputilitiesv3.server_events.FinalFight;
 import kiul.kiulsmputilitiesv3.stats.StatDB;
 import kiul.kiulsmputilitiesv3.stats.StatDBListeners;
 import org.bukkit.*;
@@ -46,6 +47,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FeatureInventory(),this);
         getServer().getPluginManager().registerEvents(new EggAccessory(),this);
         getServer().getPluginManager().registerEvents(new CloseEndDimension(),this);
+        getServer().getPluginManager().registerEvents(new FinalFight(),this);
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
             if ((accessoryItem.getLocalName().contains("ring") || accessoryItem.getLocalName().contains("tome")) && accessoryItem.getLocalName().contains("base")) {
@@ -86,6 +88,8 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getCommand("recaps").setExecutor(new Commands());
         getCommand("kmenu").setExecutor(new Commands());
         getCommand("close-end").setExecutor(new Commands());
+        getCommand("debug-event").setExecutor(new Commands());
+        getCommand("debug-event").setTabCompleter(new Commands());
 
         // Config
         ConfigData.setup();
@@ -103,6 +107,10 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         AccessoryData.setup();
         ClaimData.setup();
         WorldData.setup();
+        if (WorldData.get().get("final_fight") == null) {
+            WorldData.get().set("final_fight", false);
+            WorldData.save();
+        }
         RecapData.setup();
         ScheduleConfig.setup();
         SMPScheduler.initializeScheduleConfig();

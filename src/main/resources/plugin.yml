@@ -5,6 +5,7 @@ api-version: '1.21.4'
 softdepend:
   - PattyEssentialsV3
 commands:
+  debug-event:
   logout:
     aliases:
       - safelog
