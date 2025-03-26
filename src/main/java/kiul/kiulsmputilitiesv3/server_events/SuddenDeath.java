@@ -5,6 +5,7 @@ import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.*;
 
@@ -15,6 +16,7 @@ public class SuddenDeath {
     int maximumPlayersAlive; // decreases over time. cannot go below minimumPlayers.
     int timeBetweenTicksMinutes;
     long graceTime;
+    BukkitTask runnable;
 
     HashMap<Player,Boolean> aboveThreshold;
     HashMap<Player,Double> livingPlayersDamageMap;
@@ -35,14 +37,16 @@ public class SuddenDeath {
         this.timeBetweenTicksMinutes = timeBetweenTicksMinutes;
     }
 
-
+    public HashMap<Player, Double> getLivingPlayersDamageMap() {
+        return livingPlayersDamageMap;
+    }
 
     public void start() {
         for (Player p : livingPlayersDamageMap.keySet()) {
             p.sendMessage(C.t(C.ICE_BLUE + "❄ " + C.LIGHT_ICE_BLUE + "You feel the cold down to your bones"));
         }
 
-        new BukkitRunnable() {
+        runnable = new BukkitRunnable() {
 
             int tickMinutes = 0;
             int damageTick = 0;
@@ -75,23 +79,26 @@ public class SuddenDeath {
                         thresholdDamage = livingPlayersDamageMap.get(playersArranged.get(maximumPlayersAlive-1));
 
                         for (Player player : playersArranged) {
+                            if (player == null) continue;
                             aboveThreshold.put(player, true);
                         }
                         for (int j = maximumPlayersAlive; j < playersArranged.size(); j++) {
+                            if (playersArranged.get(j) == null) continue;
                             aboveThreshold.put(playersArranged.get(j), false);
                         }
 
                         for (Player p : aboveThreshold.keySet()) {
+                            if (p == null) continue;
                             if (aboveThreshold.get(p)) {
                                 if (damageTick >= 10) {
-                                    p.sendMessage(C.t( C.RED+"\uD83D\uDD25 " + C.LIGHT_RED + (livingPlayersDamageMap.get(p) - thresholdDamage) + " damage above threshold"));
+                                    p.sendMessage(C.t( C.RED+"\uD83D\uDD25 " + C.LIGHT_RED + C.twoPointDecimal.format(livingPlayersDamageMap.get(p) - thresholdDamage) + " damage above threshold"));
                                     if (p.getAttribute(Attribute.MAX_HEALTH).getBaseValue() < 20) {
                                         p.getAttribute(Attribute.MAX_HEALTH).setBaseValue(p.getAttribute(Attribute.MAX_HEALTH).getBaseValue() + 1);
                                     }
                                 }
                             } else {
                                 if (damageTick >= 10) {
-                                    p.sendMessage(C.t(C.ICE_BLUE+ "❄ " +C.LIGHT_ICE_BLUE + (thresholdDamage - livingPlayersDamageMap.get(p)) + " damage below threshold"));
+                                    p.sendMessage(C.t(C.ICE_BLUE+ "❄ " +C.LIGHT_ICE_BLUE + C.twoPointDecimal.format(thresholdDamage - livingPlayersDamageMap.get(p)) + " damage below threshold"));
                                     if (p.getAttribute(Attribute.MAX_HEALTH).getBaseValue() > 1) {
                                         p.setFreezeTicks(80);
                                         p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE,1f,1f);
@@ -126,5 +133,8 @@ public class SuddenDeath {
         }
 
         return sortedList;
+    }
+    public void stop() {
+        runnable.cancel();
     }
 }

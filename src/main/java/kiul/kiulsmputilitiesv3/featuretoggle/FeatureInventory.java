@@ -248,7 +248,7 @@ public class FeatureInventory implements Listener {
                         break;
                 }
 
-                p.sendMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (ConfigData.get().getBoolean(localName) ? C.GREEN+"Enabled":C.RED+"Disabled"));
+                Bukkit.broadcastMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (ConfigData.get().getBoolean(localName) ? C.GREEN+"Enabled":C.RED+"Disabled"));
 
                 open(p,true);
             }

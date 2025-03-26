@@ -109,6 +109,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         WorldData.setup();
         if (WorldData.get().get("final_fight") == null) {
             WorldData.get().set("final_fight", false);
+            WorldData.get().set("border_closed",false);
             WorldData.save();
         }
         RecapData.setup();

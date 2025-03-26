@@ -2,9 +2,7 @@ package kiul.kiulsmputilitiesv3;
 
 import kiul.kiulsmputilitiesv3.accessories.AccessoryMethods;
 import kiul.kiulsmputilitiesv3.combattag.RecapInventory;
-import kiul.kiulsmputilitiesv3.config.AccessoryData;
-import kiul.kiulsmputilitiesv3.config.ConfigData;
-import kiul.kiulsmputilitiesv3.config.ScheduleConfig;
+import kiul.kiulsmputilitiesv3.config.*;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.crates.CrateTypeEnum;
 import kiul.kiulsmputilitiesv3.server_events.CloseEndDimension;
@@ -19,6 +17,8 @@ import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
+import org.bukkit.OfflinePlayer;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabExecutor;
@@ -193,6 +193,13 @@ public class Commands implements TabExecutor {
                             FinalFight.beginShrinkWorldBorder(3600,150);
                             // final fight method 😨
                             break;
+                        case "border_closed":
+                            WorldData.get().set("border_closed",true);
+                            WorldData.save();
+                            for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+                                PersistentData.get().set(offlinePlayer.getUniqueId().toString()+".final_fight.time_quit",System.currentTimeMillis());
+                            }
+                            break;
                         case "sudden_death":
                             List<Player> suddenDeathPlayers = new ArrayList<>();
                             for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
@@ -200,8 +207,20 @@ public class Commands implements TabExecutor {
                                     suddenDeathPlayers.add(onlinePlayer);
                                 }
                             }
-                            C.suddenDeath = new SuddenDeath(suddenDeathPlayers,1,1);
+                            C.suddenDeath = new SuddenDeath(suddenDeathPlayers,5,2);
                             C.suddenDeath.start();
+                            break;
+                        case "reset":
+                            WorldData.get().set("final_fight", false);
+                            WorldData.get().set("border_closed",false);
+                            WorldData.save();
+                            for (Player livingPlayers : C.suddenDeath.getLivingPlayersDamageMap().keySet()) {
+                                if (livingPlayers == null) continue;
+                                livingPlayers.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20);
+                            }
+
+                            C.suddenDeath.stop();
+                            C.suddenDeath = null;
                             break;
                         default:
                             p.sendMessage(C.failPrefix + "please enter the name of a valid scheduled event");

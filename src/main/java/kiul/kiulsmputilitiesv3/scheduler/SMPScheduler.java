@@ -2,7 +2,9 @@ package kiul.kiulsmputilitiesv3.scheduler;
 
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
+import kiul.kiulsmputilitiesv3.config.PersistentData;
 import kiul.kiulsmputilitiesv3.config.ScheduleConfig;
+import kiul.kiulsmputilitiesv3.config.WorldData;
 import kiul.kiulsmputilitiesv3.server_events.CloseEndDimension;
 import kiul.kiulsmputilitiesv3.server_events.FinalFight;
 import kiul.kiulsmputilitiesv3.server_events.SuddenDeath;
@@ -14,6 +16,7 @@ import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
 import org.bukkit.GameMode;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -67,8 +70,10 @@ public class SMPScheduler {
             ScheduleConfig.get().set("event.end_opens.name", "<dark_purple>End Opens In ");
             ScheduleConfig.get().set("event.final_fight.time", 216);
             ScheduleConfig.get().set("event.final_fight.name", "<blue>Final Fight Border Closing In ");
-            ScheduleConfig.get().set("event.sudden_death.time", 217);
-            ScheduleConfig.get().set("event.sudden_death.name", "<#e33630>☠ <#f5633b>Sudden Death In ");
+            ScheduleConfig.get().set("event.border_closed.time", 217);
+            ScheduleConfig.get().set("event.border_closed.name", "<blue>Final Fight Border Closed In");
+            ScheduleConfig.get().set("event.sudden_death.time", 218);
+            ScheduleConfig.get().set("event.sudden_death.name", "<#a8caff>❄ <#c7ddff>Sudden Death In ");
             ScheduleConfig.save();
         }
     }
@@ -97,9 +102,10 @@ public class SMPScheduler {
                         if (startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000) - System.currentTimeMillis() > 0) {
                             long timeUntilEvent = startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000) - System.currentTimeMillis();
                             if (timeUntilEvent < 24*60*60*1000) {
-                                float progress = (float) System.currentTimeMillis() /(startTime+timeUntilEvent);
-                                if (progress > 1) progress = 1f;
-                                if (progress < 0) progress = 0f;
+                                long eventTimeInMilliseconds = (long) ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000;
+                                long currentTime = System.currentTimeMillis();
+                                float progress = (float) (currentTime - startTime) / eventTimeInMilliseconds;
+                                progress = 1 - Math.min(1f, Math.max(0f, progress));
                                 eventBossBars.get(event).progress(progress);
                                 int[] times = C.splitTimestamp(startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000));
                                 Component time = Component.text(times[0] + " Hours " + times[1] + " Minutes " + times[2] + " Seconds").color(NamedTextColor.WHITE);
@@ -134,6 +140,12 @@ public class SMPScheduler {
                                         case "final_fight":
                                             FinalFight.beginShrinkWorldBorder(3600,150);
                                             // final fight method 😨
+                                            break;
+                                        case "border_closed":
+                                            WorldData.get().set("border_closed",true);
+                                            for (OfflinePlayer p : Bukkit.getOfflinePlayers()) {
+                                                PersistentData.get().set(p.getUniqueId().toString()+".final_fight.time_quit",System.currentTimeMillis());
+                                            }
                                             break;
                                         case "sudden_death":
                                             List<Player> suddenDeathPlayers = new ArrayList<>();

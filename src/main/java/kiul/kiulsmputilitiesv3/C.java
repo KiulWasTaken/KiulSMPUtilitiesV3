@@ -61,6 +61,7 @@ public class C {
 
     /* static utilities */
     public static String failPrefix = C.t(DARK_RED+"❌ "+RED);
+    public static String warnPrefix = C.t(YELLOW+"⚠ "+ GOLD);
     public static String successPrefix = C.t(DARK_GREEN+"✔ "+GREEN);
     public static BukkitTask smpScheduler;
     public static Plugin plugin = KiulSMPUtilitiesV3.getPlugin(KiulSMPUtilitiesV3.class);
