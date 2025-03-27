@@ -4,6 +4,12 @@ import com.mongodb.Block;
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.accessories.IngredientItemEnum;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
+import kiul.kiulsmputilitiesv3.config.ScheduleConfig;
+import net.kyori.adventure.bossbar.BossBar;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextDecoration;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
@@ -245,9 +251,9 @@ public class CrateMethods {
         CrateTypeEnum crateType = getCrate(type);
 
         Location crateSpawnLocation = returnCrateLocation(world);
-        long crateSpawnTime = System.currentTimeMillis()+crateType.getSpawnTime();
+        long crateSpawnTime = System.currentTimeMillis() + crateType.getSpawnTime();
         if (debug) {
-            crateSpawnTime = System.currentTimeMillis()+1000*60;
+            crateSpawnTime = System.currentTimeMillis() + 1000 * 60;
         }
 
         int x = (int) crateSpawnLocation.getX();
@@ -255,18 +261,18 @@ public class CrateMethods {
         int z = (int) crateSpawnLocation.getZ();
         crateSpawnLocation.getChunk().setForceLoaded(true);
         int[] timestamps = C.splitTimestamp(crateSpawnTime);
-        Bukkit.broadcastMessage("");
-        Bukkit.broadcastMessage(C.eventPrefix + crateType.getDisplayName() + ChatColor.WHITE + " container will arrive at " + x + " " + y + " " + z + " in " + ChatColor.RED + String.format("%02d:%02d:%02d",timestamps[0],timestamps[1],timestamps[2]));
-        Bukkit.broadcastMessage("");
         long spawnTime = crateSpawnTime;
         new BukkitRunnable() {
-            ArmorStand nameplate = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0.5,2,0.5),EntityType.ARMOR_STAND);
-            long timeUntilSpawn = spawnTime-System.currentTimeMillis();
+            ArmorStand nameplate = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0.5, 2, 0.5), EntityType.ARMOR_STAND);
+            long timeUntilSpawn = spawnTime - System.currentTimeMillis();
             int tick = 0;
+            BossBar bossBar = BossBar.bossBar(crateType.getDisplayName(), 0, BossBar.Color.WHITE, BossBar.Overlay.NOTCHED_12);
+
             @Override
             public void run() {
 
                 if (System.currentTimeMillis() < spawnTime) {
+                    long currentTime = System.currentTimeMillis();
                     tick++;
                     int[] timestamps = C.splitTimestamp(spawnTime);
                     nameplate.setInvulnerable(true);
@@ -275,57 +281,67 @@ public class CrateMethods {
                     nameplate.setCustomNameVisible(true);
                     nameplate.setPersistent(true);
                     nameplate.setMarker(true);
-                    if (tick >= 300) {
-                        tick = 0;
-                        Bukkit.broadcastMessage("");
-                        Bukkit.broadcastMessage(C.eventPrefix + crateType.getDisplayName() + ChatColor.WHITE + " container will arrive at " + x + " " + y + " " + z + " in " + ChatColor.RED + String.format("%02d:%02d:%02d",timestamps[0],timestamps[1],timestamps[2]));
-                        Bukkit.broadcastMessage("");
-                    }
-                    if (spawnTime-System.currentTimeMillis() <= 5*1000*60) {
-                        if (spawnTime-System.currentTimeMillis() <= 5*1000) {
-                            tick = 0;
-                            Bukkit.broadcastMessage("");
-                            Bukkit.broadcastMessage(C.eventPrefix + crateType.getDisplayName() + ChatColor.WHITE + " container will arrive at " + x + " " + y + " " + z + " in " + ChatColor.RED + String.format("%02d:%02d:%02d", timestamps[0], timestamps[1], timestamps[2]));
-                            Bukkit.broadcastMessage("");
-                        }
-                        if (tick >= 30) {
-                            tick = 0;
-                            Bukkit.broadcastMessage("");
-                            Bukkit.broadcastMessage(C.eventPrefix + crateType.getDisplayName() + ChatColor.WHITE + " container will arrive at " + x + " " + y + " " + z + " in " + ChatColor.RED + String.format("%02d:%02d:%02d", timestamps[0], timestamps[1], timestamps[2]));
-                            Bukkit.broadcastMessage("");
-                        }
-                    }
-
                     nameplate.setCustomName(String.format("%02d:%02d:%02d", timestamps[0], timestamps[1], timestamps[2]));
+
+
+                    float progress = (float) spawnTime/currentTime;
+                    progress = Math.min(1f, Math.max(0f, progress));
+                    bossBar.progress(progress);
+                    Component time = Component.empty();
+                    if (spawnTime-currentTime > 30000) {
+                        if (tick <= 5) {
+                            time = Component.text(" Crate Is Spawning At ").append(Component.text(crateSpawnLocation.x() + "x " + crateSpawnLocation.y() + "y " + crateSpawnLocation.z() + "z").color(NamedTextColor.WHITE));
+                        }
+                        if (tick > 5 && tick < 10) {
+                            time = Component.text(" Crate Is Spawning").append(Component.text(" In " + timestamps[0] + " Hours " + timestamps[1] + " Minutes " + timestamps[2] + " Seconds").color(NamedTextColor.WHITE));
+
+                        }
+                    } else {
+                        time = Component.text(" Crate Is Spawning").append(Component.text(" In " + timestamps[0] + " Hours " + timestamps[1] + " Minutes " + timestamps[2] + " Seconds").color(NamedTextColor.WHITE));
+                    }
+                    if (tick > 10) tick = 0;
+                    bossBar.name(crateType.getDisplayName().append(time));
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        bossBar.addViewer(p);
+                    }
                 } else {
+                    for (Player p : Bukkit.getOnlinePlayers()) {
+                        bossBar.removeViewer(p);
+                    }
                     nameplate.remove();
-                        Random random = new Random();
-                        Vector cornerA = crateSpawnLocation.clone().add(10,10,10).toVector();
-                        Vector cornerB = crateSpawnLocation.clone().add(-10,-10,-10).toVector();
-                        Vector squareCornerMin = Vector.getMinimum(cornerA, cornerB);
-                        Vector squareCornerMax = Vector.getMaximum(cornerA, cornerB);
-                        String color = ChatColor.getLastColors(crateType.getDisplayName());
-                        ArmorStand crate = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0.5, -2.4, 0.5), EntityType.ARMOR_STAND);
-                        crate.setInvulnerable(true);
-                        crate.setVisible(false);
-                        crate.setGravity(false);
-                        crate.setCustomNameVisible(true);
-                        crate.setPersistent(true);
-                        crate.addEquipmentLock(EquipmentSlot.HEAD, ArmorStand.LockType.REMOVING_OR_CHANGING);
-                        crate.setHelmet(new ItemStack(crateType.getCrateType()));
-                        Slime borderDisplay = (Slime) world.spawnEntity(crateSpawnLocation.clone(),EntityType.SLIME);
-                        borderDisplay.setSize(10);
-                        borderDisplay.setGlowing(true);
-                        borderDisplay.setCollidable(false);
-                        borderDisplay.setInvisible(true);
-                        borderDisplay.setVisibleByDefault(true);
-                        ArmorStand damageDisplay = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0, 2.5, 0), EntityType.ARMOR_STAND);
-                        damageDisplay.setMarker(true);
-                        damageDisplay.setInvulnerable(true);
-                        damageDisplay.setVisible(false);
-                        damageDisplay.setGravity(false);
-                        damageDisplay.setCustomNameVisible(true);
-                        damageDisplay.setPersistent(true);
+                    //  ChatColor.GOLD+""+ChatColor.BOLD+"EVENT" + ChatColor.RESET+ChatColor.GRAY+" » ";
+                    Bukkit.broadcastMessage("");
+                    Bukkit.broadcast(Component.empty().append(Component.text("[EVENT]").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD)
+                            .append(Component.text(" » ").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD,false)
+                            .append(crateType.getDisplayName()).append(Component.text(" Crate Has Spawned At " + crateSpawnLocation.x() + "x "  + crateSpawnLocation.y() + "y "  + crateSpawnLocation.z() + "z").color(NamedTextColor.WHITE)))));
+                    Bukkit.broadcastMessage("");
+                    Random random = new Random();
+                    Vector cornerA = crateSpawnLocation.clone().add(10, 10, 10).toVector();
+                    Vector cornerB = crateSpawnLocation.clone().add(-10, -10, -10).toVector();
+                    Vector squareCornerMin = Vector.getMinimum(cornerA, cornerB);
+                    Vector squareCornerMax = Vector.getMaximum(cornerA, cornerB);
+                    String color = crateType.getColor();
+                    ArmorStand crate = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0.5, -2.4, 0.5), EntityType.ARMOR_STAND);
+                    crate.setInvulnerable(true);
+                    crate.setVisible(false);
+                    crate.setGravity(false);
+                    crate.setCustomNameVisible(true);
+                    crate.setPersistent(true);
+                    crate.addEquipmentLock(EquipmentSlot.HEAD, ArmorStand.LockType.REMOVING_OR_CHANGING);
+                    crate.setHelmet(new ItemStack(crateType.getCrateType()));
+                    Slime borderDisplay = (Slime) world.spawnEntity(crateSpawnLocation.clone(), EntityType.SLIME);
+                    borderDisplay.setSize(10);
+                    borderDisplay.setGlowing(true);
+                    borderDisplay.setCollidable(false);
+                    borderDisplay.setInvisible(true);
+                    borderDisplay.setVisibleByDefault(true);
+                    ArmorStand damageDisplay = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0, 2.5, 0), EntityType.ARMOR_STAND);
+                    damageDisplay.setMarker(true);
+                    damageDisplay.setInvulnerable(true);
+                    damageDisplay.setVisible(false);
+                    damageDisplay.setGravity(false);
+                    damageDisplay.setCustomNameVisible(true);
+                    damageDisplay.setPersistent(true);
 //                    new BukkitRunnable() {
 //                        public void run() {
 //                            if (!crate.isDead()) {
@@ -342,227 +358,229 @@ public class CrateMethods {
 //                            }
 //                        }
 //                    }.runTaskTimer(C.plugin, 0L, 10L);
-                        crate.setRotation(random.nextFloat(0, 180), 0);
-                        String phases = "\uD83D\uDD12";
-                        crate.setCustomName(color + phases.repeat(crateType.getUnlockPhases()));
-                        locked.add(crate);
-                        if (crateType.getPointsPerPhase() == 0) {
+                    crate.setRotation(random.nextFloat(0, 180), 0);
+                    String phases = "\uD83D\uDD12";
+                    crate.setCustomName(color + phases.repeat(crateType.getUnlockPhases()));
+                    locked.add(crate);
+                    if (crateType.getPointsPerPhase() == 0) {
 
-                            new BukkitRunnable() {
-                                @Override
-                                public void run() {
-                                    if (!locked.contains(crate)) {
-                                        long unlockTime = crateUnlockTime.get(crate);
-                                        unlocking.add(crate);
-                                        crate.setCustomName(color + String.format("%02d : %02d",
-                                                TimeUnit.MILLISECONDS.toMinutes(unlockTime - System.currentTimeMillis()),
-                                                TimeUnit.MILLISECONDS.toSeconds(unlockTime- System.currentTimeMillis()) -
-                                                        TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(unlockTime - System.currentTimeMillis()))
-                                        ));
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                if (!locked.contains(crate)) {
+                                    long unlockTime = crateUnlockTime.get(crate);
+                                    unlocking.add(crate);
+                                    crate.setCustomName(color + String.format("%02d : %02d",
+                                            TimeUnit.MILLISECONDS.toMinutes(unlockTime - System.currentTimeMillis()),
+                                            TimeUnit.MILLISECONDS.toSeconds(unlockTime - System.currentTimeMillis()) -
+                                                    TimeUnit.MINUTES.toSeconds(TimeUnit.MILLISECONDS.toMinutes(unlockTime - System.currentTimeMillis()))
+                                    ));
 
-                                        if (System.currentTimeMillis() >= unlockTime) {
-                                            Bukkit.broadcastMessage(crate.toString());
-                                            populateCrate(crateType,crate,null);
-                                            unlocking.remove(crate);
-                                            crate.setCustomName(color + "CLICK TO OPEN");
-                                            new BukkitRunnable() {
-                                                @Override
-                                                public void run() {
-                                                    if (CrateMethods.crateInventoryMap.get(crate).isEmpty()) {
-                                                        world.playSound(crate.getLocation(), Sound.BLOCK_BELL_RESONATE, 10f, 1f);
-                                                        crate.remove();
-                                                        CrateMethods.crateInventoryMap.remove(crate);
-                                                        crateSpawnLocation.getChunk().setForceLoaded(false);
+                                    if (System.currentTimeMillis() >= unlockTime) {
+                                        Bukkit.broadcastMessage(crate.toString());
+                                        populateCrate(crateType, crate, null);
+                                        unlocking.remove(crate);
+                                        crate.setCustomName(color + "CLICK TO OPEN");
+                                        new BukkitRunnable() {
+                                            @Override
+                                            public void run() {
+                                                if (CrateMethods.crateInventoryMap.get(crate).isEmpty()) {
+                                                    world.playSound(crate.getLocation(), Sound.BLOCK_BELL_RESONATE, 10f, 1f);
+                                                    crate.remove();
+                                                    CrateMethods.crateInventoryMap.remove(crate);
+                                                    crateSpawnLocation.getChunk().setForceLoaded(false);
 
-                                                        HashSet<String> uniqueSet = new HashSet<>(playersWhoGotLoot);
-                                                        List<String> uniqueList = new ArrayList<>(uniqueSet);
-                                                        Bukkit.broadcastMessage("");
-                                                        Bukkit.broadcastMessage(C.eventPrefix + ChatColor.WHITE + "Players " + ChatColor.RED + uniqueList.toString() + ChatColor.WHITE + " Looted the crate!");
-                                                        Bukkit.broadcastMessage("");
-                                                        for (String displayName : uniqueList) {
-                                                            Player p = Bukkit.getPlayer(displayName);
-                                                            p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 1200, 0, false, false));
-                                                        }
-
-                                                        CrateMethods.playersWhoGotLoot.clear();
-                                                        cancel();
+                                                    HashSet<String> uniqueSet = new HashSet<>(playersWhoGotLoot);
+                                                    List<String> uniqueList = new ArrayList<>(uniqueSet);
+                                                    Bukkit.broadcastMessage("");
+                                                    Bukkit.broadcastMessage(C.eventPrefix + ChatColor.WHITE + "Players " + ChatColor.RED + uniqueList.toString() + ChatColor.WHITE + " Looted the crate!");
+                                                    Bukkit.broadcastMessage("");
+                                                    for (String displayName : uniqueList) {
+                                                        Player p = Bukkit.getPlayer(displayName);
+                                                        p.addPotionEffect(new PotionEffect(PotionEffectType.GLOWING, 1200, 0, false, false));
                                                     }
 
+                                                    CrateMethods.playersWhoGotLoot.clear();
+                                                    cancel();
                                                 }
-                                            }.runTaskTimer(C.plugin, 0L, 5L);
-                                            cancel();
-                                        }
+
+                                            }
+                                        }.runTaskTimer(C.plugin, 0L, 5L);
+                                        cancel();
                                     }
                                 }
-                            }.runTaskTimer(C.plugin, 0, 20);
-                        } else {
-                            activeCratesLocation.put(crateSpawnLocation,0.0);
-                            new BukkitRunnable() {
-                                HashMap<Team,Integer> teamScores = new HashMap<Team, Integer>();
-                                HashMap<Team,Long> teamCooldown = new HashMap<Team, Long>();
-                                Set<Team> involvedTeams = new HashSet<>();
+                            }
+                        }.runTaskTimer(C.plugin, 0, 20);
+                    } else {
+                        activeCratesLocation.put(crateSpawnLocation, 0.0);
+                        new BukkitRunnable() {
+                            HashMap<Team, Integer> teamScores = new HashMap<Team, Integer>();
+                            HashMap<Team, Long> teamCooldown = new HashMap<Team, Long>();
+                            Set<Team> involvedTeams = new HashSet<>();
 
-                                int phase = 0;
+                            int phase = 0;
 
-                                boolean wait = false;
-                                int maxScore = crateType.getPointsPerPhase();
+                            boolean wait = false;
+                            int maxScore = crateType.getPointsPerPhase();
 
-                                String blue = ChatColor.BLUE+ "|";
-                                String red = ChatColor.RED + "|";
-                                String gray = ChatColor.GRAY + "|";
+                            String blue = ChatColor.BLUE + "|";
+                            String red = ChatColor.RED + "|";
+                            String gray = ChatColor.GRAY + "|";
 
-                                @Override
-                                public void run() {
-                                    damageDisplay.setCustomName(color + "" + activeCratesLocation.get(crateSpawnLocation));
-                                    if (!wait) {
-                                        Iterator<Team> iterator = involvedTeams.iterator();
-                                        int total = 0;
+                            @Override
+                            public void run() {
+                                damageDisplay.setCustomName(color + "" + activeCratesLocation.get(crateSpawnLocation));
+                                if (!wait) {
+                                    Iterator<Team> iterator = involvedTeams.iterator();
+                                    int total = 0;
 
-                                        for (Team team : teamScores.keySet()) {
-                                            total = total+teamScores.get(team);
-                                        }
-                                        for (Team team : teamScores.keySet()) {
-                                            for (String teamMemberNames : team.getEntries()) {
-                                                if (Bukkit.getPlayer(teamMemberNames) != null) {
+                                    for (Team team : teamScores.keySet()) {
+                                        total = total + teamScores.get(team);
+                                    }
+                                    for (Team team : teamScores.keySet()) {
+                                        for (String teamMemberNames : team.getEntries()) {
+                                            if (Bukkit.getPlayer(teamMemberNames) != null) {
 
-                                                    int blueLength = (int)Math.floor(C.safeDivide(teamScores.get(team), maxScore) * 50);
-                                                    int redLength = (int)Math.floor(C.safeDivide((total - teamScores.get(team)), maxScore) * 50);
-                                                    int grayLength = (int)Math.floor(C.safeDivide((maxScore - total), maxScore) * 50);
+                                                int blueLength = (int) Math.floor(C.safeDivide(teamScores.get(team), maxScore) * 50);
+                                                int redLength = (int) Math.floor(C.safeDivide((total - teamScores.get(team)), maxScore) * 50);
+                                                int grayLength = (int) Math.floor(C.safeDivide((maxScore - total), maxScore) * 50);
 
 // Ensure non-negative lengths
-                                                    blueLength = Math.max(blueLength, 0);
-                                                    redLength = Math.max(redLength, 0);
-                                                    grayLength = Math.max(grayLength, 0);
+                                                blueLength = Math.max(blueLength, 0);
+                                                redLength = Math.max(redLength, 0);
+                                                grayLength = Math.max(grayLength, 0);
 
-                                                    String bar = blue.repeat(blueLength) + red.repeat(redLength) + gray.repeat(grayLength);
-                                                    Bukkit.getPlayer(teamMemberNames).spigot().sendMessage(ChatMessageType.ACTION_BAR,new TextComponent(bar));
-                                                }
+                                                String bar = blue.repeat(blueLength) + red.repeat(redLength) + gray.repeat(grayLength);
+                                                Bukkit.getPlayer(teamMemberNames).spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(bar));
                                             }
-                                        }
-
-                                        for (Player p : Bukkit.getOnlinePlayers()) {
-                                            if (p.getLocation().toVector().isInAABB(squareCornerMin,squareCornerMax)) {
-                                                if (C.getPlayerTeam(p) != null) {
-                                                    Team team = C.getPlayerTeam(p);
-
-                                                    if (teamScores.get(team) == null) {
-                                                        teamScores.put(team, 10);
-                                                        teamCooldown.put(team, System.currentTimeMillis() + 3 * 1000);
-                                                        involvedTeams.add(team);
-                                                    } else {
-                                                        if (total+10 < maxScore) {
-                                                            teamScores.put(team, teamScores.get(team) + 10);
-                                                        }
-                                                        if (involvedTeams.size() == 1 && teamScores.get(team) == maxScore-10) {
-                                                            teamScores.put(team, teamScores.get(team) + 10);
-                                                        }
-                                                        teamCooldown.put(team, System.currentTimeMillis() + 3 * 1000);
-                                                    }
-
-                                                }
-                                            }
-                                        }
-
-
-                                        while (iterator.hasNext()) {
-                                            Team team = iterator.next();
-                                            if (teamCooldown.get(team) < System.currentTimeMillis()) {
-                                                teamScores.put(team, teamScores.get(team) - 20);
-                                                if (teamScores.get(team) <= 0) {
-                                                    iterator.remove();
-                                                    teamScores.remove(team);
-                                                }
-                                            }
-                                            if (teamScores.get(team) >= maxScore) {
-                                                teamScores.put(team, maxScore);
-                                                if (maxScore == crateType.getPointsPerPhase()) {
-                                                    phase++;
-                                                    String phases = "\uD83D\uDD12";
-                                                    int phasesRemaining = crateType.getUnlockPhases()-phase;
-                                                    crate.setCustomName(color + phases.repeat(phasesRemaining));
-                                                    wait = true;
-                                                    Bukkit.broadcastMessage("");
-                                                    Bukkit.broadcastMessage(C.eventPrefix + ChatColor.RESET + team.getPrefix() + ChatColor.RESET + ChatColor.WHITE + "has broken a lock! " + color + phasesRemaining + ChatColor.WHITE + " lock(s) remain!");
-                                                    Bukkit.broadcastMessage("");
-                                                    Firework fw = (Firework) world.spawnEntity(crate.getLocation().clone().add(0,3,0), EntityType.FIREWORK_ROCKET);
-                                                    FireworkMeta fwM = fw.getFireworkMeta();
-                                                    FireworkEffect fwE = FireworkEffect.builder().with(FireworkEffect.Type.BALL_LARGE).withColor(Color.WHITE).build();
-                                                    fwM.addEffect(fwE);
-                                                    fw.setFireworkMeta(fwM);
-                                                    fw.setMetadata("pat",new FixedMetadataValue(C.plugin,"rat"));
-                                                    fw.detonate();
-                                                    new BukkitRunnable() {
-                                                        int tick = 0;
-                                                        ArrayList<String> playerNames = new ArrayList<>(team.getEntries());
-
-                                                        @Override
-                                                        public void run() {
-                                                            Player teamMember = Bukkit.getPlayer(playerNames.get(tick));
-                                                            if (teamMember != null) {
-                                                                privateItemStacks.put(teamMember,new ArrayList<>());
-                                                                Location location = crateSpawnLocation.clone().add(0, 3,0); // Add the offsets to the center location
-
-                                                                /* increase the amount of times loot is rolled depending on how much damage has been dealt in the
-                                                                * vicinity of the crate since the KOTH event started. */
-                                                                int lootTableExtraRolls = (int)(Math.floor(activeCratesLocation.get(crateSpawnLocation))/100);
-                                                                if (lootTableExtraRolls > 5) {lootTableExtraRolls = 5;}
-
-                                                                for (int i = 0; i < crateType.getLootTableRolls()+lootTableExtraRolls; i++) {
-                                                                    ItemStack item = CrateMethods.getLootTableItem(crateType.getLootTable(), crateType);
-                                                                    i = i + CrateMethods.getRollConsumption(item, crateType);
-                                                                    LootTableEnum lootTable = CrateMethods.getLootTable(item, crateType.getIdentifier());
-                                                                    if (lootTable != null) {
-                                                                        int amount = random.nextInt(lootTable.getMinStackSize(), lootTable.getMaxStackSize() + 1);
-
-
-                                                                        item.setAmount(amount);
-                                                                    }
-                                                                    if (item.getMaxStackSize() == 1) {
-                                                                        item.setAmount(1);
-                                                                    }
-                                                                    item.getItemMeta().setMaxStackSize(item.getAmount());
-                                                                    Item droppedItem = world.dropItem(location,item);
-                                                                    for (Player onlinePlayers : Bukkit.getOnlinePlayers()) {
-                                                                        onlinePlayers.hideEntity(C.plugin,droppedItem);
-                                                                    }
-                                                                    teamMember.showEntity(C.plugin,droppedItem);
-                                                                    privateItemStacks.get(teamMember).add(droppedItem);
-                                                                }
-                                                            }
-                                                            tick++;
-                                                            if (tick >= team.getSize()) {
-                                                                tick = 0;
-                                                                wait = false;
-                                                                for (Team teams : involvedTeams) {
-                                                                    teamScores.put(teams,10);
-                                                                }
-                                                                cancel();
-                                                            }
-                                                        }
-                                                    }.runTaskTimer(C.plugin,0,10);
-                                                    if (phasesRemaining < 1) {
-                                                        crate.remove();
-                                                        damageDisplay.remove();
-                                                        new BukkitRunnable() {
-                                                            @Override
-                                                            public void run() {
-                                                                activeCratesLocation.remove(crateSpawnLocation);
-                                                            }
-                                                        }.runTaskLater(C.plugin,20);
-                                                        cancel();
-                                                    }
-                                                }
-                                            }
-
                                         }
                                     }
+
+                                    for (Player p : Bukkit.getOnlinePlayers()) {
+                                        if (p.getLocation().toVector().isInAABB(squareCornerMin, squareCornerMax)) {
+                                            if (C.getPlayerTeam(p) != null) {
+                                                Team team = C.getPlayerTeam(p);
+
+                                                if (teamScores.get(team) == null) {
+                                                    teamScores.put(team, 10);
+                                                    teamCooldown.put(team, System.currentTimeMillis() + 3 * 1000);
+                                                    involvedTeams.add(team);
+                                                } else {
+                                                    if (total + 10 < maxScore) {
+                                                        teamScores.put(team, teamScores.get(team) + 10);
+                                                    }
+                                                    if (involvedTeams.size() == 1 && teamScores.get(team) == maxScore - 10) {
+                                                        teamScores.put(team, teamScores.get(team) + 10);
+                                                    }
+                                                    teamCooldown.put(team, System.currentTimeMillis() + 3 * 1000);
+                                                }
+
+                                            }
+                                        }
+                                    }
+
+
+                                    while (iterator.hasNext()) {
+                                        Team team = iterator.next();
+                                        if (teamCooldown.get(team) < System.currentTimeMillis()) {
+                                            teamScores.put(team, teamScores.get(team) - 20);
+                                            if (teamScores.get(team) <= 0) {
+                                                iterator.remove();
+                                                teamScores.remove(team);
+                                            }
+                                        }
+                                        if (teamScores.get(team) >= maxScore) {
+                                            teamScores.put(team, maxScore);
+                                            if (maxScore == crateType.getPointsPerPhase()) {
+                                                phase++;
+                                                String phases = "\uD83D\uDD12";
+                                                int phasesRemaining = crateType.getUnlockPhases() - phase;
+                                                crate.setCustomName(color + phases.repeat(phasesRemaining));
+                                                wait = true;
+                                                Bukkit.broadcastMessage("");
+                                                Bukkit.broadcastMessage(C.eventPrefix + ChatColor.RESET + team.getPrefix() + ChatColor.RESET + ChatColor.WHITE + "has broken a lock! " + color + phasesRemaining + ChatColor.WHITE + " lock(s) remain!");
+                                                Bukkit.broadcastMessage("");
+                                                Firework fw = (Firework) world.spawnEntity(crate.getLocation().clone().add(0, 3, 0), EntityType.FIREWORK_ROCKET);
+                                                FireworkMeta fwM = fw.getFireworkMeta();
+                                                FireworkEffect fwE = FireworkEffect.builder().with(FireworkEffect.Type.BALL_LARGE).withColor(Color.WHITE).build();
+                                                fwM.addEffect(fwE);
+                                                fw.setFireworkMeta(fwM);
+                                                fw.setMetadata("pat", new FixedMetadataValue(C.plugin, "rat"));
+                                                fw.detonate();
+                                                new BukkitRunnable() {
+                                                    int tick = 0;
+                                                    ArrayList<String> playerNames = new ArrayList<>(team.getEntries());
+
+                                                    @Override
+                                                    public void run() {
+                                                        Player teamMember = Bukkit.getPlayer(playerNames.get(tick));
+                                                        if (teamMember != null) {
+                                                            privateItemStacks.put(teamMember, new ArrayList<>());
+                                                            Location location = crateSpawnLocation.clone().add(0, 3, 0); // Add the offsets to the center location
+
+                                                            /* increase the amount of times loot is rolled depending on how much damage has been dealt in the
+                                                             * vicinity of the crate since the KOTH event started. */
+                                                            int lootTableExtraRolls = (int) (Math.floor(activeCratesLocation.get(crateSpawnLocation)) / 100);
+                                                            if (lootTableExtraRolls > 5) {
+                                                                lootTableExtraRolls = 5;
+                                                            }
+
+                                                            for (int i = 0; i < crateType.getLootTableRolls() + lootTableExtraRolls; i++) {
+                                                                ItemStack item = CrateMethods.getLootTableItem(crateType.getLootTable(), crateType);
+                                                                i = i + CrateMethods.getRollConsumption(item, crateType);
+                                                                LootTableEnum lootTable = CrateMethods.getLootTable(item, crateType.getIdentifier());
+                                                                if (lootTable != null) {
+                                                                    int amount = random.nextInt(lootTable.getMinStackSize(), lootTable.getMaxStackSize() + 1);
+
+
+                                                                    item.setAmount(amount);
+                                                                }
+                                                                if (item.getMaxStackSize() == 1) {
+                                                                    item.setAmount(1);
+                                                                }
+                                                                item.getItemMeta().setMaxStackSize(item.getAmount());
+                                                                Item droppedItem = world.dropItem(location, item);
+                                                                for (Player onlinePlayers : Bukkit.getOnlinePlayers()) {
+                                                                    onlinePlayers.hideEntity(C.plugin, droppedItem);
+                                                                }
+                                                                teamMember.showEntity(C.plugin, droppedItem);
+                                                                privateItemStacks.get(teamMember).add(droppedItem);
+                                                            }
+                                                        }
+                                                        tick++;
+                                                        if (tick >= team.getSize()) {
+                                                            tick = 0;
+                                                            wait = false;
+                                                            for (Team teams : involvedTeams) {
+                                                                teamScores.put(teams, 10);
+                                                            }
+                                                            cancel();
+                                                        }
+                                                    }
+                                                }.runTaskTimer(C.plugin, 0, 10);
+                                                if (phasesRemaining < 1) {
+                                                    crate.remove();
+                                                    damageDisplay.remove();
+                                                    new BukkitRunnable() {
+                                                        @Override
+                                                        public void run() {
+                                                            activeCratesLocation.remove(crateSpawnLocation);
+                                                        }
+                                                    }.runTaskLater(C.plugin, 20);
+                                                    cancel();
+                                                }
+                                            }
+                                        }
+
+                                    }
                                 }
-                            }.runTaskTimer(C.plugin,0,5);
-                        }
-                        cancel();
+                            }
+                        }.runTaskTimer(C.plugin, 0, 5);
                     }
+                    cancel();
                 }
-        }.runTaskTimer(C.plugin,100,20);
+            }
+        }.runTaskTimer(C.plugin, 0, 20);
     }
 
     public static void populateCrate (CrateTypeEnum crateType, ArmorStand crate, Player p) {
