@@ -4,8 +4,6 @@ import kiul.kiulsmputilitiesv3.C;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Material;
-import org.bukkit.enchantments.Enchantment;
-import org.bukkit.entity.Item;
 import org.bukkit.inventory.ItemStack;
 
 import java.util.ArrayList;
@@ -68,7 +66,7 @@ public enum CrateTypeEnum {
 
 
     private Component displayName;
-    private String color;
+    private String textColor;
     private String identifier;
     private Long spawnTime;
     private int unlockPhases;
@@ -81,7 +79,7 @@ public enum CrateTypeEnum {
 
     CrateTypeEnum(Component displayName, String color, String identifier, Long spawnTime, int unlockPhases, int pointsPerPhase, long unlockTime, Material crateType, ArrayList<ItemStack> lootTable,int lootTableRolls) {
         this.displayName = displayName;
-        this.color = color;
+        this.textColor = color;
         this.identifier = identifier;
         this.spawnTime = spawnTime;
         this.unlockPhases = unlockPhases;
@@ -96,8 +94,8 @@ public enum CrateTypeEnum {
         return displayName;
     }
 
-    public String getColor() {
-        return color;
+    public String getTextColor() {
+        return textColor;
     }
 
     public String getIdentifier() {

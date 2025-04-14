@@ -1,13 +1,12 @@
 package kiul.kiulsmputilitiesv3.crates;
 
-import com.mongodb.Block;
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.accessories.IngredientItemEnum;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
-import kiul.kiulsmputilitiesv3.config.ScheduleConfig;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
+import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.md_5.bungee.api.ChatMessageType;
@@ -263,6 +262,7 @@ public class CrateMethods {
         int[] timestamps = C.splitTimestamp(crateSpawnTime);
         long spawnTime = crateSpawnTime;
         new BukkitRunnable() {
+            long startTime = System.currentTimeMillis();
             ArmorStand nameplate = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0.5, 2, 0.5), EntityType.ARMOR_STAND);
             long timeUntilSpawn = spawnTime - System.currentTimeMillis();
             int tick = 0;
@@ -284,7 +284,7 @@ public class CrateMethods {
                     nameplate.setCustomName(String.format("%02d:%02d:%02d", timestamps[0], timestamps[1], timestamps[2]));
 
 
-                    float progress = (float) spawnTime/currentTime;
+                    float progress = (float) (currentTime-startTime)/(spawnTime-startTime);
                     progress = Math.min(1f, Math.max(0f, progress));
                     bossBar.progress(progress);
                     Component time = Component.empty();
@@ -292,12 +292,12 @@ public class CrateMethods {
                         if (tick <= 5) {
                             time = Component.text(" Crate Is Spawning At ").append(Component.text(crateSpawnLocation.x() + "x " + crateSpawnLocation.y() + "y " + crateSpawnLocation.z() + "z").color(NamedTextColor.WHITE));
                         }
-                        if (tick > 5 && tick < 10) {
-                            time = Component.text(" Crate Is Spawning").append(Component.text(" In " + timestamps[0] + " Hours " + timestamps[1] + " Minutes " + timestamps[2] + " Seconds").color(NamedTextColor.WHITE));
+                        if (tick > 5) {
+                            time = Component.text(" Crate Is Spawning").append(Component.text(" In " + timestamps[0] + "h " + timestamps[1] + "m " + timestamps[2] + "s").color(NamedTextColor.WHITE));
 
                         }
                     } else {
-                        time = Component.text(" Crate Is Spawning").append(Component.text(" In " + timestamps[0] + " Hours " + timestamps[1] + " Minutes " + timestamps[2] + " Seconds").color(NamedTextColor.WHITE));
+                        time = Component.text(" Crate Is Spawning").append(Component.text(" In " + timestamps[0] + "h " + timestamps[1] + "m " + timestamps[2] + "s").color(NamedTextColor.WHITE));
                     }
                     if (tick > 10) tick = 0;
                     bossBar.name(crateType.getDisplayName().append(time));
@@ -308,6 +308,7 @@ public class CrateMethods {
                     for (Player p : Bukkit.getOnlinePlayers()) {
                         bossBar.removeViewer(p);
                     }
+                    nameplate.setCustomNameVisible(false);
                     nameplate.remove();
                     //  ChatColor.GOLD+""+ChatColor.BOLD+"EVENT" + ChatColor.RESET+ChatColor.GRAY+" » ";
                     Bukkit.broadcastMessage("");
@@ -320,7 +321,7 @@ public class CrateMethods {
                     Vector cornerB = crateSpawnLocation.clone().add(-10, -10, -10).toVector();
                     Vector squareCornerMin = Vector.getMinimum(cornerA, cornerB);
                     Vector squareCornerMax = Vector.getMaximum(cornerA, cornerB);
-                    String color = crateType.getColor();
+                    String color = crateType.getTextColor();
                     ArmorStand crate = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0.5, -2.4, 0.5), EntityType.ARMOR_STAND);
                     crate.setInvulnerable(true);
                     crate.setVisible(false);
@@ -329,19 +330,7 @@ public class CrateMethods {
                     crate.setPersistent(true);
                     crate.addEquipmentLock(EquipmentSlot.HEAD, ArmorStand.LockType.REMOVING_OR_CHANGING);
                     crate.setHelmet(new ItemStack(crateType.getCrateType()));
-                    Slime borderDisplay = (Slime) world.spawnEntity(crateSpawnLocation.clone(), EntityType.SLIME);
-                    borderDisplay.setSize(10);
-                    borderDisplay.setGlowing(true);
-                    borderDisplay.setCollidable(false);
-                    borderDisplay.setInvisible(true);
-                    borderDisplay.setVisibleByDefault(true);
-                    ArmorStand damageDisplay = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0, 2.5, 0), EntityType.ARMOR_STAND);
-                    damageDisplay.setMarker(true);
-                    damageDisplay.setInvulnerable(true);
-                    damageDisplay.setVisible(false);
-                    damageDisplay.setGravity(false);
-                    damageDisplay.setCustomNameVisible(true);
-                    damageDisplay.setPersistent(true);
+
 //                    new BukkitRunnable() {
 //                        public void run() {
 //                            if (!crate.isDead()) {
@@ -364,6 +353,7 @@ public class CrateMethods {
                     locked.add(crate);
                     if (crateType.getPointsPerPhase() == 0) {
 
+
                         new BukkitRunnable() {
                             @Override
                             public void run() {
@@ -378,8 +368,8 @@ public class CrateMethods {
 
                                     if (System.currentTimeMillis() >= unlockTime) {
                                         Bukkit.broadcastMessage(crate.toString());
-                                        populateCrate(crateType, crate, null);
                                         unlocking.remove(crate);
+                                        populateCrate(crateType, crate, null);
                                         crate.setCustomName(color + "CLICK TO OPEN");
                                         new BukkitRunnable() {
                                             @Override
@@ -412,6 +402,13 @@ public class CrateMethods {
                             }
                         }.runTaskTimer(C.plugin, 0, 20);
                     } else {
+                        ArmorStand damageDisplay = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0, 2.5, 0), EntityType.ARMOR_STAND);
+                        damageDisplay.setMarker(true);
+                        damageDisplay.setInvulnerable(true);
+                        damageDisplay.setVisible(false);
+                        damageDisplay.setGravity(false);
+                        damageDisplay.setCustomNameVisible(true);
+                        damageDisplay.setPersistent(true);
                         activeCratesLocation.put(crateSpawnLocation, 0.0);
                         new BukkitRunnable() {
                             HashMap<Team, Integer> teamScores = new HashMap<Team, Integer>();
@@ -429,6 +426,9 @@ public class CrateMethods {
 
                             @Override
                             public void run() {
+                                for (Player p : Bukkit.getOnlinePlayers()) {
+                                    showCaptureAreaBorders(p, crateType, squareCornerMin, squareCornerMax, crateSpawnLocation);
+                                }
                                 damageDisplay.setCustomName(color + "" + activeCratesLocation.get(crateSpawnLocation));
                                 if (!wait) {
                                     Iterator<Team> iterator = involvedTeams.iterator();
@@ -624,9 +624,6 @@ public class CrateMethods {
             p.openInventory(trueCrateInventory);
             return;
         }
-        Bukkit.broadcastMessage(crate.toString());
-        Bukkit.broadcastMessage(crateInventory.toString());
-        Bukkit.broadcastMessage(trueCrateInventory.toString());
         crateInventoryMap.put(crate,trueCrateInventory);
     }
 
@@ -673,5 +670,74 @@ public class CrateMethods {
                 }
             }
         }.runTaskTimer(C.plugin,3600,1200);
+    }
+
+    public static HashMap<Player,HashMap<Integer,TextDisplay>> captureAreaBorders = new HashMap<>();
+
+    public static void showCaptureAreaBorders (Player p,CrateTypeEnum crateType, Vector min,Vector max, Location crateSpawnLocation) {
+        if (p.getLocation().distance(crateSpawnLocation) > 30) return;
+        double distanceToClosestEdge = AABBUtils.getDistanceToClosestEdge(p, min, max);
+        if (distanceToClosestEdge > 8) {
+            for (TextDisplay display : captureAreaBorders.get(p).values()) {
+                display.remove();
+            }
+            captureAreaBorders.remove(p);
+        } else {
+            double normalizedDistance = 10.0 / 8;  // Assuming distanceToClosestEdge is calculated earlier
+            if (captureAreaBorders.get(p) == null) {
+                captureAreaBorders.put(p, new HashMap<>());
+
+                // Define the distance for each cardinal direction
+                double distance = 10.0;  // Change this to adjust the distance
+
+                // Cardinal directions (north, south, east, west, up, down)
+                Location[] directions = {
+                        new Location(p.getWorld(), 0, 0, distance),   // North (positive Z direction)
+                        new Location(p.getWorld(), 0, 0, -distance),  // South (negative Z direction)
+                        new Location(p.getWorld(), distance, 0, 0),   // East (positive X direction)
+                        new Location(p.getWorld(), -distance, 0, 0),  // West (negative X direction)
+                        new Location(p.getWorld(), 0, distance, 0),   // Up (positive Y direction)
+                        new Location(p.getWorld(), 0, -distance, 0)   // Down (negative Y direction)
+                };
+
+                // Iterate over each direction and create a TextDisplay entity
+                for (int i = 0; i < 6; i++) {
+                    // Spawn the TextDisplay
+                    TextDisplay textDisplay = (TextDisplay) p.getWorld().spawnEntity(crateSpawnLocation, EntityType.TEXT_DISPLAY);
+                    textDisplay.setSeeThrough(true);
+                    textDisplay.setDisplayHeight(20);
+                    textDisplay.setDisplayWidth(20);
+                    textDisplay.setVisibleByDefault(false);
+                    p.showEntity(C.plugin,textDisplay);
+
+                    // Move textDisplay to the proper location
+                    Location newLocation = crateSpawnLocation.clone().add(directions[i]);
+                    textDisplay.teleport(newLocation);
+                    // Calculate the yaw to make the text perpendicular to the crate spawn
+                    float yaw = calculateYaw(crateSpawnLocation, newLocation);
+
+                    // Set rotation (yaw controls horizontal rotation, pitch controls vertical rotation)
+                    textDisplay.setRotation(yaw, 0.0f);
+
+                    // Set text color based on the crateType
+                    TextColor crateTextColor = crateType.getDisplayName().color();
+                    textDisplay.setBackgroundColor(Color.fromRGB(crateTextColor.red(), crateTextColor.green(), crateTextColor.blue()).setAlpha((int) (normalizedDistance * 255)));
+
+                    // Store textDisplay for later use (capturing area borders)
+                    captureAreaBorders.get(p).put(i, textDisplay);
+                }
+            }
+        }
+    }
+
+    private static float calculateYaw(Location origin, Location target) {
+        // Get the direction vector from the origin to the target
+        Vector direction = target.clone().subtract(origin).toVector();
+
+        // Calculate the yaw (horizontal angle) based on the direction vector
+        double angle = Math.atan2(direction.getZ(), direction.getX());
+
+        // Convert from radians to degrees and normalize between 0 and 360
+        return (float) Math.toDegrees(angle) + 90;  // Adding 90 to adjust orientation
     }
 }

@@ -45,6 +45,10 @@ public class SMPScheduler {
             0, BossBar.Color.PURPLE, BossBar.Overlay.NOTCHED_6);
     public static BossBar FinalFightBossBar = BossBar.bossBar(Component.text("Final Fight Border Closing In ").color(NamedTextColor.BLUE),
             0, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_6);
+    public static BossBar borderClosedBossbar = BossBar.bossBar(Component.text("Final Fight Border Fully Closed In ").color(NamedTextColor.BLUE),
+            0, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_6);
+    public static BossBar suddenDeathBossBar = BossBar.bossBar(Component.text("Sudden Death In ").color(NamedTextColor.BLUE),
+            0, BossBar.Color.BLUE, BossBar.Overlay.NOTCHED_6);
 
     static HashMap<String,BossBar> eventBossBars = new HashMap<>() {{
         put("grace_ends",graceBossBar);
@@ -53,6 +57,9 @@ public class SMPScheduler {
         put("end_closes",endClosesBossBar);
         put("end_opens",endOpensBossBar);
         put("final_fight",FinalFightBossBar);
+        put("border_closed",borderClosedBossbar);
+        put("sudden_death",suddenDeathBossBar);
+
     }};
 
     public static void initializeScheduleConfig() {
@@ -71,7 +78,7 @@ public class SMPScheduler {
             ScheduleConfig.get().set("event.final_fight.time", 216);
             ScheduleConfig.get().set("event.final_fight.name", "<blue>Final Fight Border Closing In ");
             ScheduleConfig.get().set("event.border_closed.time", 217);
-            ScheduleConfig.get().set("event.border_closed.name", "<blue>Final Fight Border Closed In");
+            ScheduleConfig.get().set("event.border_closed.name", "<blue>Final Fight Border Fully Closed In");
             ScheduleConfig.get().set("event.sudden_death.time", 218);
             ScheduleConfig.get().set("event.sudden_death.name", "<#a8caff>❄ <#c7ddff>Sudden Death In ");
             ScheduleConfig.save();
@@ -99,16 +106,24 @@ public class SMPScheduler {
                 public void run() {
                     for (String event : ScheduleConfig.get().getConfigurationSection("event").getKeys(false)) {
                         long startTime = ScheduleConfig.get().getLong("start_time");
-                        if (startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000) - System.currentTimeMillis() > 0) {
-                            long timeUntilEvent = startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000) - System.currentTimeMillis();
+                        long timeUntilEvent = startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000) - System.currentTimeMillis();
+                        if (timeUntilEvent > 0) {
                             if (timeUntilEvent < 24*60*60*1000) {
                                 long eventTimeInMilliseconds = (long) ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000;
                                 long currentTime = System.currentTimeMillis();
-                                float progress = (float) (currentTime - startTime) / eventTimeInMilliseconds;
+                                String lastEvent = ScheduleConfig.get().getString("lastevent");
+                                long lastEventTimeHoursMilliseconds = 0;
+                                long timeOfLastEvent = startTime;
+                                if (lastEvent != null) {
+                                    lastEventTimeHoursMilliseconds = (long) ScheduleConfig.get().getInt("event." + lastEvent + ".time") * 60 * 60 * 1000;
+                                    timeOfLastEvent = startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000);
+                                }
+
+                                float progress = (float) (currentTime - timeOfLastEvent) / (eventTimeInMilliseconds-lastEventTimeHoursMilliseconds);
                                 progress = 1 - Math.min(1f, Math.max(0f, progress));
                                 eventBossBars.get(event).progress(progress);
                                 int[] times = C.splitTimestamp(startTime+((long)ScheduleConfig.get().getInt("event." + event + ".time") * 60 * 60 * 1000));
-                                Component time = Component.text(times[0] + " Hours " + times[1] + " Minutes " + times[2] + " Seconds").color(NamedTextColor.WHITE);
+                                Component time = Component.text(times[0] + "h " + times[1] + "m " + times[2] + "s").color(NamedTextColor.WHITE);
                                 eventBossBars.get(event).name(MiniMessage.miniMessage().deserialize(ScheduleConfig.get().getString("event."+event+".name")).append(time));
 
                                 for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
@@ -116,11 +131,12 @@ public class SMPScheduler {
                                 }
                             }
                             if (timeUntilEvent < 0) {
-                                for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
-                                    eventBossBars.get(event).removeViewer(onlinePlayer);
-                                }
                                 if (!ScheduleConfig.get().getBoolean(event+".occured")) {
-                                    ScheduleConfig.get().set(event+".occurred",true);
+                                    for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+                                       eventBossBars.get(event).removeViewer(onlinePlayer);
+                                    }
+                                    ScheduleConfig.get().set("event."+event+".occurred",true);
+                                    ScheduleConfig.get().set("lastevent",event);
                                     ScheduleConfig.save();
                                     switch (event) {
                                         case "grace_ends":

@@ -214,13 +214,15 @@ public class Commands implements TabExecutor {
                             WorldData.get().set("final_fight", false);
                             WorldData.get().set("border_closed",false);
                             WorldData.save();
-                            for (Player livingPlayers : C.suddenDeath.getLivingPlayersDamageMap().keySet()) {
-                                if (livingPlayers == null) continue;
-                                livingPlayers.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20);
-                            }
+                            if (C.suddenDeath != null) {
+                                for (Player livingPlayers : C.suddenDeath.getLivingPlayersDamageMap().keySet()) {
+                                    if (livingPlayers == null) continue;
+                                    livingPlayers.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20);
+                                }
 
-                            C.suddenDeath.stop();
-                            C.suddenDeath = null;
+                                C.suddenDeath.stop();
+                                C.suddenDeath = null;
+                            }
                             break;
                         default:
                             p.sendMessage(C.failPrefix + "please enter the name of a valid scheduled event");
@@ -279,6 +281,7 @@ public class Commands implements TabExecutor {
             case "debug-event":
                 for (String event : ScheduleConfig.get().getConfigurationSection("event").getKeys(false)) {
                     argsList.add(event);
+                    argsList.add("reset");
                 }
                 return argsList;
         }

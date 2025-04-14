@@ -101,33 +101,35 @@ public class FinalFight implements Listener {
     @EventHandler
     public void worldBorderCheeseListener(PlayerMoveEvent e) {
         Player p = e.getPlayer();
-        World world = p.getWorld();
-        double size = world.getWorldBorder().getSize();
-        Location center = new Location(world, world.getWorldBorder().getCenter().getX(), p.getLocation().getY() + 5, world.getWorldBorder().getCenter().getZ());
+        if (p.getGameMode().equals(GameMode.SURVIVAL)) {
+            World world = p.getWorld();
+            double size = world.getWorldBorder().getSize();
+            Location center = new Location(world, world.getWorldBorder().getCenter().getX(), p.getLocation().getY() + 5, world.getWorldBorder().getCenter().getZ());
 
-        // Define the border corners using the correct coordinates
-        Location northWestCorner = new Location(world, world.getWorldBorder().getCenter().getX() - size / 2, p.getLocation().getY(), world.getWorldBorder().getCenter().getZ() - size / 2);
-        Location southEastCorner = new Location(world, world.getWorldBorder().getCenter().getX() + size / 2, p.getLocation().getY(), world.getWorldBorder().getCenter().getZ() + size / 2);
+            // Define the border corners using the correct coordinates
+            Location northWestCorner = new Location(world, world.getWorldBorder().getCenter().getX() - size / 2, p.getLocation().getY(), world.getWorldBorder().getCenter().getZ() - size / 2);
+            Location southEastCorner = new Location(world, world.getWorldBorder().getCenter().getX() + size / 2, p.getLocation().getY(), world.getWorldBorder().getCenter().getZ() + size / 2);
 
-        // Define the minimum and maximum vectors for the AABB
-        Vector minimum = new Vector(Math.min(northWestCorner.getX(), southEastCorner.getX()), -64, Math.min(northWestCorner.getZ(), southEastCorner.getZ()));
-        Vector maximum = new Vector(Math.max(northWestCorner.getX(), southEastCorner.getX()), 1000, Math.max(northWestCorner.getZ(), southEastCorner.getZ()));
+            // Define the minimum and maximum vectors for the AABB
+            Vector minimum = new Vector(Math.min(northWestCorner.getX(), southEastCorner.getX()), -64, Math.min(northWestCorner.getZ(), southEastCorner.getZ()));
+            Vector maximum = new Vector(Math.max(northWestCorner.getX(), southEastCorner.getX()), 1000, Math.max(northWestCorner.getZ(), southEastCorner.getZ()));
 
-        // Check if the player is outside the world border (in terms of X and Z, Y is excluded here)
-        if (!p.getLocation().toVector().isInAABB(minimum, maximum)) {
-            if (p.getVehicle() != null) p.getVehicle().removePassenger(p);
-            // Check the cooldown before applying damage and velocity
-            Long lastDamageTime = outsideBorderDamageCooldown.get(p);
-            if (lastDamageTime == null || System.currentTimeMillis() - lastDamageTime > 500) {
-                // Apply damage to the player
-                p.damage(16, DamageSource.builder(DamageType.OUTSIDE_BORDER).build());
+            // Check if the player is outside the world border (in terms of X and Z, Y is excluded here)
+            if (!p.getLocation().toVector().isInAABB(minimum, maximum)) {
+                if (p.getVehicle() != null) p.getVehicle().removePassenger(p);
+                // Check the cooldown before applying damage and velocity
+                Long lastDamageTime = outsideBorderDamageCooldown.get(p);
+                if (lastDamageTime == null || System.currentTimeMillis() - lastDamageTime > 500) {
+                    // Apply damage to the player
+                    p.damage(16, DamageSource.builder(DamageType.OUTSIDE_BORDER).build());
 
-                // Push the player back toward the center of the world border
-                Vector directionToCenter = center.toVector().subtract(p.getLocation().toVector()).normalize().multiply(0.5f);
-                p.setVelocity(directionToCenter);
+                    // Push the player back toward the center of the world border
+                    Vector directionToCenter = center.toVector().subtract(p.getLocation().toVector()).normalize().multiply(0.5f);
+                    p.setVelocity(directionToCenter);
 
-                // Set the cooldown for this player
-                outsideBorderDamageCooldown.put(p, System.currentTimeMillis());
+                    // Set the cooldown for this player
+                    outsideBorderDamageCooldown.put(p, System.currentTimeMillis());
+                }
             }
         }
     }
@@ -151,7 +153,7 @@ public class FinalFight implements Listener {
         Location southEastCorner = new Location(world,0.5*size,-64,0.5*size);
         Vector minimum = Vector.getMinimum(northWestCorner.toVector(),southEastCorner.toVector());
         Vector maximum = Vector.getMaximum(northWestCorner.toVector(),southEastCorner.toVector());
-        if (p.getLocation().toVector().isInAABB(minimum,maximum)) {
+        if (!p.getLocation().toVector().isInAABB(minimum,maximum)) {
             p.playSound(p,Sound.ENTITY_ELDER_GUARDIAN_CURSE,1,0.8f);
             p.teleport(world.getSpawnLocation());
         }
