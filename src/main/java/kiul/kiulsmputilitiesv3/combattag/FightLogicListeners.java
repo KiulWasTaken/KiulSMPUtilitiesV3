@@ -1,5 +1,7 @@
 package kiul.kiulsmputilitiesv3.combattag;
 
+import com.destroystokyo.paper.entity.villager.Reputation;
+import com.destroystokyo.paper.entity.villager.ReputationType;
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
 import org.bukkit.Bukkit;
@@ -137,8 +139,7 @@ public class FightLogicListeners implements Listener {
                 }
                 isMarkedDown = true;
             }
-
-            fight.increaseStat(fight.getDamageDealt(),p1,e.getDamage());
+            if (p1 != null) fight.increaseStat(fight.getDamageDealt(),p1,e.getDamage());
             fight.increaseStat(fight.getDamageTaken(),p2,e.getDamage());
             if (!isMarkedDown) {
                 fight.increaseStat(fight.getUntypedDamageDealtToPlayer(),p1,p2,e.getDamage());
@@ -298,6 +299,21 @@ public class FightLogicListeners implements Listener {
 //            }
 //        }
 //    }
+
+    @EventHandler
+    public void pearlSlowDown (ProjectileLaunchEvent e) {
+        if (!ConfigData.get().getBoolean("combattag")) {return;}
+            if (e.getEntity() instanceof EnderPearl && e.getEntity().getShooter() instanceof Player p) {
+                if (C.fightManager.playerIsInFight(p)) {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            p.setCooldown(Material.ENDER_PEARL, 300);
+                        }
+                    }.runTaskLater(C.plugin, 0);
+            }
+        }
+    }
 
     @EventHandler
     public void useTridentCoolDown (PlayerRiptideEvent e) {

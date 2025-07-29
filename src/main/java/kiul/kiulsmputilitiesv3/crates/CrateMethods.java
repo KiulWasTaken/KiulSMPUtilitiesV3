@@ -23,8 +23,14 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.util.Transformation;
 import org.bukkit.util.Vector;
+import org.joml.AxisAngle4f;
+import org.joml.Matrix4f;
+import org.joml.Quaternionf;
+import org.joml.Vector3f;
 
 import java.util.*;
 import java.util.concurrent.TimeUnit;
@@ -284,22 +290,22 @@ public class CrateMethods {
                     nameplate.setCustomName(String.format("%02d:%02d:%02d", timestamps[0], timestamps[1], timestamps[2]));
 
 
-                    float progress = (float) (currentTime-startTime)/(spawnTime-startTime);
+                    float progress = 1-(float)(currentTime-startTime)/(spawnTime-startTime);
                     progress = Math.min(1f, Math.max(0f, progress));
                     bossBar.progress(progress);
                     Component time = Component.empty();
                     if (spawnTime-currentTime > 30000) {
-                        if (tick <= 5) {
+                        if (tick <= 15) {
                             time = Component.text(" Crate Is Spawning At ").append(Component.text(crateSpawnLocation.x() + "x " + crateSpawnLocation.y() + "y " + crateSpawnLocation.z() + "z").color(NamedTextColor.WHITE));
                         }
-                        if (tick > 5) {
+                        if (tick > 15) {
                             time = Component.text(" Crate Is Spawning").append(Component.text(" In " + timestamps[0] + "h " + timestamps[1] + "m " + timestamps[2] + "s").color(NamedTextColor.WHITE));
 
                         }
                     } else {
                         time = Component.text(" Crate Is Spawning").append(Component.text(" In " + timestamps[0] + "h " + timestamps[1] + "m " + timestamps[2] + "s").color(NamedTextColor.WHITE));
                     }
-                    if (tick > 10) tick = 0;
+                    if (tick > 30) tick = 0;
                     bossBar.name(crateType.getDisplayName().append(time));
                     for (Player p : Bukkit.getOnlinePlayers()) {
                         bossBar.addViewer(p);
@@ -410,7 +416,8 @@ public class CrateMethods {
                         damageDisplay.setCustomNameVisible(true);
                         damageDisplay.setPersistent(true);
                         activeCratesLocation.put(crateSpawnLocation, 0.0);
-                        new BukkitRunnable() {
+
+                        BukkitTask captureRunnable = new BukkitRunnable() {
                             HashMap<Team, Integer> teamScores = new HashMap<Team, Integer>();
                             HashMap<Team, Long> teamCooldown = new HashMap<Team, Long>();
                             Set<Team> involvedTeams = new HashSet<>();
@@ -426,9 +433,7 @@ public class CrateMethods {
 
                             @Override
                             public void run() {
-                                for (Player p : Bukkit.getOnlinePlayers()) {
-                                    showCaptureAreaBorders(p, crateType, squareCornerMin, squareCornerMax, crateSpawnLocation);
-                                }
+
                                 damageDisplay.setCustomName(color + "" + activeCratesLocation.get(crateSpawnLocation));
                                 if (!wait) {
                                     Iterator<Team> iterator = involvedTeams.iterator();
@@ -576,6 +581,19 @@ public class CrateMethods {
                                 }
                             }
                         }.runTaskTimer(C.plugin, 0, 5);
+
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                if (captureRunnable.isCancelled()) {
+                                    cancel();
+                                    return;
+                                }
+                                for (Player p : Bukkit.getOnlinePlayers()) {
+                                    showCaptureAreaBorders(p, crateType, squareCornerMin, squareCornerMax, crateSpawnLocation);
+                                }
+                            }
+                        }.runTaskTimer(C.plugin,0,1);
                     }
                     cancel();
                 }
@@ -676,14 +694,18 @@ public class CrateMethods {
 
     public static void showCaptureAreaBorders (Player p,CrateTypeEnum crateType, Vector min,Vector max, Location crateSpawnLocation) {
         if (p.getLocation().distance(crateSpawnLocation) > 30) return;
-        double distanceToClosestEdge = AABBUtils.getDistanceToClosestEdge(p, min, max);
-        if (distanceToClosestEdge > 8) {
-            for (TextDisplay display : captureAreaBorders.get(p).values()) {
-                display.remove();
+        boolean inside = p.getLocation().toVector().isInAABB(min,max);
+        float distanceToClosestEdge = (float)AABBUtils.getDistanceToClosestEdge(p, min, max,inside);
+        Bukkit.broadcastMessage(distanceToClosestEdge + "");
+        if (distanceToClosestEdge > 5) {
+            if (captureAreaBorders.get(p) != null) {
+                for (TextDisplay display : captureAreaBorders.get(p).values()) {
+                    display.remove();
+                }
+                captureAreaBorders.remove(p);
             }
-            captureAreaBorders.remove(p);
         } else {
-            double normalizedDistance = 10.0 / 8;  // Assuming distanceToClosestEdge is calculated earlier
+            float normalizedDistance = 1-distanceToClosestEdge / 5.0f ;  // Assuming distanceToClosestEdge is calculated earlier
             if (captureAreaBorders.get(p) == null) {
                 captureAreaBorders.put(p, new HashMap<>());
 
@@ -700,13 +722,13 @@ public class CrateMethods {
                         new Location(p.getWorld(), 0, -distance, 0)   // Down (negative Y direction)
                 };
 
+
                 // Iterate over each direction and create a TextDisplay entity
                 for (int i = 0; i < 6; i++) {
                     // Spawn the TextDisplay
-                    TextDisplay textDisplay = (TextDisplay) p.getWorld().spawnEntity(crateSpawnLocation, EntityType.TEXT_DISPLAY);
+                    TextDisplay textDisplay = (TextDisplay) p.getWorld().spawnEntity(crateSpawnLocation.clone().add(directions[i]), EntityType.TEXT_DISPLAY);
                     textDisplay.setSeeThrough(true);
-                    textDisplay.setDisplayHeight(20);
-                    textDisplay.setDisplayWidth(20);
+                    textDisplay.setTransformation(new Transformation(textDisplay.getTransformation().getTranslation(),textDisplay.getTransformation().getLeftRotation(),new Vector3f(100.0f),textDisplay.getTransformation().getRightRotation()));
                     textDisplay.setVisibleByDefault(false);
                     p.showEntity(C.plugin,textDisplay);
 
@@ -714,30 +736,45 @@ public class CrateMethods {
                     Location newLocation = crateSpawnLocation.clone().add(directions[i]);
                     textDisplay.teleport(newLocation);
                     // Calculate the yaw to make the text perpendicular to the crate spawn
-                    float yaw = calculateYaw(crateSpawnLocation, newLocation);
+                    float[] angle = calculateYawAndPitch(crateSpawnLocation, newLocation,inside);
 
                     // Set rotation (yaw controls horizontal rotation, pitch controls vertical rotation)
-                    textDisplay.setRotation(yaw, 0.0f);
-
+                    textDisplay.setRotation(angle[0], angle[1]);
                     // Set text color based on the crateType
+                    float alpha = (normalizedDistance*255);
                     TextColor crateTextColor = crateType.getDisplayName().color();
-                    textDisplay.setBackgroundColor(Color.fromRGB(crateTextColor.red(), crateTextColor.green(), crateTextColor.blue()).setAlpha((int) (normalizedDistance * 255)));
+                    textDisplay.setBackgroundColor(Color.fromARGB((int)alpha,255,255,255));
+
 
                     // Store textDisplay for later use (capturing area borders)
                     captureAreaBorders.get(p).put(i, textDisplay);
+                }
+            } else {
+                for (TextDisplay textDisplay : captureAreaBorders.get(p).values()) {
+                    float alpha = (normalizedDistance*255);
+                    textDisplay.setBackgroundColor(Color.fromARGB((int)alpha,255,255,255));
+                    Bukkit.broadcastMessage(""+alpha);
                 }
             }
         }
     }
 
-    private static float calculateYaw(Location origin, Location target) {
+    private static float[] calculateYawAndPitch(Location origin, Location target,boolean inside) {
         // Get the direction vector from the origin to the target
         Vector direction = target.clone().subtract(origin).toVector();
 
         // Calculate the yaw (horizontal angle) based on the direction vector
-        double angle = Math.atan2(direction.getZ(), direction.getX());
+        double yaw = Math.atan2(direction.getZ(), direction.getX());
 
-        // Convert from radians to degrees and normalize between 0 and 360
-        return (float) Math.toDegrees(angle) + 90;  // Adding 90 to adjust orientation
+        // Calculate the pitch (vertical angle) based on the vertical distance and horizontal distance
+        double horizontalDistance = Math.sqrt(direction.getX() * direction.getX() + direction.getZ() * direction.getZ());
+        double pitch = Math.atan2(direction.getY(), horizontalDistance);
+
+        // Convert from radians to degrees and normalize between 0 and 360 for yaw, and -90 to 90 for pitch
+        float yawInDegrees = inside ? (float) Math.toDegrees(yaw) + 90 : (float) Math.toDegrees(yaw) - 90;  // Adding 90 to adjust orientation
+        float pitchInDegrees = (float) Math.toDegrees(pitch);
+
+        // Return both yaw and pitch
+        return new float[]{yawInDegrees, pitchInDegrees};
     }
 }

@@ -65,21 +65,21 @@ public class SMPScheduler {
     public static void initializeScheduleConfig() {
         if (ScheduleConfig.get().get("event.grace_ends.name") == null) {
             ScheduleConfig.get().set("start_time", null);
-            ScheduleConfig.get().set("event.grace_ends.time", 24);
+            ScheduleConfig.get().set("event.grace_ends.time", 1);
             ScheduleConfig.get().set("event.grace_ends.name", "<red>⚔ PVP Enables In ");
-            ScheduleConfig.get().set("event.netherite_enables.time", 48);
+            ScheduleConfig.get().set("event.netherite_enables.time", 10000);
             ScheduleConfig.get().set("event.netherite_enables.name", "<gold>⚔ Netherite Enables In ");
-            ScheduleConfig.get().set("event.dragon_opens.time", 96);
+            ScheduleConfig.get().set("event.dragon_opens.time", 23);
             ScheduleConfig.get().set("event.dragon_opens.name", "<light_purple>End (Dragon Fight) Opening In ");
-            ScheduleConfig.get().set("event.end_closes.time", 120);
+            ScheduleConfig.get().set("event.end_closes.time", 25);
             ScheduleConfig.get().set("event.end_closes.name", "<light_purple>End Closes In ");
-            ScheduleConfig.get().set("event.end_opens.time", 168);
+            ScheduleConfig.get().set("event.end_opens.time", 28);
             ScheduleConfig.get().set("event.end_opens.name", "<dark_purple>End Opens In ");
-            ScheduleConfig.get().set("event.final_fight.time", 216);
+            ScheduleConfig.get().set("event.final_fight.time", 71);
             ScheduleConfig.get().set("event.final_fight.name", "<blue>Final Fight Border Closing In ");
-            ScheduleConfig.get().set("event.border_closed.time", 217);
+            ScheduleConfig.get().set("event.border_closed.time", 72);
             ScheduleConfig.get().set("event.border_closed.name", "<blue>Final Fight Border Fully Closed In");
-            ScheduleConfig.get().set("event.sudden_death.time", 218);
+            ScheduleConfig.get().set("event.sudden_death.time", 10000);
             ScheduleConfig.get().set("event.sudden_death.name", "<#a8caff>❄ <#c7ddff>Sudden Death In ");
             ScheduleConfig.save();
         }

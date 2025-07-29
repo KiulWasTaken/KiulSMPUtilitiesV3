@@ -42,42 +42,6 @@ public class LogoutListeners implements Listener {
         Location location = e.getPlayer().getLocation();
         World world = location.getWorld();
         int delay = 0;
-        if (e.getReason() != PlayerQuitEvent.QuitReason.DISCONNECTED) {
-            return;
-            // if the player disconnected by ALT+F4 or connection issue, allow them time to reconnect.
-            /*
-            delay = 20*C.CONNECTION_ISSUE_PROTECTION_SECONDS;
-
-            ArmorStand timer = (ArmorStand) world.spawnEntity(location.add(0,2,0),EntityType.ARMOR_STAND);
-            timer.setMarker(true);
-            timer.setCustomNameVisible(true);
-            timer.setInvulnerable(true);
-            timer.setInvisible(true);
-
-            ArmorStand description = (ArmorStand) world.spawnEntity(location.add(0,1.8,0),EntityType.ARMOR_STAND);
-            description.setMarker(true);
-            description.setCustomNameVisible(true);
-            description.setInvulnerable(true);
-            description.setInvisible(true);
-            description.setCustomName(ChatColor.GRAY+"Allowing Time To Reconnect (Connection Issue)");
-            long initialTime = System.currentTimeMillis();
-            new BukkitRunnable() {
-                int tick = 0;
-                @Override
-                public void run() {
-                    if (tick >= C.CONNECTION_ISSUE_PROTECTION_SECONDS) {
-                        description.remove();
-                        timer.remove();
-                        cancel();
-                        return;
-                    }
-                    int[] timestamps = C.splitTimestamp(initialTime+C.CONNECTION_ISSUE_PROTECTION_SECONDS*1000L);
-                    timer.setCustomName(ChatColor.RED+String.format("%02d:%02d:%02d", timestamps[0], timestamps[1], timestamps[2]));
-
-                    tick ++;
-                }
-            }.runTaskTimer(C.plugin,0,20);*/
-        }
 
         int finalCombatMultiplier = combatMultiplier;
         new BukkitRunnable() {

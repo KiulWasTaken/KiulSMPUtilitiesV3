@@ -1,6 +1,7 @@
 package kiul.kiulsmputilitiesv3.featuretoggle;
 
 import kiul.kiulsmputilitiesv3.C;
+import kiul.kiulsmputilitiesv3.banneditems.BannedItemListener;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
 import kiul.kiulsmputilitiesv3.config.ScheduleConfig;
 import kiul.kiulsmputilitiesv3.scheduler.SMPScheduler;
@@ -11,6 +12,7 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.inventory.ClickType;
 import org.bukkit.event.inventory.InventoryClickEvent;
+import org.bukkit.event.inventory.InventoryCloseEvent;
 import org.bukkit.inventory.BlockInventoryHolder;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.ItemStack;
@@ -246,11 +248,35 @@ public class FeatureInventory implements Listener {
                             }
                         }
                         break;
+                    case "ban_item":
+                        if (e.getClick() == ClickType.SHIFT_LEFT) {
+                            Inventory inventory = Bukkit.createInventory(null, 27, "Banned Items");
+                            for (Material material : BannedItemListener.bannedItems) {
+                                inventory.addItem(new ItemStack(material));
+                            }
+                            p.openInventory(inventory);
+                            return;
+                        }
+                        break;
                 }
+
 
                 Bukkit.broadcastMessage(C.pluginPrefix+e.getCurrentItem().getItemMeta().getDisplayName()+ChatColor.WHITE+" has been " + (ConfigData.get().getBoolean(localName) ? C.GREEN+"Enabled":C.RED+"Disabled"));
 
                 open(p,true);
+            }
+        }
+    }
+
+    @EventHandler
+    public void saveBannedItemsGUI (InventoryCloseEvent e) {
+        if (e.getView().getTitle().equalsIgnoreCase("banned items")) {
+            Player p = (Player) e.getPlayer();
+            BannedItemListener.bannedItems.clear();
+            for (ItemStack bannedItem : p.getOpenInventory().getTopInventory()) {
+                if (bannedItem != null && bannedItem.getType() != Material.AIR) {
+                    BannedItemListener.bannedItems.add(bannedItem.getType());
+                }
             }
         }
     }

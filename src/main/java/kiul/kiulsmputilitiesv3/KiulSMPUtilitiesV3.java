@@ -1,6 +1,7 @@
 package kiul.kiulsmputilitiesv3;
 
 import kiul.kiulsmputilitiesv3.accessories.*;
+import kiul.kiulsmputilitiesv3.banneditems.BannedItemListener;
 import kiul.kiulsmputilitiesv3.combatlog.LogoutListeners;
 import kiul.kiulsmputilitiesv3.combatlog.MovementListeners;
 import kiul.kiulsmputilitiesv3.combattag.FightLogicListeners;
@@ -16,9 +17,11 @@ import kiul.kiulsmputilitiesv3.server_events.CloseEndDimension;
 import kiul.kiulsmputilitiesv3.server_events.FinalFight;
 import kiul.kiulsmputilitiesv3.stats.StatDB;
 import kiul.kiulsmputilitiesv3.stats.StatDBListeners;
+import kiul.kiulsmputilitiesv3.teamcure.CureListener;
 import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapelessRecipe;
+import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.plugin.java.JavaPlugin;
 
 import java.util.logging.Level;
@@ -48,6 +51,8 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new EggAccessory(),this);
         getServer().getPluginManager().registerEvents(new CloseEndDimension(),this);
         getServer().getPluginManager().registerEvents(new FinalFight(),this);
+        getServer().getPluginManager().registerEvents(new BannedItemListener(),this);
+        getServer().getPluginManager().registerEvents(new CureListener(),this);
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
             if ((accessoryItem.getLocalName().contains("ring") || accessoryItem.getLocalName().contains("tome")) && accessoryItem.getLocalName().contains("base")) {
@@ -66,6 +71,14 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
                 Bukkit.addRecipe(sr);
             }
         }
+        ItemStack goldenApple = new ItemStack(Material.GOLDEN_APPLE);
+        ShapelessRecipe sr = new ShapelessRecipe(new NamespacedKey(C.plugin, "light_apple"), goldenApple);
+        sr.addIngredient(Material.APPLE);
+        sr.addIngredient(Material.GOLD_INGOT);
+        sr.addIngredient(Material.GOLD_INGOT);
+        sr.addIngredient(Material.GOLD_INGOT);
+        sr.addIngredient(Material.GOLD_INGOT);
+        Bukkit.addRecipe(sr);
 
         // Logger
         Logger mongoLogger = Logger.getLogger( "org.mongodb.driver" );
@@ -102,6 +115,8 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
             ConfigData.get().addDefault("accessories", true);
             ConfigData.get().addDefault("crates", true);
             ConfigData.get().addDefault("scheduler", true);
+            ConfigData.get().addDefault("ban_item", false);
+            ConfigData.get().addDefault("curing", true);
         }
         PersistentData.setup();
         AccessoryData.setup();

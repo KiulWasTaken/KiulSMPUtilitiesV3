@@ -37,31 +37,31 @@ public class EggAccessory implements Listener {
             }
         }
     }
-    @EventHandler
-    public void shulker(PlayerInteractEvent e) {
-        if (e.getItem() == null) {return;}
-        if (e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.LEFT_CLICK_BLOCK) {
-            if (e.getItem().getType().equals(Material.DRAGON_EGG)) {
-                e.getPlayer().openInventory(createEggInventory());
-                AccessoryData.get().set(e.getPlayer().getUniqueId() + ".accessory.identifier", "egg");
-                AccessoryData.get().set(e.getPlayer().getUniqueId() + ".accessory.range", AccessoryItemEnum.egg.getRange());
-                AccessoryData.save();
-                AccessoryMethods.instantiateTrackingSignalTask(e.getPlayer());
-            }
-        }
-    }
-
-    @EventHandler
-    public void updateShulker(InventoryCloseEvent e) {
-        if (e.getInventory().getHolder() instanceof BlockInventoryHolder) {return;}
-        if (e.getView().getTitle().equalsIgnoreCase("Dragon Egg")) {
-            AccessoryData.get().set("accessory.inventory", InventoryToBase64.itemStackArrayToBase64(e.getInventory().getContents()));
-            AccessoryData.get().set(e.getPlayer().getUniqueId()+".accessory.identifier", null);
-            AccessoryData.get().set(e.getPlayer().getUniqueId()+".accessory.range", null);
-            AccessoryData.save();
-            AccessoryMethods.trackingSignalTask.get(e.getPlayer()).cancel();
-        }
-    }
+//    @EventHandler
+//    public void shulker(PlayerInteractEvent e) {
+//        if (e.getItem() == null) {return;}
+//        if (e.getAction() == Action.LEFT_CLICK_AIR || e.getAction() == Action.LEFT_CLICK_BLOCK) {
+//            if (e.getItem().getType().equals(Material.DRAGON_EGG)) {
+//                e.getPlayer().openInventory(createEggInventory());
+//                AccessoryData.get().set(e.getPlayer().getUniqueId() + ".accessory.identifier", "egg");
+//                AccessoryData.get().set(e.getPlayer().getUniqueId() + ".accessory.range", AccessoryItemEnum.egg.getRange());
+//                AccessoryData.save();
+//                AccessoryMethods.instantiateTrackingSignalTask(e.getPlayer());
+//            }
+//        }
+//    }
+//
+//    @EventHandler
+//    public void updateShulker(InventoryCloseEvent e) {
+//        if (e.getInventory().getHolder() instanceof BlockInventoryHolder) {return;}
+//        if (e.getView().getTitle().equalsIgnoreCase("Dragon Egg")) {
+//            AccessoryData.get().set("accessory.inventory", InventoryToBase64.itemStackArrayToBase64(e.getInventory().getContents()));
+//            AccessoryData.get().set(e.getPlayer().getUniqueId()+".accessory.identifier", null);
+//            AccessoryData.get().set(e.getPlayer().getUniqueId()+".accessory.range", null);
+//            AccessoryData.save();
+//            AccessoryMethods.trackingSignalTask.get(e.getPlayer()).cancel();
+//        }
+//    }
 
 
     public Inventory createEggInventory () {

@@ -48,17 +48,7 @@ public class CrateListeners implements Listener {
 
     @EventHandler
     public void OpenCrate(PlayerInteractAtEntityEvent e) {
-        Player p = e.getPlayer();
-        p.sendMessage("1");
         if (e.getRightClicked() instanceof ArmorStand crate) {
-            p.sendMessage("2");
-            p.sendMessage("unlocking.contains(crate): " + CrateMethods.unlocking.contains(crate));
-            p.sendMessage("locked.contains(crate):" + CrateMethods.locked.contains(crate));
-            if (crateInventoryMap.get(crate) != null) {
-                p.sendMessage("crateInventoryMap.get(crate): " + crateInventoryMap.get(crate).toString());
-            } else {
-                p.sendMessage("crateInventoryMap.get(crate): null");
-            }
             if (crateUnlockTime.get(crate) != null && System.currentTimeMillis() >= crateUnlockTime.get(crate) && crateInventoryMap.get(crate) != null) {
                 e.getPlayer().openInventory(crateInventoryMap.get(crate));
             } else if (CrateMethods.locked.contains(crate)) {
