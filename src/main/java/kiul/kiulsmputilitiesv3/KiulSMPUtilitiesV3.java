@@ -1,5 +1,6 @@
 package kiul.kiulsmputilitiesv3;
 
+import com.sun.jna.platform.unix.solaris.LibKstat;
 import kiul.kiulsmputilitiesv3.accessories.*;
 import kiul.kiulsmputilitiesv3.banneditems.BannedItemListener;
 import kiul.kiulsmputilitiesv3.combatlog.LogoutListeners;
@@ -10,6 +11,7 @@ import kiul.kiulsmputilitiesv3.config.*;
 import kiul.kiulsmputilitiesv3.crates.CrateListeners;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
+import kiul.kiulsmputilitiesv3.itemhistory.ItemMethods;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemCraft;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemPickupAfterDeath;
 import kiul.kiulsmputilitiesv3.scheduler.SMPScheduler;
@@ -18,12 +20,19 @@ import kiul.kiulsmputilitiesv3.server_events.FinalFight;
 import kiul.kiulsmputilitiesv3.stats.StatDB;
 import kiul.kiulsmputilitiesv3.stats.StatDBListeners;
 import kiul.kiulsmputilitiesv3.teamcure.CureListener;
+import kiul.kiulsmputilitiesv3.towns.listeners.ProtectedBlocks;
+import kiul.kiulsmputilitiesv3.towns.listeners.TownBlock;
 import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
 import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -53,6 +62,8 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FinalFight(),this);
         getServer().getPluginManager().registerEvents(new BannedItemListener(),this);
         getServer().getPluginManager().registerEvents(new CureListener(),this);
+        getServer().getPluginManager().registerEvents(new TownBlock(),this);
+        getServer().getPluginManager().registerEvents(new ProtectedBlocks(),this);
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
             if ((accessoryItem.getLocalName().contains("ring") || accessoryItem.getLocalName().contains("tome")) && accessoryItem.getLocalName().contains("base")) {
@@ -71,6 +82,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
                 Bukkit.addRecipe(sr);
             }
         }
+
         ItemStack goldenApple = new ItemStack(Material.GOLDEN_APPLE);
         ShapelessRecipe sr = new ShapelessRecipe(new NamespacedKey(C.plugin, "light_apple"), goldenApple);
         sr.addIngredient(Material.APPLE);
@@ -79,6 +91,20 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         sr.addIngredient(Material.GOLD_INGOT);
         sr.addIngredient(Material.GOLD_INGOT);
         Bukkit.addRecipe(sr);
+
+        List<String> lore = new ArrayList<>();
+        ItemStack townCore = new ItemStack(Material.RESPAWN_ANCHOR);
+        ItemMeta townCoreMeta = townCore.getItemMeta();
+        lore.add(ChatColor.GRAY+"Can be placed to create a safe zone for your team.");
+        townCoreMeta.setLore(lore);
+        townCoreMeta.setDisplayName(C.t("&eTown Core"));
+        townCoreMeta.getPersistentDataContainer().set(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING,"towncore");
+        townCore.setItemMeta(townCoreMeta);
+        ShapedRecipe shapedRecipe = new ShapedRecipe(new NamespacedKey(C.plugin,"town_core"),townCore);
+        shapedRecipe.shape("XXX","XAX","XXX");
+        shapedRecipe.setIngredient('X',Material.CRYING_OBSIDIAN);
+        shapedRecipe.setIngredient('A',Material.GOLD_BLOCK);
+        Bukkit.addRecipe(shapedRecipe);
 
         // Logger
         Logger mongoLogger = Logger.getLogger( "org.mongodb.driver" );

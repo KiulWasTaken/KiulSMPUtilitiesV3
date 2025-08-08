@@ -96,6 +96,7 @@ public class ItemCraft implements Listener {
             return;
         }
         if (e.getClickedInventory() == e.getView().getTopInventory() && !(e.getView().getTopInventory() instanceof CraftingInventory)) {
+            if (e.getCurrentItem() == null) return;
             if (historyItems.contains(e.getCurrentItem().getType())) {
                 if (e.getCurrentItem().getLore() != null) {
                     for (String loreString : e.getCurrentItem().getLore()) {

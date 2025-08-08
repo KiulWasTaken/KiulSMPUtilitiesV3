@@ -2,6 +2,8 @@ package kiul.kiulsmputilitiesv3;
 
 import kiul.kiulsmputilitiesv3.combattag.FightManager;
 import kiul.kiulsmputilitiesv3.server_events.SuddenDeath;
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.*;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.Player;
@@ -17,12 +19,14 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 
+import java.awt.*;
 import java.awt.Color;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.DecimalFormat;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -60,6 +64,8 @@ public class C {
 #6d2b94 purple*/
 
     /* static utilities */
+    public static String fMsg(String msg) { return t("&7[&4\uD83C\uDFDB&7] " + RED + msg); }
+    public static String msg(String msg) { return t("&7[" + GREEN + "\uD83C\uDFDB&7] " + GOLD + msg); }
     public static String failPrefix = C.t(DARK_RED+"❌ "+RED);
     public static String warnPrefix = C.t(YELLOW+"⚠ "+ GOLD);
     public static String successPrefix = C.t(DARK_GREEN+"✔ "+GREEN);
@@ -138,6 +144,32 @@ public class C {
         }
         return net.md_5.bungee.api.ChatColor.WHITE;}
 
+    public static String componentToString(Component input1) {
+
+        String input = MiniMessage.miniMessage().serialize(input1);
+
+        // Regular expression to match the hex color code in the format <#xxxxxx>
+        String regex = "<#([0-9A-Fa-f]{6})>";
+
+        // Compile the regex pattern
+        Pattern pattern = Pattern.compile(regex);
+        Matcher matcher = pattern.matcher(input);
+
+        // If a match is found, extract the color and the remaining text
+        if (matcher.find()) {
+            // Extract the hex color
+            String hexColor = matcher.group(1);  // This will capture the hex part without the <# and >
+
+            // Extract everything after the '>'
+            String textAfterColor = input.substring(matcher.end());  // Get substring after the hex part
+
+            // For this case, we return the color and the text after it
+            return C.t("&#" + hexColor + textAfterColor.trim());
+        }
+
+        // Return a message if no hex color was found
+        return "No valid hex color found!";
+    }
 
     public static ItemStack getHeadFromURL(URL value) {
         ItemStack head = new ItemStack(Material.PLAYER_HEAD, 1, (short)3);
