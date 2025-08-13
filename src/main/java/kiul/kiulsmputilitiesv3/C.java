@@ -54,6 +54,8 @@ public class C {
     public static String BLUE = C.t("&#658bb5"); //old &#5f95ed
     public static String GRAY = C.t("&#787878");
     public static String PURPLE = C.t("&#6d2b94");
+    public static String FUCHSIA = C.t("&#c72850");
+    public static String LIGHT_PURPLE = C.t("&#9139c4");
     public static String PINK = C.t("&#c73e8b");
     public static String LIGHT_GREEN = C.t("&#31e862");
     public static String DARK_GREEN = C.t("&#218a3c");
@@ -89,7 +91,7 @@ public class C {
     public static ArrayList<Player> logoutTimer = new ArrayList<>();
 
     /* Configurable */
-    public static int BLOCK_REGEN_SECONDS = 90;
+    public static int BLOCK_REGEN_SECONDS = 5;
     public static int NPC_DESPAWN_SECONDS = 45;
     public static int ACCESSORY_COOLDOWN_MINUTES = 0;
     public static int CONNECTION_ISSUE_PROTECTION_SECONDS = 15;

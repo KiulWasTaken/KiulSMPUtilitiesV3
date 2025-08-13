@@ -28,9 +28,10 @@ public class TownBlock implements Listener {
 
     @EventHandler
     public void placeTown (BlockPlaceEvent e) {
+        if (!e.getItemInHand().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) return;
         if (e.getItemInHand().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING).equalsIgnoreCase("towncore")) {
-            if (C.getPlayerTeam(e.getPlayer()) == null || C.getPlayerTeam(e.getPlayer()).getEntries().size() < 2) {
-                e.getPlayer().sendMessage(C.failPrefix+" cannot place a town core without a team that has at least 2 members!");
+            if (C.getPlayerTeam(e.getPlayer()) == null || C.getPlayerTeam(e.getPlayer()).getEntries().size() < 1) {
+                e.getPlayer().sendMessage(C.failPrefix+" cannot place a town core without a team that has at least 1 members!");
                 e.setCancelled(true);
                 return;
             }
@@ -41,6 +42,7 @@ public class TownBlock implements Listener {
                     return;
                 }
             }
+            e.getPlayer().sendMessage(C.GOLD+C.t("&oSneak click to change the name of the town"));
             Town.townsList.add(new Town(e.getBlockPlaced().getLocation(), e.getPlayer()));
         }
     }
@@ -56,7 +58,7 @@ public class TownBlock implements Listener {
                         e.setCancelled(true);
                     } else {
                         e.setCancelled(true);
-                        e.getPlayer().sendMessage(C.failPrefix+" you cannot destroy a town core you do not own whilst its shield is still up!");
+                        e.getPlayer().sendMessage(C.failPrefix+" you cannot destroy a town core you do not own!");
                     }
 
                     return;
@@ -76,7 +78,8 @@ public class TownBlock implements Listener {
         }
 
         List<String> lore = new ArrayList<>();
-        lore.add(ChatColor.GRAY+"This will remove your town");
+        lore.add(ChatColor.GRAY+"This will remove your town and all");
+        lore.add(ChatColor.GRAY+"protections will be immediately voided");
         ItemStack yesItem = C.createItemStack(C.successPrefix+"Confirm Destroy",Material.LIME_WOOL,1,lore.toArray(String[]::new),null,null,"yes",null);
 
 

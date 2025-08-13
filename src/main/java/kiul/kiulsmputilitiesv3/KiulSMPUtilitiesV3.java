@@ -20,8 +20,10 @@ import kiul.kiulsmputilitiesv3.server_events.FinalFight;
 import kiul.kiulsmputilitiesv3.stats.StatDB;
 import kiul.kiulsmputilitiesv3.stats.StatDBListeners;
 import kiul.kiulsmputilitiesv3.teamcure.CureListener;
+import kiul.kiulsmputilitiesv3.towns.Town;
 import kiul.kiulsmputilitiesv3.towns.listeners.ProtectedBlocks;
 import kiul.kiulsmputilitiesv3.towns.listeners.TownBlock;
+import kiul.kiulsmputilitiesv3.towns.listeners.TownGUI;
 import org.bukkit.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
@@ -30,6 +32,9 @@ import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scoreboard.Scoreboard;
+import org.bukkit.scoreboard.Team;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -62,6 +67,8 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FinalFight(),this);
         getServer().getPluginManager().registerEvents(new BannedItemListener(),this);
         getServer().getPluginManager().registerEvents(new CureListener(),this);
+
+        getServer().getPluginManager().registerEvents(new TownGUI(),this);
         getServer().getPluginManager().registerEvents(new TownBlock(),this);
         getServer().getPluginManager().registerEvents(new ProtectedBlocks(),this);
         // Recipes
@@ -164,12 +171,31 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
             CrateMethods.startRandomCrates(getServer().getWorld("world"));
         }
 
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
+                for (Team team : sb.getTeams()) {
+                    C.plugin.getLogger().warning(team.getName());
+                    continue;
+                }
+                if (C.plugin.getConfig().getConfigurationSection("towns") != null) {
+                    for (String key : C.plugin.getConfig().getConfigurationSection("towns").getKeys(false)) {
+                        Town.townsList.add(Town.loadFromConfig(key));
+                    }
+                }
+            }
+        }.runTaskLater(C.plugin,10);
+
         // Database
 //        StatDB.connect();
     }
 
     @Override
     public void onDisable() {
+        for (Town town : Town.townsList) {
+            Town.saveToConfig(town);
+        }
         // Plugin shutdown logic
         AccessoryData.save();
     }
