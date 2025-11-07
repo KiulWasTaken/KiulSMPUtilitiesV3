@@ -9,10 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.*;
 import org.bukkit.block.data.BlockData;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
-import org.bukkit.entity.TNTPrimed;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
@@ -26,10 +23,7 @@ import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.IOException;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Random;
-import java.util.Set;
+import java.util.*;
 
 public class ProtectedBlocks implements Listener {
 
@@ -91,7 +85,6 @@ public class ProtectedBlocks implements Listener {
 
             if (isInsideProtectedZone) {
                 e.setDropItems(false);
-
                 scheduleBlockRespawn(e.getBlock(), System.currentTimeMillis() + (1000L * C.BLOCK_REGEN_SECONDS), e.getBlock().getType(),false,containerInventoryContents,e.getBlock().getBlockData(),town,false,e.getPlayer());
             }
             town.damageTownShield(1, true,e.getPlayer(),e.getBlock().getLocation());
@@ -239,6 +232,8 @@ public class ProtectedBlocks implements Listener {
                 scheduleBlockRespawn(explodedBlock, System.currentTimeMillis() + (1000L * C.BLOCK_REGEN_SECONDS), explodedBlock.getType(), false,
                         containerInventoryContents, explodedBlock.getBlockData(),town,true, entityOwner.get(e.getEntity()));
             }
+
+
             e.blockList().forEach(block -> {
                 if (block.getType().equals(Material.TNT) && block.hasMetadata("unauth")) {
                     TNTPrimed tntPrimed = (TNTPrimed) block.getLocation().getWorld().spawnEntity(block.getLocation().add(0.5,0,0.5), EntityType.TNT);
@@ -248,6 +243,7 @@ public class ProtectedBlocks implements Listener {
             });
             // deal damage to town hp
             town.damageTownShield(e.blockList().size(), true,entityOwner.get(e.getEntity()),e.getLocation());
+            e.setCancelled(true);
         }
     }
 
@@ -336,21 +332,56 @@ public class ProtectedBlocks implements Listener {
         }
     }
 
+    public static ArrayList<Block> regeneratingBlocks = new ArrayList<>();
 
+    public static Location getNextAirPocket(Location location) {
+        double x = location.x();
+        int y = (int)location.y();
+        double z = location.z();
+
+        int air = 0;
+        for (int i = y; i < 320; i++) {
+
+            Location newloc = new Location(location.getWorld(),x,i,z);
+            if (newloc.getBlock().getType().equals(Material.AIR)) {
+                air++;
+            } else {
+                air = 0;
+            }
+
+            if (air > 1) {
+                y = i-1;
+                break;
+            }
+        }
+
+        return new Location(location.getWorld(),x,y,z);
+    }
+
+    public static HashMap<Block,Material> regeneratingBlockFinalTypeHash = new HashMap<>();
 
     public static void scheduleBlockRespawn(Block block, long timeUntilRegenerate, Material finalType, boolean isPlacedBlock, String containerInventoryBase64, BlockData blockData, Town town, boolean isExplosion,Player attacker) {
-
+        regeneratingBlocks.add(block);
+        regeneratingBlockFinalTypeHash.put(block,finalType);
+        ProtectedEntities.disableNearbyEntities(block);
         new BukkitRunnable() {
             @Override
             public void run() {
                 if (isPlacedBlock && block.getType().equals(Material.AIR)) {
+                    regeneratingBlocks.remove(block);
+                    regeneratingBlockFinalTypeHash.remove(block);
                     cancel();
                 }
+
                 if (System.currentTimeMillis() >= timeUntilRegenerate) {
                     boolean nearbyPlayer = false;
-                    for (Entity entity : block.getWorld().getNearbyEntities(block.getLocation(), 5, 5, 5)) {
+                    Collection<Entity> nearbyEntities = block.getWorld().getNearbyEntities(block.getLocation(), 5, 5, 5);
+                    for (Entity entity : nearbyEntities) {
                         if (entity instanceof Player) {
                             nearbyPlayer = true;
+                            for (Entity nonPlayer : block.getLocation().getNearbyEntities(1,1,1)) {
+                                nonPlayer.teleport(getNextAirPocket(nonPlayer.getLocation()));
+                            }
                             break;
                         }
                     }
@@ -358,6 +389,8 @@ public class ProtectedBlocks implements Listener {
                     if (!nearbyPlayer) {
                         block.setType(finalType);
                         block.setBlockData(blockData);
+                        regeneratingBlocks.remove(block);
+                        regeneratingBlockFinalTypeHash.remove(block);
 
                         new BukkitRunnable() {
                             @Override

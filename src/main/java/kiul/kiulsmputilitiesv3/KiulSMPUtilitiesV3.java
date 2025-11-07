@@ -22,9 +22,13 @@ import kiul.kiulsmputilitiesv3.stats.StatDBListeners;
 import kiul.kiulsmputilitiesv3.teamcure.CureListener;
 import kiul.kiulsmputilitiesv3.towns.Town;
 import kiul.kiulsmputilitiesv3.towns.listeners.ProtectedBlocks;
+import kiul.kiulsmputilitiesv3.towns.listeners.ProtectedEntities;
 import kiul.kiulsmputilitiesv3.towns.listeners.TownBlock;
 import kiul.kiulsmputilitiesv3.towns.listeners.TownGUI;
 import org.bukkit.*;
+import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
@@ -67,6 +71,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FinalFight(),this);
         getServer().getPluginManager().registerEvents(new BannedItemListener(),this);
         getServer().getPluginManager().registerEvents(new CureListener(),this);
+        getServer().getPluginManager().registerEvents(new ProtectedEntities(),this);
 
         getServer().getPluginManager().registerEvents(new TownGUI(),this);
         getServer().getPluginManager().registerEvents(new TownBlock(),this);
@@ -196,6 +201,17 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         for (Town town : Town.townsList) {
             Town.saveToConfig(town);
         }
+        for (Entity disabledEntity : ProtectedEntities.disabledEntities) {
+            if (disabledEntity instanceof LivingEntity livingEntity) {
+                livingEntity.setAI(true);
+            }
+            disabledEntity.setNoPhysics(false);
+            disabledEntity.setGravity(true);
+        }
+        for (Block regeneratingBlock : ProtectedBlocks.regeneratingBlocks) {
+            regeneratingBlock.setType(ProtectedBlocks.regeneratingBlockFinalTypeHash.get(regeneratingBlock));
+        }
+
         // Plugin shutdown logic
         AccessoryData.save();
     }
