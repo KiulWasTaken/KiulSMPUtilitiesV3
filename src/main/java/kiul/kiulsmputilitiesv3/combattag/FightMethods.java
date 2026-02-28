@@ -1,6 +1,9 @@
 package kiul.kiulsmputilitiesv3.combattag;
 
+import com.ibm.icu.impl.locale.LocaleValidityChecker;
 import kiul.kiulsmputilitiesv3.C;
+import kiul.kiulsmputilitiesv3.locatorbar.LocatorBar;
+import kiul.kiulsmputilitiesv3.locatorbar.Waypoint;
 import kiul.kiulsmputilitiesv3.stats.StatDB;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.md_5.bungee.api.ChatMessageType;
@@ -8,14 +11,14 @@ import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scoreboard.Team;
+import org.bukkit.util.Vector;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
+import java.util.*;
 
 public class FightMethods {
 
@@ -115,11 +118,14 @@ public class FightMethods {
             @Override
             public void run() {
                 if (fight != null && fight.isPartaking(p.getUniqueId()) && fight.getParticipants().size() > 1) {
-                    String hex = ColorInterpolator.getColorBasedOnAverageDistance(p, fight.getParticipants().stream()
-                            .filter(player -> !player.equals(p.getUniqueId())) // Exclude Player1
-                            .toList());
-                    p.sendActionBar(MiniMessage.miniMessage().deserialize("<" + hex + ">⚔"));
-
+                    for (UUID uuid : fight.getParticipants()) {
+                        if (uuid == p.getUniqueId()) continue;
+                        if (LocatorBar.playerLocatorBar.get(p.getUniqueId()) != null) {
+                            if (!LocatorBar.playerLocatorBar.get(p.getUniqueId()).barContains(Waypoint.waypoints.get(Bukkit.getOfflinePlayer(uuid).getName()))) {
+                                LocatorBar.playerLocatorBar.get(p.getUniqueId()).addWaypoint(Waypoint.waypoints.get(Bukkit.getOfflinePlayer(uuid).getName()));
+                            }
+                        }
+                    }
                     boolean allPlayersSneaking = true;
                     for (UUID uuid : fight.getParticipants()) {
                         Player fightPlayer = Bukkit.getPlayer(uuid);
@@ -143,15 +149,20 @@ public class FightMethods {
                                 cancel();
                                 return;
                             }
+                            return;
                         }
                     }
+
                 } else {
+                    new LocatorBar(45,p);
                     cancel();
                     return;
                 }
             }
         }.runTaskTimer(C.plugin,0,2);
     }
+
+
 
 
     public static int totalArmourDurability(Player p) {
@@ -165,5 +176,37 @@ public class FightMethods {
         }
 
         return totalDamage;
+    }
+
+    private static String getArrowTo(Player from, Player to) {
+        if (to == null || to.getWorld() != from.getWorld() || to.getLocation().distance(from.getLocation()) > to.getAttribute(Attribute.WAYPOINT_TRANSMIT_RANGE).getValue()) return "⚔";
+
+        Vector facing = from.getLocation().getDirection().setY(0).normalize();
+
+        Vector toTarget = to.getLocation().toVector().subtract(from.getLocation().toVector());
+        toTarget.setY(0);
+
+        if (toTarget.lengthSquared() == 0) return "⚔"; // player is at same spot
+
+        toTarget.normalize();
+
+        // signed angle between facing and target
+        double dot = facing.dot(toTarget);
+        double det = facing.getX() * toTarget.getZ() - facing.getZ() * toTarget.getX();
+        double angle = Math.toDegrees(Math.atan2(det, dot));
+
+        return getArrowFromAngle(angle);
+    }
+
+    private static String getArrowFromAngle(double diff) {
+        if (diff >= -22.5 && diff < 22.5) return "\uD83E\uDC69";   // Forward
+        if (diff >= 22.5 && diff < 67.5) return "\uD83E\uDC6D";   // Slight Right
+        if (diff >= 67.5 && diff < 112.5) return "\uD83E\uDC6A";  // Right
+        if (diff >= 112.5 && diff < 157.5) return "\uD83E\uDC6E"; // Far Right
+        if (diff >= 157.5 || diff < -157.5) return "\uD83E\uDC6B"; // Behind
+        if (diff >= -157.5 && diff < -112.5) return "\uD83E\uDC6F"; // Far Left
+        if (diff >= -112.5 && diff < -67.5) return "\uD83E\uDC68"; // Left
+        if (diff >= -67.5 && diff < -22.5) return "\uD83E\uDC6C";  // Slight Left
+        return "⬆";
     }
 }

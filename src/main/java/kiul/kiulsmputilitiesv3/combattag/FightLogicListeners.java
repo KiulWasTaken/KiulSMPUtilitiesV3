@@ -4,25 +4,30 @@ import com.destroystokyo.paper.entity.villager.Reputation;
 import com.destroystokyo.paper.entity.villager.ReputationType;
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
-import org.bukkit.Bukkit;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
 import org.bukkit.event.entity.*;
 import org.bukkit.event.player.*;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
+import org.bukkit.inventory.meta.FireworkMeta;
+import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
 
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.UUID;
 
 import static kiul.kiulsmputilitiesv3.combattag.FightMethods.totalArmourDurability;
+import static kiul.kiulsmputilitiesv3.crates.CrateMethods.activeCratesLocation;
+import static kiul.kiulsmputilitiesv3.crates.CrateMethods.playersWhoGotLoot;
 
 public class FightLogicListeners implements Listener {
 
@@ -139,7 +144,20 @@ public class FightLogicListeners implements Listener {
                 }
                 isMarkedDown = true;
             }
-            if (p1 != null) fight.increaseStat(fight.getDamageDealt(),p1,e.getDamage());
+            if (p1 != null) {
+                fight.increaseStat(fight.getDamageDealt(), p1, e.getDamage());
+                if (C.getPlayerTeam(p1) != C.getPlayerTeam(p2)) {
+                    for (Location crateLocation : activeCratesLocation.keySet()) {
+                        Vector cornerA = crateLocation.clone().add(10, 10, 10).toVector();
+                        Vector cornerB = crateLocation.clone().add(-10, -10, -10).toVector();
+                        Vector squareCornerA = Vector.getMinimum(cornerA, cornerB);
+                        Vector squareCornerB = Vector.getMaximum(cornerA, cornerB);
+                        if (p2.getLocation().toVector().isInAABB(squareCornerA, squareCornerB)) {
+                            activeCratesLocation.put(crateLocation, activeCratesLocation.get(crateLocation) + e.getFinalDamage());
+                        }
+                    }
+                }
+            }
             fight.increaseStat(fight.getDamageTaken(),p2,e.getDamage());
             if (!isMarkedDown) {
                 fight.increaseStat(fight.getUntypedDamageDealtToPlayer(),p1,p2,e.getDamage());
@@ -148,6 +166,8 @@ public class FightLogicListeners implements Listener {
             if (p1 == null) {
                 return;
             }
+
+
             int p2preDurability = totalArmourDurability(p2);
             Player finalP = p1;
             Bukkit.getScheduler().scheduleSyncDelayedTask(C.plugin, new Runnable() {
@@ -334,7 +354,7 @@ public class FightLogicListeners implements Listener {
                     new BukkitRunnable() {
                         @Override
                         public void run() {
-                            p.setCooldown(Material.WIND_CHARGE, 300);
+                            p.setCooldown(Material.WIND_CHARGE, 140);
                         }
                     }.runTaskLater(C.plugin, 0);
 
@@ -437,7 +457,7 @@ public class FightLogicListeners implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler (priority = EventPriority.HIGHEST)
     public void elytraMidAirDisable (EntityDamageByEntityEvent e) {
         if (e.getEntity() instanceof Player p) {
             Player damager = null;
@@ -452,41 +472,158 @@ public class FightLogicListeners implements Listener {
             if (damager != null) {
                 if (p.isGliding()) {
                     p.setGliding(false);
-                    Damageable elytra = (Damageable) p.getInventory().getChestplate();
+                    ItemStack chestplate = p.getInventory().getChestplate();
+                    if (chestplate == null || chestplate.getType() != Material.ELYTRA) {
+                        for (ItemStack item : p.getInventory().getContents()) {
+                            if (item == null) continue;
+                            if (item.getType().equals(Material.ELYTRA)) {
+                                Damageable itemMeta = (Damageable) item.getItemMeta();
+                                if (!itemMeta.hasDamage() || itemMeta.getDamage() < 432) {
+                                    chestplate = item;
+                                }
+                            }
+                        }
+                    }
+                    Damageable elytra = (Damageable) chestplate.getItemMeta();
 
-                    elytra.setDamage(elytra.getDamage()+(elytra.getMaxDamage()/3));
-                    p.setCooldown(Material.ELYTRA, 1200);
+                    elytra.setDamage(432);
+                    chestplate.setItemMeta(elytra);
+                    damager.spawnParticle(Particle.BLOCK_CRUMBLE,p.getLocation(),20,0.5,0.5,0.5,Material.GRAY_WOOL.createBlockData());
+                    damager.playSound(damager,Sound.ENTITY_ITEM_BREAK,1f,1f);
                 }
             }
         }
     }
 
     @EventHandler
-    public void damagedRocketCoolDown (EntityDamageByEntityEvent e) {
-        if (!ConfigData.get().getBoolean("combattag")) {return;}
-        if (e.getDamager() instanceof Player damager && e.getEntity() instanceof Player damaged) {
-            if (C.fightManager.playerIsInFight(damaged)) {
-                if (damaged.getInventory().getChestplate() != null) {
-                    if (damaged.getInventory().contains(Material.ELYTRA) || damaged.getInventory().getChestplate().getType() == Material.ELYTRA) {
-                        int cooldown = damaged.getCooldown(Material.FIREWORK_ROCKET) + 400;
-                        if (cooldown > 1200) {
-                            cooldown = 1200;
-                        }
-                        damaged.setCooldown(Material.FIREWORK_ROCKET, cooldown);
-                    }
-                }
+    public void maceHitRestoreWindchargeAndRocket (EntityDamageByEntityEvent e) {
+        if (e.getEntity() instanceof Player) {
+            Player damager = null;
+            if (e.getDamager() instanceof Player) {
+                damager = (Player) e.getDamager();
             }
-            if (C.fightManager.playerIsInFight(damager)) {
-                if (damager.getInventory().getChestplate() != null) {
-                    if (damager.getInventory().contains(Material.ELYTRA) || damager.getInventory().getChestplate().getType() == Material.ELYTRA) {
-                        int cooldown = damaged.getCooldown(Material.FIREWORK_ROCKET) + 400;
-                        if (cooldown > 1200) {
-                            cooldown = 1200;
-                        }
-                        damager.setCooldown(Material.FIREWORK_ROCKET, cooldown);
+            if (damager != null) {
+                if (damager.getInventory().getItemInMainHand().getType().equals(Material.MACE) && damager.getFallDistance() > 1.5) {
+                    if (e.getFinalDamage() > 0.0) {
+                        damager.setCooldown(Material.WIND_CHARGE, 0);
+                        damager.setCooldown(Material.FIREWORK_ROCKET, 0);
+                        fireworkUses.put(damager, 1);
+                        return;
+                    }
+                    if (e.getFinalDamage() <= 0.0 && !((Player) e.getEntity()).isBlocking()) {
+                        damager.setCooldown(Material.WIND_CHARGE, 0);
+                        damager.setCooldown(Material.FIREWORK_ROCKET, 0);
+                        fireworkUses.put(damager, 1);
+                        return;
                     }
                 }
             }
         }
+    }
+
+    @EventHandler
+            public void resetCooldowns (PlayerGameModeChangeEvent e) {
+        Player p = e.getPlayer();
+        p.setCooldown(Material.FIREWORK_ROCKET,0);
+        p.setCooldown(Material.WIND_CHARGE,0);
+        p.setCooldown(Material.TRIDENT,0);
+        fireworkUses.put(p, 1);
+    }
+
+    HashMap<Player,Integer> fireworkUses = new HashMap<>();
+
+    @EventHandler
+    public void equipElytraLoud (PlayerInteractEvent e) {
+        if (!C.PAT_MODE) {
+            if (!ConfigData.get().getBoolean("combattag")) {
+                return;
+            }
+        }
+        if (e.getPlayer().getLocation().getWorld().getName().equals("practice")) return;
+        if (e.getItem() == null) return;
+        if (e.getItem().getType() == Material.ELYTRA &&
+                (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK)) {
+
+            Player p = e.getPlayer();
+            p.playSound(p.getLocation(),Sound.ITEM_ARMOR_EQUIP_ELYTRA,100f,1f);
+        }
+    }
+
+    @EventHandler
+    public void fireworkCastCooldown (PlayerInteractEvent e) {
+        if (!C.PAT_MODE) {
+            if (!ConfigData.get().getBoolean("combattag")) {
+                return;
+            }
+        }
+        if (e.getPlayer().getLocation().getWorld().getName().equals("practice")) return;
+        if (e.getItem() == null) return;
+        if (e.getItem().getType() == Material.FIREWORK_ROCKET &&
+                (e.getAction() == Action.RIGHT_CLICK_AIR || e.getAction() == Action.RIGHT_CLICK_BLOCK)) {
+
+            Player p = e.getPlayer();
+            if (!p.isGliding() || !p.getInventory().getChestplate().getType().equals(Material.ELYTRA) || p.getCooldown(Material.FIREWORK_ROCKET) > 0) return;
+            if (!fireworkUses.containsKey(p)) {
+                fireworkUses.put(p,1);
+            }
+            int newFireworkUses = fireworkUses.get(p)-1;
+            p.playSound(p.getLocation(), Sound.ENTITY_FIREWORK_ROCKET_LAUNCH,100f,1f);
+            if (newFireworkUses <= 0) {
+                newFireworkUses = 0;
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        p.setCooldown(Material.FIREWORK_ROCKET, 12000);
+                    }
+                }.runTaskLater(C.plugin,0);
+
+            }
+            fireworkUses.put(p,newFireworkUses);
+            FireworkMeta fireworkMeta = (FireworkMeta) e.getItem().getItemMeta();
+            dealElytraBoostDamage(p,fireworkMeta.getPower());
+        }
+    }
+
+    public void dealElytraBoostDamage (Player p, int duration) {
+        new BukkitRunnable() {
+            int boostTicks = (duration+2)*20;
+            int elytraDamageTick = 0;
+            int elytraBoostTick = 0;
+            @Override
+            public void run() {
+                if (elytraBoostTick >= boostTicks) {
+                    cancel();
+                    return;
+                }
+
+                if (p.getInventory().getChestplate().getType().equals(Material.ELYTRA)) {
+                    ItemStack chestplate = p.getInventory().getChestplate();
+                    Damageable elytra = (Damageable) chestplate.getItemMeta();
+                    int elytraDamage = elytra.getDamage();
+                    int damageToDeal = ((elytraDamageTick/4));
+                    if (elytraDamage+damageToDeal >= 432) {
+                        elytra.setDamage(432);
+                        chestplate.setItemMeta(elytra);
+                        cancel();
+                        return;
+                    }
+                    elytra.setDamage(elytraDamage+damageToDeal);
+                    chestplate.setItemMeta(elytra);
+                } else {
+                    if (elytraBoostTick > boostTicks) {
+                        cancel();
+                        return;
+                    }
+
+                }
+                if (p.getLocation().getPitch() < 0 && p.isGliding()) {
+                    elytraDamageTick += 1;
+                } else {
+                    elytraDamageTick = 0;
+                }
+                elytraBoostTick += 1;
+
+            }
+        }.runTaskTimer(C.plugin,0,1);
     }
 }

@@ -12,6 +12,7 @@ import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
 import org.bukkit.*;
+import org.bukkit.block.Block;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.EquipmentSlot;
@@ -40,26 +41,26 @@ import java.util.concurrent.TimeUnit;
 public class CrateMethods {
 
     public static HashMap<ArmorStand, Inventory> crateInventoryMap = new HashMap<>();
-    public static HashMap<ArmorStand,Long> crateUnlockTime = new HashMap<>();
+    public static HashMap<ArmorStand, Long> crateUnlockTime = new HashMap<>();
 
     public static ArrayList<String> playersWhoGotLoot = new ArrayList<>();
-    public static HashMap<Location,Double> activeCratesLocation = new HashMap<>();
+    public static HashMap<Location, Double> activeCratesLocation = new HashMap<>();
 
     public static ArrayList<ArmorStand> locked = new ArrayList<>();
     public static ArrayList<ArmorStand> unlocking = new ArrayList<>();
 
-    public static HashMap<Player,ArrayList<Item>> privateItemStacks = new HashMap<>();
+    public static HashMap<Player, ArrayList<Item>> privateItemStacks = new HashMap<>();
 
 
-    public static Location returnCrateLocation (World world) {
+    public static Location returnCrateLocation(World world) {
         Random random = new Random();
-        int x = random.nextInt((int)-(world.getWorldBorder().getSize()/2),(int)(world.getWorldBorder().getSize()/2));
-        int z = random.nextInt((int)-(world.getWorldBorder().getSize()/2),(int)(world.getWorldBorder().getSize()/2));
-        int y = world.getHighestBlockYAt(x,z);
-        return new Location(world,x,y,z);
+        int x = random.nextInt((int) -(world.getWorldBorder().getSize() / 2), (int) (world.getWorldBorder().getSize() / 2));
+        int z = random.nextInt((int) -(world.getWorldBorder().getSize() / 2), (int) (world.getWorldBorder().getSize() / 2));
+        int y = world.getHighestBlockYAt(x, z);
+        return new Location(world, x, y, z);
     }
 
-    public static ItemStack randomEnchantedGear (ItemStack itemStack) {
+    public static ItemStack randomEnchantedGear(ItemStack itemStack) {
         ArrayList<Enchantment> armourEnchantments = new ArrayList<>() {{
             add(Enchantment.PROTECTION);
             add(Enchantment.UNBREAKING);
@@ -129,60 +130,59 @@ public class CrateMethods {
                 break;
             case ENCHANTED_BOOK:
                 EnchantmentStorageMeta meta = (EnchantmentStorageMeta) itemStack.getItemMeta();
-                int enchantmentNum = (int)(Math.random()*maceBookEnchantments.size());
-                meta.addStoredEnchant(maceBookEnchantments.get(enchantmentNum),(int)(Math.random()*maceBookEnchantments.get(enchantmentNum).getMaxLevel()+0.5),false);
+                int enchantmentNum = (int) (Math.random() * maceBookEnchantments.size());
+                meta.addStoredEnchant(maceBookEnchantments.get(enchantmentNum), (int) (Math.random() * maceBookEnchantments.get(enchantmentNum).getMaxLevel() + 0.5), false);
                 if (Math.random() > 0.5) {
-                    meta.addStoredEnchant(armourEnchantments.get(1),(int)(Math.random()*3.5),false);
+                    meta.addStoredEnchant(armourEnchantments.get(1), (int) (Math.random() * 3.5), false);
                 }
                 if (!meta.hasStoredEnchants()) {
-                    meta.addStoredEnchant(Enchantment.MENDING,1,false);
+                    meta.addStoredEnchant(Enchantment.MENDING, 1, false);
                 }
                 itemStack.setItemMeta(meta);
                 break;
             case NETHERITE_BLOCK:
-                gearItem = netheriteBlock.get((int)(Math.random()*netheriteBlock.size()));
-                gearItem.addEnchantment(armourEnchantments.get(0),4);
-                gearItem.addEnchantment(armourEnchantments.get(1),3);
+                gearItem = netheriteBlock.get((int) (Math.random() * netheriteBlock.size()));
+                gearItem.addEnchantment(armourEnchantments.get(0), 4);
+                gearItem.addEnchantment(armourEnchantments.get(1), 3);
                 if (Math.random() > 0.5) {
-                    gearItem.addEnchantment(armourEnchantments.get(2),1);
+                    gearItem.addEnchantment(armourEnchantments.get(2), 1);
                 }
                 break;
             case DIAMOND_BLOCK:
-                gearItem = diamondBlock.get((int)(Math.random()*diamondBlock.size()));
-                gearItem.addEnchantment(armourEnchantments.get(0),4);
-                gearItem.addEnchantment(armourEnchantments.get(1),3);
+                gearItem = diamondBlock.get((int) (Math.random() * diamondBlock.size()));
+                gearItem.addEnchantment(armourEnchantments.get(0), 4);
+                gearItem.addEnchantment(armourEnchantments.get(1), 3);
                 if (Math.random() > 0.5) {
-                    gearItem.addEnchantment(armourEnchantments.get(2),1);
+                    gearItem.addEnchantment(armourEnchantments.get(2), 1);
                 }
                 break;
             case ANCIENT_DEBRIS:
-                gearItem = ancientDebris.get((int)(Math.random()*ancientDebris.size()));
-                gearItem.addEnchantment(toolEnchants.get(0),4+(int)(Math.random()+0.5));
+                gearItem = ancientDebris.get((int) (Math.random() * ancientDebris.size()));
+                gearItem.addEnchantment(toolEnchants.get(0), 4 + (int) (Math.random() + 0.5));
 
                 if (Math.random() > 0.5) {
-                    gearItem.addEnchantment(toolEnchants.get(1),1);
+                    gearItem.addEnchantment(toolEnchants.get(1), 1);
                 } else {
-                    gearItem.addEnchantment(toolEnchants.get(2),3);
+                    gearItem.addEnchantment(toolEnchants.get(2), 3);
                 }
-                gearItem.addEnchantment(toolEnchants.get(3),3);
+                gearItem.addEnchantment(toolEnchants.get(3), 3);
                 if (Math.random() > 0.5) {
-                    gearItem.addEnchantment(toolEnchants.get(4),1);
+                    gearItem.addEnchantment(toolEnchants.get(4), 1);
                 }
                 break;
             case DIAMOND_ORE:
-                gearItem = diamondOre.get((int)(Math.random()*diamondOre.size()));
-                gearItem.addEnchantment(toolEnchants.get(0),4+(int)(Math.random()+0.5));
+                gearItem = diamondOre.get((int) (Math.random() * diamondOre.size()));
+                gearItem.addEnchantment(toolEnchants.get(0), 4 + (int) (Math.random() + 0.5));
 
                 if (Math.random() > 0.5) {
-                    gearItem.addEnchantment(toolEnchants.get(1),1);
+                    gearItem.addEnchantment(toolEnchants.get(1), 1);
                 } else {
-                    gearItem.addEnchantment(toolEnchants.get(2),3);
+                    gearItem.addEnchantment(toolEnchants.get(2), 3);
                 }
-                gearItem.addEnchantment(toolEnchants.get(3),3);
+                gearItem.addEnchantment(toolEnchants.get(3), 3);
                 if (Math.random() > 0.5) {
-                    gearItem.addEnchantment(toolEnchants.get(4),1);
+                    gearItem.addEnchantment(toolEnchants.get(4), 1);
                 }
-
 
 
                 break;
@@ -190,33 +190,34 @@ public class CrateMethods {
         gearItem.setAmount(1);
         return gearItem;
     }
-    public static ItemStack getLootTableItem (ArrayList<ItemStack> crateLootTable,CrateTypeEnum crateType) {
+
+    public static ItemStack getLootTableItem(ArrayList<ItemStack> crateLootTable, CrateTypeEnum crateType) {
 //        ArrayList<ItemStack> lootTable = (ArrayList<ItemStack>) crateLootTable.clone();
 
-            ArrayList<LootTableEnum> lootTableValues = new ArrayList<>();
-            for (LootTableEnum lootTable : LootTableEnum.values()) {
-                if (lootTable.getCrateType().equalsIgnoreCase(crateType.getIdentifier())) {
-                    lootTableValues.add(lootTable);
-                }
+        ArrayList<LootTableEnum> lootTableValues = new ArrayList<>();
+        for (LootTableEnum lootTable : LootTableEnum.values()) {
+            if (lootTable.getCrateType().equalsIgnoreCase(crateType.getIdentifier())) {
+                lootTableValues.add(lootTable);
             }
-            double totalWeight = 0.0;
-            for (LootTableEnum i : lootTableValues) {
-                totalWeight += i.getWeight();
-            }
+        }
+        double totalWeight = 0.0;
+        for (LootTableEnum i : lootTableValues) {
+            totalWeight += i.getWeight();
+        }
 
 
-            int idx = 0;
-            for (double r = Math.random() * totalWeight; idx < lootTableValues.size() - 1; ++idx) {
-                r -= lootTableValues.get(idx).getWeight();
-                if (r <= 0.0) break;
-            }
-            LootTableEnum item = lootTableValues.get(idx);
-            ItemStack itemStack = new ItemStack(item.getMaterial());
-            itemStack = randomEnchantedGear(itemStack);
-             return itemStack;
+        int idx = 0;
+        for (double r = Math.random() * totalWeight; idx < lootTableValues.size() - 1; ++idx) {
+            r -= lootTableValues.get(idx).getWeight();
+            if (r <= 0.0) break;
+        }
+        LootTableEnum item = lootTableValues.get(idx);
+        ItemStack itemStack = new ItemStack(item.getMaterial());
+        itemStack = randomEnchantedGear(itemStack);
+        return itemStack;
     }
 
-    public static LootTableEnum getLootTable (ItemStack itemStack,String identifier) {
+    public static LootTableEnum getLootTable(ItemStack itemStack, String identifier) {
         for (LootTableEnum lootTableEnum : LootTableEnum.values()) {
             if (lootTableEnum.getMaterial() == itemStack.getType()) {
                 if (lootTableEnum.getCrateType().equalsIgnoreCase(identifier)) {
@@ -224,7 +225,8 @@ public class CrateMethods {
                 }
             }
         }
-        return null;}
+        return null;
+    }
 
 
     public static CrateTypeEnum getCrate(String identifier) {
@@ -233,24 +235,22 @@ public class CrateMethods {
                 return crateTypeEnum;
             }
         }
-        return CrateTypeEnum.Gold;}
+        return CrateTypeEnum.Gold;
+    }
 
-    public static int getRollConsumption(ItemStack item,CrateTypeEnum crateType) {
+    public static int getRollConsumption(ItemStack item, CrateTypeEnum crateType) {
         for (LootTableEnum lootTableEnum : LootTableEnum.values()) {
             if (lootTableEnum.getMaterial() == item.getType()) {
                 if (lootTableEnum.getCrateType().equalsIgnoreCase(crateType.getIdentifier())) {
-                    return lootTableEnum.getRollConsumption()-1;
+                    return lootTableEnum.getRollConsumption() - 1;
                 }
             }
         }
-        return 0;}
+        return 0;
+    }
 
 
-
-
-
-
-    public static void createCrate(World world, String type,boolean debug) {
+    public static void createCrate(World world, String type, boolean debug) {
 
 
         CrateTypeEnum crateType = getCrate(type);
@@ -277,7 +277,7 @@ public class CrateMethods {
             @Override
             public void run() {
 
-                if (System.currentTimeMillis() < spawnTime) {
+                if (System.currentTimeMillis() < spawnTime && !debug) {
                     long currentTime = System.currentTimeMillis();
                     tick++;
                     int[] timestamps = C.splitTimestamp(spawnTime);
@@ -290,11 +290,11 @@ public class CrateMethods {
                     nameplate.setCustomName(String.format("%02d:%02d:%02d", timestamps[0], timestamps[1], timestamps[2]));
 
 
-                    float progress = 1-(float)(currentTime-startTime)/(spawnTime-startTime);
+                    float progress = 1 - (float) (currentTime - startTime) / (spawnTime - startTime);
                     progress = Math.min(1f, Math.max(0f, progress));
                     bossBar.progress(progress);
                     Component time = Component.empty();
-                    if (spawnTime-currentTime > 30000) {
+                    if (spawnTime - currentTime > 30000) {
                         if (tick <= 15) {
                             time = Component.text(" Crate Is Spawning At ").append(Component.text(crateSpawnLocation.x() + "x " + crateSpawnLocation.y() + "y " + crateSpawnLocation.z() + "z").color(NamedTextColor.WHITE));
                         }
@@ -319,8 +319,8 @@ public class CrateMethods {
                     //  ChatColor.GOLD+""+ChatColor.BOLD+"EVENT" + ChatColor.RESET+ChatColor.GRAY+" » ";
                     Bukkit.broadcastMessage("");
                     Bukkit.broadcast(Component.empty().append(Component.text("[EVENT]").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD)
-                            .append(Component.text(" » ").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD,false)
-                            .append(crateType.getDisplayName()).append(Component.text(" Crate Has Spawned At " + crateSpawnLocation.x() + "x "  + crateSpawnLocation.y() + "y "  + crateSpawnLocation.z() + "z").color(NamedTextColor.WHITE)))));
+                            .append(Component.text(" » ").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)
+                                    .append(crateType.getDisplayName()).append(Component.text(" Crate Has Spawned At " + crateSpawnLocation.x() + "x " + crateSpawnLocation.y() + "y " + crateSpawnLocation.z() + "z").color(NamedTextColor.WHITE)))));
                     Bukkit.broadcastMessage("");
                     Random random = new Random();
                     Vector cornerA = crateSpawnLocation.clone().add(10, 10, 10).toVector();
@@ -337,22 +337,16 @@ public class CrateMethods {
                     crate.addEquipmentLock(EquipmentSlot.HEAD, ArmorStand.LockType.REMOVING_OR_CHANGING);
                     crate.setHelmet(new ItemStack(crateType.getCrateType()));
 
-//                    new BukkitRunnable() {
-//                        public void run() {
-//                            if (!crate.isDead()) {
-//                                for (Player p : Bukkit.getOnlinePlayers()) {
-//                                    if (p.getLocation().toVector().isInAABB(squareCornerMin,squareCornerMax)) {
-//                                        p.showEntity(C.plugin,borderDisplay);
-//                                    } else {
-//                                        p.hideEntity(C.plugin,borderDisplay);
-//                                    }
-//                                }
-//                            } else {
-//                                borderDisplay.remove();
-//                                cancel();
-//                            }
-//                        }
-//                    }.runTaskTimer(C.plugin, 0L, 10L);
+
+                    new BukkitRunnable() {
+                        public void run() {
+                            if (!crate.isDead()) {
+                                drawCubeEdgesOnce(crateSpawnLocation.clone().add(0.5,0.4,0.5),20,0.5);
+                            } else {
+                                cancel();
+                            }
+                        }
+                    }.runTaskTimer(C.plugin, 0L, 10L);
                     crate.setRotation(random.nextFloat(0, 180), 0);
                     String phases = "\uD83D\uDD12";
                     crate.setCustomName(color + phases.repeat(crateType.getUnlockPhases()));
@@ -373,7 +367,6 @@ public class CrateMethods {
                                     ));
 
                                     if (System.currentTimeMillis() >= unlockTime) {
-                                        Bukkit.broadcastMessage(crate.toString());
                                         unlocking.remove(crate);
                                         populateCrate(crateType, crate, null);
                                         crate.setCustomName(color + "CLICK TO OPEN");
@@ -408,13 +401,16 @@ public class CrateMethods {
                             }
                         }.runTaskTimer(C.plugin, 0, 20);
                     } else {
-                        ArmorStand damageDisplay = (ArmorStand) world.spawnEntity(crateSpawnLocation.add(0, 2.5, 0), EntityType.ARMOR_STAND);
+                        ArmorStand damageDisplay = (ArmorStand) world.spawnEntity(crateSpawnLocation.clone().add(0, 2.5, 0), EntityType.ARMOR_STAND);
                         damageDisplay.setMarker(true);
                         damageDisplay.setInvulnerable(true);
                         damageDisplay.setVisible(false);
                         damageDisplay.setGravity(false);
                         damageDisplay.setCustomNameVisible(true);
                         damageDisplay.setPersistent(true);
+                        TextDisplay captureDisplay = (TextDisplay) world.spawnEntity(crateSpawnLocation.clone().add(0, 2.53, 0), EntityType.TEXT_DISPLAY);
+                        captureDisplay.setVisibleByDefault(true);
+                        captureDisplay.setBillboard(org.bukkit.entity.Display.Billboard.CENTER);
                         activeCratesLocation.put(crateSpawnLocation, 0.0);
 
                         BukkitTask captureRunnable = new BukkitRunnable() {
@@ -423,18 +419,39 @@ public class CrateMethods {
                             Set<Team> involvedTeams = new HashSet<>();
 
                             int phase = 0;
-
+                            int despawnTick = 0;
                             boolean wait = false;
                             int maxScore = crateType.getPointsPerPhase();
 
-                            String blue = ChatColor.BLUE + "|";
-                            String red = ChatColor.RED + "|";
-                            String gray = ChatColor.GRAY + "|";
 
                             @Override
                             public void run() {
 
-                                damageDisplay.setCustomName(color + "" + activeCratesLocation.get(crateSpawnLocation));
+                                if (involvedTeams.isEmpty()) {
+                                    despawnTick++;
+                                } else {
+                                    despawnTick = 0;
+                                }
+
+                                if (despawnTick >= 4*300) {//*300 5 minutes
+                                    Bukkit.broadcastMessage("");
+                                    Bukkit.broadcast(Component.empty().append(Component.text("[EVENT]").color(NamedTextColor.GOLD).decorate(TextDecoration.BOLD)
+                                            .append(Component.text(" » ").color(NamedTextColor.GRAY).decoration(TextDecoration.BOLD, false)
+                                                    .append(crateType.getDisplayName()).append(Component.text(" crate has despawned due to inactivity").color(NamedTextColor.WHITE)))));
+                                    Bukkit.broadcastMessage("");
+                                    crate.remove();
+                                    damageDisplay.remove();
+                                    captureDisplay.remove();
+                                    new BukkitRunnable() {
+                                        @Override
+                                        public void run() {
+                                            activeCratesLocation.remove(crateSpawnLocation);
+                                        }
+                                    }.runTaskLater(C.plugin, 20);
+                                    cancel();
+
+                                }
+                                damageDisplay.setCustomName(color + "" + C.twoPointDecimal.format(activeCratesLocation.get(crateSpawnLocation)));
                                 if (!wait) {
                                     Iterator<Team> iterator = involvedTeams.iterator();
                                     int total = 0;
@@ -442,24 +459,29 @@ public class CrateMethods {
                                     for (Team team : teamScores.keySet()) {
                                         total = total + teamScores.get(team);
                                     }
+                                    int size = 30;
+
+                                    String str = "";
+                                    double grayLength = size;
                                     for (Team team : teamScores.keySet()) {
-                                        for (String teamMemberNames : team.getEntries()) {
-                                            if (Bukkit.getPlayer(teamMemberNames) != null) {
+                                        double teamLength = ((double) teamScores.get(team) / (double) maxScore) * size;
 
-                                                int blueLength = (int) Math.floor(C.safeDivide(teamScores.get(team), maxScore) * 50);
-                                                int redLength = (int) Math.floor(C.safeDivide((total - teamScores.get(team)), maxScore) * 50);
-                                                int grayLength = (int) Math.floor(C.safeDivide((maxScore - total), maxScore) * 50);
+                                        teamLength = Math.round(teamLength);
 
-// Ensure non-negative lengths
-                                                blueLength = Math.max(blueLength, 0);
-                                                redLength = Math.max(redLength, 0);
-                                                grayLength = Math.max(grayLength, 0);
+                                        // Ensure its not exceeding 50 length
+                                        teamLength = (teamLength > size) ? size : teamLength;
 
-                                                String bar = blue.repeat(blueLength) + red.repeat(redLength) + gray.repeat(grayLength);
-                                                Bukkit.getPlayer(teamMemberNames).spigot().sendMessage(ChatMessageType.ACTION_BAR, new TextComponent(bar));
-                                            }
-                                        }
+                                        // Ensure non-negative lengths
+                                        teamLength = Math.max(teamLength, 0);
+                                        String teamBar = team.getColor() + "|";
+                                        str += teamBar.repeat((int) teamLength);
+                                        grayLength -= teamLength;
                                     }
+
+                                    grayLength = (grayLength > size) ? size : grayLength;
+                                    grayLength = Math.max(grayLength, 0);
+                                    String grayBar = "|";
+                                    captureDisplay.setText(str+C.GRAY_BLUE+grayBar.repeat((int) grayLength));
 
                                     for (Player p : Bukkit.getOnlinePlayers()) {
                                         if (p.getLocation().toVector().isInAABB(squareCornerMin, squareCornerMax)) {
@@ -492,6 +514,7 @@ public class CrateMethods {
                                             if (teamScores.get(team) <= 0) {
                                                 iterator.remove();
                                                 teamScores.remove(team);
+                                                continue;
                                             }
                                         }
                                         if (teamScores.get(team) >= maxScore) {
@@ -525,7 +548,7 @@ public class CrateMethods {
 
                                                             /* increase the amount of times loot is rolled depending on how much damage has been dealt in the
                                                              * vicinity of the crate since the KOTH event started. */
-                                                            int lootTableExtraRolls = (int) (Math.floor(activeCratesLocation.get(crateSpawnLocation)) / 100);
+                                                            int lootTableExtraRolls = (int) (Math.floor(activeCratesLocation.get(crateSpawnLocation)) / 400);
                                                             if (lootTableExtraRolls > 5) {
                                                                 lootTableExtraRolls = 5;
                                                             }
@@ -566,6 +589,7 @@ public class CrateMethods {
                                                 if (phasesRemaining < 1) {
                                                     crate.remove();
                                                     damageDisplay.remove();
+                                                    captureDisplay.remove();
                                                     new BukkitRunnable() {
                                                         @Override
                                                         public void run() {
@@ -582,18 +606,6 @@ public class CrateMethods {
                             }
                         }.runTaskTimer(C.plugin, 0, 5);
 
-                        new BukkitRunnable() {
-                            @Override
-                            public void run() {
-                                if (captureRunnable.isCancelled()) {
-                                    cancel();
-                                    return;
-                                }
-                                for (Player p : Bukkit.getOnlinePlayers()) {
-                                    showCaptureAreaBorders(p, crateType, squareCornerMin, squareCornerMax, crateSpawnLocation);
-                                }
-                            }
-                        }.runTaskTimer(C.plugin,0,1);
                     }
                     cancel();
                 }
@@ -601,7 +613,7 @@ public class CrateMethods {
         }.runTaskTimer(C.plugin, 0, 20);
     }
 
-    public static void populateCrate (CrateTypeEnum crateType, ArmorStand crate, Player p) {
+    public static void populateCrate(CrateTypeEnum crateType, ArmorStand crate, Player p) {
         Random random = new Random();
         ArrayList<ItemStack> crateInventory = new ArrayList<>();
         //crateType.getRolls()
@@ -624,7 +636,7 @@ public class CrateMethods {
 
         // Shuffling the contents
         Collections.shuffle(crateInventory);
-        Inventory trueCrateInventory = Bukkit.createInventory(null,27,"Crate");
+        Inventory trueCrateInventory = Bukkit.createInventory(null, 27, "Crate");
         for (ItemStack itemStack : crateInventory) {
             int randomSlot;
 
@@ -642,7 +654,7 @@ public class CrateMethods {
             p.openInventory(trueCrateInventory);
             return;
         }
-        crateInventoryMap.put(crate,trueCrateInventory);
+        crateInventoryMap.put(crate, trueCrateInventory);
     }
 
     public static void startRandomCrates(World world) {
@@ -653,7 +665,7 @@ public class CrateMethods {
 
                     if (Bukkit.getOnlinePlayers().size() >= 10) {
                         double magicNumber = 0.001 * Bukkit.getOnlinePlayers().size() - 10;
-                        if (Math.random() < 0.016+magicNumber) {
+                        if (Math.random() < 0.016 + magicNumber) {
                             double[] chance = {0.3, 0.6, 0.85, 0.9, 1};
                             int event = Arrays.binarySearch(chance, Math.random());
                             if (event < 0) event = -event - 1;
@@ -687,15 +699,15 @@ public class CrateMethods {
                     cancel();
                 }
             }
-        }.runTaskTimer(C.plugin,3600,1200);
+        }.runTaskTimer(C.plugin, 3600, 1200);
     }
 
-    public static HashMap<Player,HashMap<Integer,TextDisplay>> captureAreaBorders = new HashMap<>();
+    public static HashMap<Player, HashMap<Integer, TextDisplay>> captureAreaBorders = new HashMap<>();
 
-    public static void showCaptureAreaBorders (Player p,CrateTypeEnum crateType, Vector min,Vector max, Location crateSpawnLocation) {
+    public static void showCaptureAreaBorders(Player p, CrateTypeEnum crateType, Vector min, Vector max, Location crateSpawnLocation) {
         if (p.getLocation().distance(crateSpawnLocation) > 30) return;
-        boolean inside = p.getLocation().toVector().isInAABB(min,max);
-        float distanceToClosestEdge = (float)AABBUtils.getDistanceToClosestEdge(p, min, max,inside);
+        boolean inside = p.getLocation().toVector().isInAABB(min, max);
+        float distanceToClosestEdge = (float) AABBUtils.getDistanceToClosestEdge(p, min, max, inside);
         Bukkit.broadcastMessage(distanceToClosestEdge + "");
         if (distanceToClosestEdge > 5) {
             if (captureAreaBorders.get(p) != null) {
@@ -705,7 +717,7 @@ public class CrateMethods {
                 captureAreaBorders.remove(p);
             }
         } else {
-            float normalizedDistance = 1-distanceToClosestEdge / 5.0f ;  // Assuming distanceToClosestEdge is calculated earlier
+            float normalizedDistance = 1 - distanceToClosestEdge / 5.0f;  // Assuming distanceToClosestEdge is calculated earlier
             if (captureAreaBorders.get(p) == null) {
                 captureAreaBorders.put(p, new HashMap<>());
 
@@ -728,22 +740,22 @@ public class CrateMethods {
                     // Spawn the TextDisplay
                     TextDisplay textDisplay = (TextDisplay) p.getWorld().spawnEntity(crateSpawnLocation.clone().add(directions[i]), EntityType.TEXT_DISPLAY);
                     textDisplay.setSeeThrough(true);
-                    textDisplay.setTransformation(new Transformation(textDisplay.getTransformation().getTranslation(),textDisplay.getTransformation().getLeftRotation(),new Vector3f(100.0f),textDisplay.getTransformation().getRightRotation()));
+                    textDisplay.setTransformation(new Transformation(textDisplay.getTransformation().getTranslation(), textDisplay.getTransformation().getLeftRotation(), new Vector3f(100.0f), textDisplay.getTransformation().getRightRotation()));
                     textDisplay.setVisibleByDefault(false);
-                    p.showEntity(C.plugin,textDisplay);
+                    p.showEntity(C.plugin, textDisplay);
 
                     // Move textDisplay to the proper location
                     Location newLocation = crateSpawnLocation.clone().add(directions[i]);
                     textDisplay.teleport(newLocation);
                     // Calculate the yaw to make the text perpendicular to the crate spawn
-                    float[] angle = calculateYawAndPitch(crateSpawnLocation, newLocation,inside);
+                    float[] angle = calculateYawAndPitch(crateSpawnLocation, newLocation, inside);
 
                     // Set rotation (yaw controls horizontal rotation, pitch controls vertical rotation)
                     textDisplay.setRotation(angle[0], angle[1]);
                     // Set text color based on the crateType
-                    float alpha = (normalizedDistance*255);
+                    float alpha = (normalizedDistance * 255);
                     TextColor crateTextColor = crateType.getDisplayName().color();
-                    textDisplay.setBackgroundColor(Color.fromARGB((int)alpha,255,255,255));
+                    textDisplay.setBackgroundColor(Color.fromARGB((int) alpha, 255, 255, 255));
 
 
                     // Store textDisplay for later use (capturing area borders)
@@ -751,15 +763,15 @@ public class CrateMethods {
                 }
             } else {
                 for (TextDisplay textDisplay : captureAreaBorders.get(p).values()) {
-                    float alpha = (normalizedDistance*255);
-                    textDisplay.setBackgroundColor(Color.fromARGB((int)alpha,255,255,255));
-                    Bukkit.broadcastMessage(""+alpha);
+                    float alpha = (normalizedDistance * 255);
+                    textDisplay.setBackgroundColor(Color.fromARGB((int) alpha, 255, 255, 255));
+                    Bukkit.broadcastMessage("" + alpha);
                 }
             }
         }
     }
 
-    private static float[] calculateYawAndPitch(Location origin, Location target,boolean inside) {
+    private static float[] calculateYawAndPitch(Location origin, Location target, boolean inside) {
         // Get the direction vector from the origin to the target
         Vector direction = target.clone().subtract(origin).toVector();
 
@@ -776,5 +788,49 @@ public class CrateMethods {
 
         // Return both yaw and pitch
         return new float[]{yawInDegrees, pitchInDegrees};
+    }
+
+    public static void drawCubeEdgesOnce(Location center, double edgeLength, double step) {
+        if (step <= 0) throw new IllegalArgumentException("step must be > 0");
+
+        World world = center.getWorld();
+        double half = edgeLength / 2.0;
+
+        // 8 cube corners relative to center
+        double[][] corners = new double[][]{
+                {-half, -half, -half}, {half, -half, -half}, {half, half, -half}, {-half, half, -half},
+                {-half, -half, half}, {half, -half, half}, {half, half, half}, {-half, half, half}
+        };
+
+        // 12 edges (pairs of corner indices)
+        int[][] edges = new int[][]{
+                {0, 1}, {1, 2}, {2, 3}, {3, 0},
+                {4, 5}, {5, 6}, {6, 7}, {7, 4},
+                {0, 4}, {1, 5}, {2, 6}, {3, 7}
+        };
+
+        Particle.DustOptions dust = new Particle.DustOptions(Color.RED, 1.0f);
+
+        for (int[] edge : edges) {
+            double[] a = corners[edge[0]];
+            double[] b = corners[edge[1]];
+
+            double dx = b[0] - a[0];
+            double dy = b[1] - a[1];
+            double dz = b[2] - a[2];
+
+            double edgeLen = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            int steps = Math.max(1, (int) Math.ceil(edgeLen / step));
+
+            for (int i = 0; i <= steps; i++) {
+                double t = (double) i / steps;
+
+                double x = center.getX() + a[0] + dx * t;
+                double y = center.getY() + a[1] + dy * t;
+                double z = center.getZ() + a[2] + dz * t;
+
+                world.spawnParticle(Particle.DUST, x, y, z, 1, 0, 0, 0, 0, dust);
+            }
+        }
     }
 }

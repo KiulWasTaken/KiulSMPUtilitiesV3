@@ -1,6 +1,5 @@
 package kiul.kiulsmputilitiesv3;
 
-import com.sun.jna.platform.unix.solaris.LibKstat;
 import kiul.kiulsmputilitiesv3.accessories.*;
 import kiul.kiulsmputilitiesv3.banneditems.BannedItemListener;
 import kiul.kiulsmputilitiesv3.combatlog.LogoutListeners;
@@ -11,28 +10,28 @@ import kiul.kiulsmputilitiesv3.config.*;
 import kiul.kiulsmputilitiesv3.crates.CrateListeners;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
-import kiul.kiulsmputilitiesv3.itemhistory.ItemMethods;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemCraft;
 import kiul.kiulsmputilitiesv3.itemhistory.listeners.ItemPickupAfterDeath;
+import kiul.kiulsmputilitiesv3.locatorbar.LocatorBar;
+import kiul.kiulsmputilitiesv3.locatorbar.LocatorBarJoinEvent;
+import kiul.kiulsmputilitiesv3.locatorbar.LocatorConfigInventory;
+import kiul.kiulsmputilitiesv3.locatorbar.Waypoint;
 import kiul.kiulsmputilitiesv3.scheduler.SMPScheduler;
 import kiul.kiulsmputilitiesv3.server_events.CloseEndDimension;
 import kiul.kiulsmputilitiesv3.server_events.FinalFight;
-import kiul.kiulsmputilitiesv3.stats.StatDB;
 import kiul.kiulsmputilitiesv3.stats.StatDBListeners;
 import kiul.kiulsmputilitiesv3.teamcure.CureListener;
 import kiul.kiulsmputilitiesv3.towns.Town;
-import kiul.kiulsmputilitiesv3.towns.listeners.ProtectedBlocks;
-import kiul.kiulsmputilitiesv3.towns.listeners.ProtectedEntities;
-import kiul.kiulsmputilitiesv3.towns.listeners.TownBlock;
-import kiul.kiulsmputilitiesv3.towns.listeners.TownGUI;
+import kiul.kiulsmputilitiesv3.towns.augments.ModifyItemListeners;
+import kiul.kiulsmputilitiesv3.towns.listeners.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.ShapedRecipe;
 import org.bukkit.inventory.ShapelessRecipe;
-import org.bukkit.inventory.meta.Damageable;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
@@ -50,7 +49,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
     @Override
     public void onEnable() {
         // Plugin startup logic
-
+        C.PAT_MODE = getServer().getPluginManager().getPlugin("Kit-API") != null;
 
         // Listeners
         getServer().getPluginManager().registerEvents(new FightLogicListeners(),this);
@@ -61,6 +60,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new CrateListeners(),this);
         getServer().getPluginManager().registerEvents(new RingAccessory(),this);
         getServer().getPluginManager().registerEvents(new TomeAccessory(),this);
+        getServer().getPluginManager().registerEvents(new LocatorConfigInventory(),this);
         getServer().getPluginManager().registerEvents(new ItemCraft(),this);
         getServer().getPluginManager().registerEvents(new ItemPickupAfterDeath(),this);
         getServer().getPluginManager().registerEvents(new StatDBListeners(),this);
@@ -71,11 +71,14 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new FinalFight(),this);
         getServer().getPluginManager().registerEvents(new BannedItemListener(),this);
         getServer().getPluginManager().registerEvents(new CureListener(),this);
-        getServer().getPluginManager().registerEvents(new ProtectedEntities(),this);
+        getServer().getPluginManager().registerEvents(new StartAugment(),this);
+        getServer().getPluginManager().registerEvents(new ModifyItemListeners(), this);
 
         getServer().getPluginManager().registerEvents(new TownGUI(),this);
         getServer().getPluginManager().registerEvents(new TownBlock(),this);
         getServer().getPluginManager().registerEvents(new ProtectedBlocks(),this);
+        getServer().getPluginManager().registerEvents(new ProtectedEntities(),this);
+        getServer().getPluginManager().registerEvents(new LocatorBarJoinEvent(),this);
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
             if ((accessoryItem.getLocalName().contains("ring") || accessoryItem.getLocalName().contains("tome")) && accessoryItem.getLocalName().contains("base")) {
@@ -138,10 +141,13 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getCommand("translate").setExecutor(new Commands());
         getCommand("recaps").setExecutor(new Commands());
         getCommand("kmenu").setExecutor(new Commands());
+        getCommand("locator_bar").setExecutor(new Commands());
         getCommand("close-end").setExecutor(new Commands());
         getCommand("debug-event").setExecutor(new Commands());
         getCommand("debug-event").setTabCompleter(new Commands());
-
+        getCommand("debug-augment").setExecutor(new Commands());
+        getCommand("debug-augment").setTabCompleter(new Commands());
+        getCommand("debug-waypoints").setExecutor(new Commands());
         // Config
         ConfigData.setup();
         if (ConfigData.get().get("scheduler") == null) {
@@ -175,6 +181,17 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         if (ConfigData.get().getBoolean("crates")) {
             CrateMethods.startRandomCrates(getServer().getWorld("world"));
         }
+        Waypoint.initializePlayerWaypointManager();
+        LocatorBar.sendLocatorBars();
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    new LocatorBar(45,p);
+                }
+            }
+        }.runTaskLater(C.plugin,5);
+
 
         new BukkitRunnable() {
             @Override
@@ -200,6 +217,9 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
     public void onDisable() {
         for (Town town : Town.townsList) {
             Town.saveToConfig(town);
+            if (town.isAugmenting()) {
+                town.getAugmentEvent().abort();
+            }
         }
         for (Entity disabledEntity : ProtectedEntities.disabledEntities) {
             if (disabledEntity instanceof LivingEntity livingEntity) {

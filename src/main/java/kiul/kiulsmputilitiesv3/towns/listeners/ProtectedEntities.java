@@ -86,6 +86,35 @@ public class ProtectedEntities implements Listener {
         }
 
     }
+
+    @EventHandler
+    public void hurtPlayerInsideTown (EntityDamageByEntityEvent e) {
+        if (e.getDamager() instanceof Player p) {
+            if (e.getEntity() instanceof Player enemy) {
+            boolean isInsideProtectedZone = false;
+            boolean isOnOwningTeam = false;
+
+            Town town = null;
+            for (Town allTowns : Town.townsList) {
+                if (allTowns.protectedAreaContains(e.getEntity().getLocation())) {
+                    town = allTowns;
+                    isInsideProtectedZone = true;
+                    if (allTowns.getOwningTeam() != null) {
+                        isOnOwningTeam = allTowns.getOwningTeam().equals(C.getPlayerTeam(p));
+                    }
+                    break;
+                }
+
+            }
+            if (isOnOwningTeam && C.getPlayerTeam(enemy) != town.getOwningTeam()) {
+                town.setTownHealth((float)(town.getTownHealth()+(5*e.getFinalDamage())));
+                // heal town
+                }
+            }
+        }
+
+    }
+
     public static Set<Entity> disabledEntities = new HashSet<>();
 
     public static void disableNearbyEntities (Block brokenBlock) { // when blocks are broken near entities inside a town during a raid, we don't want the entities to escape.

@@ -1,11 +1,13 @@
 package kiul.kiulsmputilitiesv3.towns.listeners;
 
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.bukkit.BukkitWorld;
+import com.sk89q.worldedit.world.block.BaseBlock;
+import com.sk89q.worldedit.world.block.BlockTypes;
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.towns.Town;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Material;
-import org.bukkit.NamespacedKey;
+import org.bukkit.*;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -23,6 +25,8 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 
+import static kiul.kiulsmputilitiesv3.C.getHighestBlockY;
+
 public class TownBlock implements Listener {
 
 
@@ -35,6 +39,11 @@ public class TownBlock implements Listener {
                 e.setCancelled(true);
                 return;
             }
+            if (e.getBlockPlaced().getLocation().y() > 100 || e.getBlockPlaced().getLocation().y() < 60) {
+                e.getPlayer().sendMessage(C.failPrefix+" town cores can only be placed between y60-100");
+                e.setCancelled(true);
+                return;
+            }
             for (Town town : Town.townsList) {
                 if (town.getTownCenter().distance(e.getBlockPlaced().getLocation()) < 500) {
                     e.setCancelled(true);
@@ -43,7 +52,34 @@ public class TownBlock implements Listener {
                 }
             }
             e.getPlayer().sendMessage(C.GOLD+C.t("&oSneak click to change the name of the town"));
-            Town.townsList.add(new Town(e.getBlockPlaced().getLocation(), e.getPlayer()));
+            Town town = new Town(e.getBlockPlaced().getLocation(), e.getPlayer());
+            Town.townsList.add(town);
+            try (EditSession editSession = WorldEdit.getInstance().newEditSession(new BukkitWorld(e.getPlayer().getWorld()))) {
+                    int radius = town.getTownProtectedRadius();
+
+                    Location cornerA = town.getTownCenter().clone().add(-radius, 0, -radius);
+
+                    for (int x = 0; x <= radius * 2; x++) {
+                        Location loc1 = cornerA.clone().add(x, 0, 0);
+                        Location loc2 = loc1.clone().add(0, 0, radius * 2);
+                        loc1.setY(getHighestBlockY(loc1));
+                        loc2.setY(getHighestBlockY(loc2));
+                        editSession.setBlock(loc1.getBlockX(), loc1.getBlockY(), loc1.getBlockZ(), new BaseBlock(BlockTypes.BEDROCK.getDefaultState()));
+                        editSession.setBlock(loc2.getBlockX(), loc2.getBlockY(), loc2.getBlockZ(), new BaseBlock(BlockTypes.BEDROCK.getDefaultState()));
+                        editSession.setBlock(loc1.getBlockX(), loc1.getBlockY() + 1, loc1.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
+                        editSession.setBlock(loc2.getBlockX(), loc2.getBlockY() + 1, loc2.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
+                    }
+                    for (int z = 0; z <= radius * 2; z++) {
+                        Location loc1 = cornerA.clone().add(0, 0, z);
+                        Location loc2 = loc1.clone().add(radius * 2, 0, 0);
+                        loc1.setY(getHighestBlockY(loc1));
+                        loc2.setY(getHighestBlockY(loc2));
+                        editSession.setBlock(loc1.getBlockX(), loc1.getBlockY(), loc1.getBlockZ(), new BaseBlock(BlockTypes.BEDROCK.getDefaultState()));
+                        editSession.setBlock(loc2.getBlockX(), loc2.getBlockY(), loc2.getBlockZ(), new BaseBlock(BlockTypes.BEDROCK.getDefaultState()));
+                        editSession.setBlock(loc1.getBlockX(), loc1.getBlockY() + 1, loc1.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
+                        editSession.setBlock(loc2.getBlockX(), loc2.getBlockY() + 1, loc2.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
+                    }
+                }
         }
     }
 
@@ -58,7 +94,7 @@ public class TownBlock implements Listener {
                         e.setCancelled(true);
                     } else {
                         e.setCancelled(true);
-                        e.getPlayer().sendMessage(C.failPrefix+" you cannot destroy a town core you do not own!");
+                        town.damageTownShield(5, false,e.getPlayer(),e.getBlock().getLocation().clone().add(0,1,0));
                     }
 
                     return;

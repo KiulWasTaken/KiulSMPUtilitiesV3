@@ -31,20 +31,6 @@ public class CrateListeners implements Listener {
         }
     }
 
-    @EventHandler
-    public void damageInCrateFight(EntityDamageByEntityEvent e) {
-        if (e.getEntity() instanceof Player p) {
-            for (Location crateLocation : activeCratesLocation.keySet()) {
-                Vector cornerA = crateLocation.clone().add(10,10,10).toVector();
-                Vector cornerB = crateLocation.clone().add(-10,-10,-10).toVector();
-                Vector squareCornerA = Vector.getMinimum(cornerA, cornerB);
-                Vector squareCornerB = Vector.getMaximum(cornerA, cornerB);
-                if (p.getLocation().toVector().isInAABB(squareCornerA,squareCornerB)) {
-                    activeCratesLocation.put(crateLocation,activeCratesLocation.get(crateLocation)+e.getFinalDamage());
-                }
-            }
-        }
-    }
 
     @EventHandler
     public void OpenCrate(PlayerInteractAtEntityEvent e) {

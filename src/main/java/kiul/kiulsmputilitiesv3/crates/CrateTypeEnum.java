@@ -13,7 +13,7 @@ public enum CrateTypeEnum {
      * Symbols
      */
     //C.t("&#FFC70BG&#FFD007O&#FFDA04L&#FFE300D")
-    Gold(MiniMessage.miniMessage().deserialize("<gradient:#FFC70B:#FFE300>GILDED"),C.t("&#FFE300"),"gold",(long)1000*60*60,1,0,1000*60*1,Material.RAW_GOLD_BLOCK, new ArrayList<ItemStack>() {{
+    Gold(MiniMessage.miniMessage().deserialize("<gradient:#FFC70B:#FFE300><bold>GILDED"),C.t("&#FFE300"),"gold",(long)1000*60*60,1,0,1000*60*1,Material.RAW_GOLD_BLOCK, new ArrayList<ItemStack>() {{
         add(new ItemStack(Material.GOLD_BLOCK));
         add(new ItemStack(Material.GOLD_INGOT));
         add(new ItemStack(Material.GOLDEN_APPLE));
@@ -22,7 +22,7 @@ public enum CrateTypeEnum {
         add(new ItemStack(Material.TOTEM_OF_UNDYING));
     }},7),
     //C.t("&#96694DO&#8F7757X&#878462I&#80926CD&#789F77I&#71AD81Z&#69BA8CE&#62C896D")
-    Oxidized(MiniMessage.miniMessage().deserialize("<gradient:#96694D:#62C896>OXIDIZED"),C.t("&#62C896"),"oxidized",(long)1000*60*60,1,0,1000*60*5,Material.VAULT, new ArrayList<ItemStack>() {{
+    Oxidized(MiniMessage.miniMessage().deserialize("<gradient:#96694D:#62C896><bold>OXIDIZED"),C.t("&#62C896"),"oxidized",(long)1000*60*60,1,0,1000*60*5,Material.VAULT, new ArrayList<ItemStack>() {{
         add(new ItemStack(Material.EXPERIENCE_BOTTLE));
         add(new ItemStack(Material.GUNPOWDER));
         add(new ItemStack(Material.EMERALD));
@@ -32,7 +32,7 @@ public enum CrateTypeEnum {
         add(new ItemStack(Material.ENCHANTED_BOOK));
     }},7),
     //C.t("&#B766D9R&#C579D3E&#D48CCEM&#D48CCEO&#C579D3T&#B766D9E")
-    End(MiniMessage.miniMessage().deserialize("<gradient:#B766D9:#D48CCE:#B766D9>REMOTE"),C.t("&#B766D9"), "end",(long)1000*60*120,2,2000,0,Material.SHULKER_BOX,new ArrayList<ItemStack>() {{
+    End(MiniMessage.miniMessage().deserialize("<gradient:#B766D9:#D48CCE:#B766D9><bold>REMOTE"),C.t("&#B766D9"), "end",(long)1000*60*120,2,2000,0,Material.SHULKER_BOX,new ArrayList<ItemStack>() {{
         add(new ItemStack(Material.EXPERIENCE_BOTTLE));
         add(new ItemStack(Material.ENCHANTED_GOLDEN_APPLE));
         add(new ItemStack(Material.DIAMOND_BLOCK));
@@ -46,7 +46,7 @@ public enum CrateTypeEnum {
         add(new ItemStack(Material.SPIRE_ARMOR_TRIM_SMITHING_TEMPLATE));
     }},2),
     //C.t("&#CF2200M&#D1310EO&#D3401CL&#D3401CT&#D1310EE&#CF2200N")
-    Nether(MiniMessage.miniMessage().deserialize("<gradient:#cf2200:#d3401c:#cf2200>MOLTEN"),C.t("&#cf2200"),"nether",(long)1000*60*120,2,2000,0,Material.GILDED_BLACKSTONE,new ArrayList<ItemStack>() {{
+    Nether(MiniMessage.miniMessage().deserialize("<gradient:#cf2200:#d3401c:#cf2200><bold>MOLTEN"),C.t("&#cf2200"),"nether",(long)1000*60*120,2,2000,0,Material.GILDED_BLACKSTONE,new ArrayList<ItemStack>() {{
         add(new ItemStack(Material.NETHERITE_SCRAP));
         add(new ItemStack(Material.GOLD_BLOCK));
         add(new ItemStack(Material.NETHERITE_INGOT));

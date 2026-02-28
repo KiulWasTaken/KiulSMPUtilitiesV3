@@ -1,8 +1,18 @@
 package kiul.kiulsmputilitiesv3.towns;
 
+import com.sk89q.worldedit.EditSession;
+import com.sk89q.worldedit.WorldEdit;
+import com.sk89q.worldedit.bukkit.BukkitWorld;
+import com.sk89q.worldedit.world.block.BaseBlock;
+import com.sk89q.worldedit.world.block.BlockTypes;
 import kiul.kiulsmputilitiesv3.C;
+import kiul.kiulsmputilitiesv3.locatorbar.LocatorBar;
+import kiul.kiulsmputilitiesv3.locatorbar.LocatorBarJoinEvent;
+import kiul.kiulsmputilitiesv3.locatorbar.Waypoint;
+import kiul.kiulsmputilitiesv3.towns.augments.AugmentEnum;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.kyori.adventure.title.Title;
@@ -27,14 +37,19 @@ import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
 
 import java.awt.Color;
-import java.time.Duration;
+import java.time.*;
+import java.time.format.DateTimeFormatter;
+import java.time.format.TextStyle;
+import java.time.temporal.TemporalField;
 import java.util.*;
 import java.util.List;
 
+import static kiul.kiulsmputilitiesv3.C.getHighestBlockY;
+
 public class Town {
 
-    public static List<Town> townsList = new ArrayList<>();
-    public static float DEFAULT_TOWN_MAX_HEALTH = 200f;
+    public static Set<Town> townsList = new HashSet<>();
+    public static float DEFAULT_TOWN_MAX_HEALTH = 12000f;
 
     public static Town getTownForPlayer(Player p) {
         for (Town town : townsList) {
@@ -48,6 +63,7 @@ public class Town {
     private final Location townCenter;
     private String townUUID;
     private Component townName;
+    private String townNameString;
     private Color townColour;
     private Team owningTeam;
     private final ArmorStand townNameStand;
@@ -75,22 +91,33 @@ public class Town {
     private BossBar notInvoledBossbar;
     private BossBar attackersBossbar;
     private BossBar defendingBossbar;
+    private BossBar augmentingBossbar;
     private long timeSinceLastDamage;
     private HashMap<Location,Material> reinstateBlocks; // list of locations and original material for reinstating towns that have been sieged.
 
     // side mission
     private int townCharge;
+    private AugmentEnum selectedAugment;
+    private boolean isAugmenting;
+    private AugmentEvent augmentEvent;
     private long bountyUntil;
     private UUID bountySkull;
     private ArrayList collectedSkulls;
+    private Waypoint waypoint;
     
-    public Town(Location placedLocation, Player p) { // from placement
+    public Town(Location placedLocation, Player p) {// from placement
         this.townCenter = placedLocation;
+
+        if (placedLocation.getBlock().getType() != Material.RESPAWN_ANCHOR) {
+            placedLocation.getWorld().setBlockData(placedLocation,Material.RESPAWN_ANCHOR.createBlockData());
+        }
+        this.selectedAugment = null;
         this.townProtectedRadius = 80;
         this.owningTeam = C.getPlayerTeam(p);
         this.townUUID = owningTeam.getName();
         this.townColour = new Color(owningTeam.color().red(),owningTeam.color().green(),owningTeam.color().blue());
         this.townName = Component.text("New Town");
+        this.townNameString = "New Town";
         this.collectedSkulls = new ArrayList<>();
         this.defaultTownMaxHealth = DEFAULT_TOWN_MAX_HEALTH;
         this.townMaxHealth = defaultTownMaxHealth;
@@ -161,11 +188,25 @@ public class Town {
 
         this.notInvoledBossbar = null;
         this.attackersBossbar = null;
-        this.defendingBossbar = null;
+        this.defendingBossbar = null; // ❤♥♦⬩
+        TreeMap<Integer,String> textures = new TreeMap<Integer,String>() {{
+            put(0,"❤");
+            put(100,"♥");
+            put(1000,"♦");
+            put(5000,"⬩");
+        }};
+        this.waypoint = new Waypoint(townUUID,townCenter.clone().add(0.5,0,0.5),textures,owningTeam,false);
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            if (LocatorBar.playerLocatorBar.get(onlinePlayer.getUniqueId()) != null) {
+                LocatorBar.playerLocatorBar.get(onlinePlayer.getUniqueId()).addWaypoint(waypoint);
+            }
+        }
     }
 
     public Town(Location townCenter, String townUUID, Component townName, ArrayList collectedSkulls, float townHealth, float townMaxHealth, long disabledUntil, long invulnerableUntil, boolean isRegenerating, UUID bountySkull, long bountyUntil, boolean isActive, HashMap<Location,Material> reinstateBlocks) { // from config
         this.townCenter = townCenter;
+        townCenter.getBlock().setType(Material.RESPAWN_ANCHOR);
+        this.selectedAugment = null;
         townProtectedRadius = 80;
         this.townUUID = townUUID;
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
@@ -239,6 +280,16 @@ public class Town {
         this.notInvoledBossbar = null;
         this.attackersBossbar = null;
         this.defendingBossbar = null;
+        TreeMap<Integer,String> textures = new TreeMap<Integer,String>() {{
+            put(0,"❤");
+            put(100,"♥");
+            put(1000,"♦");
+            put(5000,"⬩");
+        }};
+        this.waypoint = new Waypoint(townUUID,townCenter.clone().add(0.5,0,0.5),textures,owningTeam,false);
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            LocatorBar.playerLocatorBar.get(onlinePlayer.getUniqueId()).addWaypoint(waypoint);
+        }
     }
 
     public boolean protectedAreaContains(Location location) {
@@ -254,6 +305,7 @@ public class Town {
             block.setType(reinstateBlocks.get(blockLocation));
         }
     }
+
 
     public String getTownStatus() {
         if (disabledUntil > System.currentTimeMillis()) {
@@ -276,6 +328,10 @@ public class Town {
             // regenerating
 
             return C.ICE_BLUE+"❤ " +C.LIGHT_ICE_BLUE+"Regenerating "+ChatColor.DARK_GRAY+"("+String.format("%.1f",percentage) +"%)";
+        }
+        if (isAugmenting) {
+            float augmentPercentage = (float) (augmentEvent.getEventHealth()/augmentEvent.getEventMaxHealth())*100;
+            return C.YELLOW+"✪ "+C.GOLD+"Augmenting "+ChatColor.DARK_GRAY+"("+String.format("%.1f",augmentPercentage) +"%)";
         }
 
         return C.PURPLE+"\uD83D\uDEE1 "+C.LIGHT_PURPLE+"Shielded "+ChatColor.DARK_GRAY+"("+String.format("%.1f",percentage) +"%)";
@@ -326,8 +382,36 @@ public class Town {
         getTownCenter().getWorld().playSound(getTownCenter(),Sound.BLOCK_RESPAWN_ANCHOR_CHARGE,1,1.1f-((float)0.1*chargeAmount));
         updateTownCharge();
     }
+
+    static List<Material> DO_NOT_REINSTATE = new ArrayList<>() {{
+       add(Material.NETHERITE_BLOCK);
+       add(Material.DIAMOND_BLOCK);
+       add(Material.IRON_BLOCK);
+       add(Material.GOLD_BLOCK);
+       add(Material.LAPIS_BLOCK);
+       add(Material.EMERALD_BLOCK);
+       add(Material.COAL_BLOCK);
+
+       add(Material.ANCIENT_DEBRIS);
+       add(Material.DIAMOND_ORE);
+       add(Material.DEEPSLATE_DIAMOND_ORE);
+       add(Material.IRON_ORE);
+       add(Material.DEEPSLATE_IRON_ORE);
+       add(Material.GOLD_ORE);
+       add(Material.DEEPSLATE_GOLD_ORE);
+       add(Material.NETHER_GOLD_ORE);
+       add(Material.LAPIS_ORE);
+       add(Material.DEEPSLATE_LAPIS_ORE);
+       add(Material.EMERALD_ORE);
+       add(Material.DEEPSLATE_EMERALD_ORE);
+       add(Material.COAL_ORE);
+       add(Material.DEEPSLATE_COAL_ORE);
+
+    }};
+
     public void breakBlockInDisabledTownArea(Location blockLocation, Material initialBlockType) {
         if (reinstateBlocks.containsKey(blockLocation)) return;
+        if (DO_NOT_REINSTATE.contains(initialBlockType)) return;
         reinstateBlocks.put(blockLocation,initialBlockType);
     }
 
@@ -337,44 +421,141 @@ public class Town {
         float multiplier = (float) (1-(numMembersInsideTown()*0.1));
         if (isExplosion) multiplier = 0.2f;
         damage = damage*multiplier;
+        double coreDistanceMultiplier = -Math.log(((1.39)*this.townCenter.distance(damageLocation))+1)+5;
+        // -ln(ax+b)+c
+        // where x = distance.
+        // and a = the sharpness of the curve. at a = 1.39 the multiplier at town edge is 0.27 and at 40 blocks its 0.97
+        // c = multiplier at 0 distance to core
+        // b = dont touch, it controls the asymptote
+        damage = (float) (damage*coreDistanceMultiplier);
+        damage = damage/C.numOnlineTeammates(C.getPlayerTeam(attacker));
 
+        if (((townHealth-damage)/townMaxHealth)*100 <= 95) {
+            if (attackingTeam == null && attacker != null) {
+                attackingTeam = C.getPlayerTeam(attacker);
+                announceSiegeStage(0,true);
+                displayHealthBar();
+            }
+        }
+
+        TextColor color;
+        if (isAugmenting && this.townCenter.distance(damageLocation) < 20) {
+            color = TextColor.color(181, 154, 78);
+        } else {
+            color = TextColor.color(109, 43, 148);
+        }
+
+        if (isAugmenting) {
+            if (this.townCenter.distance(damageLocation) < 20) {
+                augmentEvent.damageEvent(damage);
+                damageMarker(attacker,damage,damageLocation,color);
+                damage = 0;
+            } else {
+                damage = 0;
+                damageMarker(attacker,damage,damageLocation,color);
+            }
+        } else {
+            damageMarker(attacker,damage,damageLocation,color);
+        }
         if (!isRegenerating && ((townHealth-damage)/townMaxHealth)*100 <= 10) {
             isRegenerating = true;
-            invulnerableUntil = System.currentTimeMillis()+(1000 * 60); // invulnerable for 6 hours
+            invulnerableUntil = System.currentTimeMillis()+(1000 * 60 * 60 * 6); // invulnerable for 6 hours
             townHealth = townMaxHealth/10;
+            announceSiegeStage(1,true);
             return;
         }
         if (isRegenerating && townHealth-damage <= 0) {
             isActive = false;
-            disabledUntil = System.currentTimeMillis()+1000*60;
+            disabledUntil = System.currentTimeMillis()+1000*60*60*24;
             townHealth = 0;
             updateTownStatus();
             // announce attackers WON
             if (attacker != null) {
                 attackingTeam = C.getPlayerTeam(attacker);
-                Bukkit.broadcast(attackingTeam.prefix().append(Component.text(" has successfully sieged ").append(owningTeam.prefix()).append(townName)));
+                announceSiegeStage(3,true);
             }
-            for (Player player : Bukkit.getOnlinePlayers()) {
-                if (notInvoledBossbar != null)
-                    notInvoledBossbar.removeViewer(player);
-                if (attackersBossbar != null)
-                    attackersBossbar.removeViewer(player);
-                if (defendingBossbar != null)
-                    defendingBossbar.removeViewer(player);
-            }
+
             return;
         }
 
-        if (((townHealth-damage)/townMaxHealth)*100 <= 95) {
-            if (attacker != null) {
-                attackingTeam = C.getPlayerTeam(attacker);
-                displayHealthBar();
-            }
-        }
+
         timeSinceLastDamage = System.currentTimeMillis();
         townHealth -= damage;
         updateTownStatus();
 
+    }
+
+    public void announceSiegeStage (int stage, boolean attackersProceed) {
+        ZonedDateTime calendar = ZonedDateTime.now();
+
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(
+                "d MMMM h:mma",
+                Locale.ENGLISH
+        );
+
+
+        String siegePrefix = C.LIGHT_PURPLE + ChatColor.BOLD+ "SIEGE! " + C.PURPLE;
+        switch (stage) {
+            case 0:
+                Bukkit.broadcastMessage(siegePrefix + attackingTeam.getPrefix() + ChatColor.GRAY + "are trying to initiate a siege on " + owningTeam.getPrefix() + townNameString);
+                break;
+            case 1:
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (notInvoledBossbar != null)
+                        notInvoledBossbar.removeViewer(player);
+                    if (attackersBossbar != null)
+                        attackersBossbar.removeViewer(player);
+                    if (defendingBossbar != null)
+                        defendingBossbar.removeViewer(player);
+                }
+                if (attackersProceed) {
+                     calendar = Instant
+                            .ofEpochMilli(invulnerableUntil) // or disabledUntil
+                            .atZone(ZoneId.systemDefault());
+                    Bukkit.broadcastMessage(siegePrefix + attackingTeam.getPrefix() + ChatColor.GRAY + "have successfully weakened " + owningTeam.getPrefix() + townNameString + ChatColor.GRAY  + "'s core. It is invulnerable until defense phase is activated at any time by defenders before " + ChatColor.DARK_GRAY + formatter.format(calendar) + " " + ZoneId.systemDefault().getDisplayName(TextStyle.SHORT,Locale.ENGLISH));
+                } else {
+                    Bukkit.broadcastMessage(siegePrefix + attackingTeam.getPrefix() + ChatColor.GRAY + "have been repelled from " + owningTeam.getPrefix() + townNameString + ChatColor.GRAY  + " and failed to initiate a siege.");
+                }
+                break;
+            case 2:
+                calendar = ZonedDateTime.now().plusHours(3);
+
+                Bukkit.broadcastMessage(siegePrefix + owningTeam.getPrefix() + ChatColor.GRAY + "have started their defense of " + ChatColor.WHITE + townNameString + ChatColor.GRAY  + "! Without " + attackingTeam.getPrefix() + ChatColor.GRAY  + "intervention, the town will be fully healed at " + ChatColor.DARK_GRAY + formatter.format(calendar) + " " + ZoneId.systemDefault().getDisplayName(TextStyle.SHORT,Locale.ENGLISH));
+                break;
+            case 3:
+                for (Player player : Bukkit.getOnlinePlayers()) {
+                    if (notInvoledBossbar != null)
+                        notInvoledBossbar.removeViewer(player);
+                    if (attackersBossbar != null)
+                        attackersBossbar.removeViewer(player);
+                    if (defendingBossbar != null)
+                        defendingBossbar.removeViewer(player);
+                }
+                if (attackersProceed) {
+                    calendar = Instant
+                            .ofEpochMilli(disabledUntil) // or disabledUntil
+                            .atZone(ZoneId.systemDefault());
+                    Bukkit.broadcastMessage(siegePrefix + attackingTeam.getPrefix() + ChatColor.GRAY + "have successfully sieged " + owningTeam.getPrefix() + townNameString + ChatColor.GRAY + ". All block protection has been disabled within its claim until " + ChatColor.DARK_GRAY + formatter.format(calendar) + " " + ZoneId.systemDefault().getDisplayName(TextStyle.SHORT,Locale.ENGLISH));
+                } else {
+                    Bukkit.broadcastMessage(siegePrefix + attackingTeam.getPrefix() + ChatColor.GRAY + "have been repelled by the defenders of " + owningTeam.getPrefix() + townNameString + ChatColor.GRAY + " and failed the siege.");
+                }
+                break;
+        }
+
+        // [0] ATTACKERS are trying to initiate a siege on TOWN!
+
+        // [1] ATTACKERS have been repelled from TOWN and failed to initiate a siege.
+        // OR
+        // [1] ATTACKERS have successfully weakened TOWN's core. TOWN is invulnerable until defense phase is activated at any time by defenders before XXX ACDT
+
+        // [2] DEFENDERS have started their defense of TOWN! Without ATTACKER intervention TOWN will be fully healed at XXX ACDT
+
+        // [3] ATTACKERS have been repelled by the defenders of TOWN.
+        // OR
+        // [3] ATTACKERS have successfully sieged TOWN. All block protection has been disabled within its claim until XXX ACDT.
+    }
+
+    public void damageMarker(Player attacker, float damage, Location damageLocation, TextColor color) {
         // === DAMAGE MARKER ===
         if (attacker != null) {
             float finalDamage = damage;
@@ -383,7 +564,7 @@ public class Town {
                 as.setInvisible(true);
                 as.setGravity(true);
                 as.setSmall(true);
-                as.customName(Component.text(String.format("-%.1f", finalDamage)).color(TextColor.color(109, 43, 148)));
+                as.customName(Component.empty().append(Component.text(C.getNumTeammatesDivSymbol(C.numOnlineTeammates(C.getPlayerTeam(attacker))) + " ").color(NamedTextColor.DARK_GRAY)).append(Component.text(String.format("-%.1f", finalDamage)).color(color)));
                 as.setCustomNameVisible(true); // required so name actually exists
                 as.setCollidable(false);
             });
@@ -401,7 +582,6 @@ public class Town {
         }
     }
 
-
     public void regenerateTownHealth() {
         if (isDisabled()) return;
         if (isInvulnerable()) return;
@@ -417,8 +597,9 @@ public class Town {
         updateTownStatus();
     }
 
-    public void destroy() {
 
+    public void destroy() {
+        C.plugin.getLogger().info(townsList.toString());
         List<String> lore = new ArrayList<>();
         ItemStack townCore = new ItemStack(Material.RESPAWN_ANCHOR);
         ItemMeta townCoreMeta = townCore.getItemMeta();
@@ -430,7 +611,7 @@ public class Town {
         getTownNameStand().remove();
         getTownStatusStand().remove();
         getTownChargeStand().remove();
-
+        C.plugin.getLogger().info("-------------------------");
         FileConfiguration config = C.plugin.getConfig();
         townCenter.getBlock().setType(Material.AIR);
         townCenter.getWorld().dropItemNaturally(townCenter,townCore);
@@ -438,6 +619,33 @@ public class Town {
         areaCheck.cancel();
         townsList.remove(this);
         C.plugin.saveConfig();
+        C.plugin.getLogger().info(townsList.toString());
+        try (EditSession editSession = WorldEdit.getInstance().newEditSession(new BukkitWorld(this.getTownCenter().getWorld()))) {
+            int radius = this.getTownProtectedRadius();
+
+            Location cornerA = this.getTownCenter().clone().add(-radius, 0, -radius);
+
+            for (int x = 0; x <= radius * 2; x++) {
+                Location loc1 = cornerA.clone().add(x, 0, 0);
+                Location loc2 = loc1.clone().add(0, 0, radius * 2);
+                loc1.setY(getHighestBlockY(loc1));
+                loc2.setY(getHighestBlockY(loc2));
+                editSession.setBlock(loc1.getBlockX(), loc1.getBlockY(), loc1.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
+                editSession.setBlock(loc2.getBlockX(), loc2.getBlockY(), loc2.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
+                editSession.setBlock(loc1.getBlockX(), loc1.getBlockY() + 1, loc1.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
+                editSession.setBlock(loc2.getBlockX(), loc2.getBlockY() + 1, loc2.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
+            }
+            for (int z = 0; z <= radius * 2; z++) {
+                Location loc1 = cornerA.clone().add(0, 0, z);
+                Location loc2 = loc1.clone().add(radius * 2, 0, 0);
+                loc1.setY(getHighestBlockY(loc1));
+                loc2.setY(getHighestBlockY(loc2));
+                editSession.setBlock(loc1.getBlockX(), loc1.getBlockY(), loc1.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
+                editSession.setBlock(loc2.getBlockX(), loc2.getBlockY(), loc2.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
+                editSession.setBlock(loc1.getBlockX(), loc1.getBlockY() + 1, loc1.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
+                editSession.setBlock(loc2.getBlockX(), loc2.getBlockY() + 1, loc2.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
+            }
+        }
     }
 
     public ArmorStand getTownChargeStand() {
@@ -452,6 +660,8 @@ public class Town {
                 regenerateTownHealth();
 
                 if (attackingTeam != null && System.currentTimeMillis()-timeSinceLastDamage >= 1000*60*5) {
+                    announceSiegeStage(1,false);
+                    attackingTeam = null;
                     for (Player player : Bukkit.getOnlinePlayers()) {
                         if (notInvoledBossbar != null)
                             notInvoledBossbar.removeViewer(player);
@@ -465,6 +675,7 @@ public class Town {
                 if (isRegenerating && (float) (townHealth/DEFAULT_TOWN_MAX_HEALTH)*100 >= 95) {
                     isRegenerating = false;
                     attackingTeam = null;
+                    announceSiegeStage(3,false);
                 }
                 updateTownStatus();
                 for (Player p : Bukkit.getOnlinePlayers()) {
@@ -488,7 +699,7 @@ public class Town {
                                     if (Bukkit.getPlayer(entries) != null) {
                                         Player owningTeamMember = Bukkit.getPlayer(entries);
                                         String unauthorisedPlayerTeamPrefix = C.getPlayerTeam(p) != null ? C.getPlayerTeamPrefix(p) : "";
-                                        owningTeamMember.sendMessage(C.msg(unauthorisedPlayerTeamPrefix + p.getName() + ChatColor.WHITE + " has entered the protected radius of your town " + C.componentToString(townName) + "."));
+                                        owningTeamMember.sendMessage(C.msg(unauthorisedPlayerTeamPrefix + p.getName() + ChatColor.WHITE + " has entered the protected radius of your town "));
                                     }
                                 }
                             }
@@ -500,7 +711,7 @@ public class Town {
                                 if (Bukkit.getPlayer(entries) != null) {
                                     Player owningTeamMember = Bukkit.getPlayer(entries);
                                     String unauthorisedPlayerTeamPrefix = C.getPlayerTeam(p) != null ? C.getPlayerTeamPrefix(p) : "";
-                                    owningTeamMember.sendMessage(C.msg(unauthorisedPlayerTeamPrefix + p.getName() + ChatColor.WHITE + " has left the protected radius of your town " + C.componentToString(townName) + "."));
+                                    owningTeamMember.sendMessage(C.msg(unauthorisedPlayerTeamPrefix + p.getName() + ChatColor.WHITE + " has left the protected radius of your town "));
                                 }
                             }
                         }
@@ -512,6 +723,33 @@ public class Town {
     }
 
     public void displayHealthBar() {
+        if (isAugmenting) {
+            float progress = (float) (augmentEvent.getEventHealth()/augmentEvent.getEventMaxHealth());
+
+            Component name = Component.empty().append(
+                            owningTeam.prefix())
+                    .append(Component.text("is Augmenting "))
+                    .append(augmentEvent.getInputItem().name());
+            BossBar global = BossBar.bossBar(name,
+                    progress, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_12);
+            if (augmentingBossbar == null) {
+                augmentingBossbar = global;
+            } else {
+                augmentingBossbar.name(name);
+                augmentingBossbar.progress(progress);
+            }
+            for (Player p : Bukkit.getOnlinePlayers()) {
+                augmentingBossbar.addViewer(p);
+            }
+        } else {
+            if (augmentingBossbar != null) {
+                for (Player p : Bukkit.getOnlinePlayers()) {
+                    augmentingBossbar.removeViewer(p);
+                }
+                augmentingBossbar = null;
+            }
+        }
+
         if (attackingTeam == null) return;
 
         if ((townHealth/townMaxHealth)*100 >= 95) {
@@ -526,10 +764,15 @@ public class Town {
             return;
         }
 
+
+
         for (Player p : Bukkit.getOnlinePlayers()) { // loop all online players
 
             assert attackingTeam != null;
+
             float progress = ((float) townHealth / (float) townMaxHealth);
+            Component extra = Component.text("");
+
             if (progress > 1) {
                 progress = 1;
             }
@@ -564,7 +807,7 @@ public class Town {
                                 .append(Component.text("Attacking ")).append(owningTeam.prefix())
                                 .append(townName);
                         BossBar attacking = BossBar.bossBar(name,
-                                progress, BossBar.Color.YELLOW, BossBar.Overlay.NOTCHED_12);
+                                progress, BossBar.Color.RED, BossBar.Overlay.NOTCHED_12);
                         if (attackersBossbar == null) {
                             attackersBossbar = attacking;
                         } else {
@@ -623,9 +866,10 @@ public class Town {
         config.set("towns." + uuid + ".active", town.isActive());
 
         // Save bounty
-        config.set("towns." + uuid + ".bountyuuid", town.getBountySkull().toString());
-        config.set("towns." + uuid + ".bountyuntil", town.getBountyUntil());
-
+        if (town.getBountySkull() != null) {
+            config.set("towns." + uuid + ".bountyuuid", town.getBountySkull().toString());
+            config.set("towns." + uuid + ".bountyuntil", town.getBountyUntil());
+        }
         // Save collected skulls
         config.set("towns." + uuid + ".collectedskulls", town.getCollectedSkulls());
 
@@ -737,8 +981,16 @@ public class Town {
         return bountyUntil;
     }
 
-    public Color getTownColour() {
-        return townColour;
+    public void setAugmentEvent(AugmentEvent augmentEvent) {
+        this.augmentEvent = augmentEvent;
+    }
+
+    public AugmentEvent getAugmentEvent() {
+        return augmentEvent;
+    }
+
+    public boolean isAugmenting() {
+        return getAugmentEvent() != null;
     }
 
     public float getTownHealth() {
@@ -765,6 +1017,10 @@ public class Town {
         return isRegenerating;
     }
 
+    public void setAugmenting(boolean augmenting) {
+        isAugmenting = augmenting;
+    }
+
     public HashMap<Player, Integer> getPlayersInsideTown() {
         return playersInsideTown;
     }
@@ -783,5 +1039,25 @@ public class Town {
 
     public Team getOwningTeam() {
         return owningTeam;
+    }
+
+    public AugmentEnum getSelectedAugment() {
+        return selectedAugment;
+    }
+
+    public void setSelectedAugment(AugmentEnum selectedAugment) {
+        this.selectedAugment = selectedAugment;
+    }
+
+    public Waypoint getWaypoint() {
+        return waypoint;
+    }
+
+    public String getTownNameString() {
+        return townNameString;
+    }
+
+    public void setTownNameString(String townNameString) {
+        this.townNameString = townNameString;
     }
 }

@@ -15,6 +15,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextColor;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.entity.Player;
@@ -160,6 +161,9 @@ public class SMPScheduler {
                                         case "border_closed":
                                             WorldData.get().set("border_closed",true);
                                             for (OfflinePlayer p : Bukkit.getOfflinePlayers()) {
+                                                if (p.isOnline()) {
+                                                    Bukkit.getPlayer(p.getName()).sendMessage(C.LIGHT_PASTEL_PINK+"\uD83D\uDD31 " + C.PASTEL_PINK + ChatColor.BOLD+"BORDER CLOSED! " + C.LIGHT_PASTEL_PINK + "Late joiners will die and logouts will be punished! Fight to the death!");
+                                                }
                                                 PersistentData.get().set(p.getUniqueId().toString()+".final_fight.time_quit",System.currentTimeMillis());
                                             }
                                             break;
@@ -170,7 +174,7 @@ public class SMPScheduler {
                                                     suddenDeathPlayers.add(p);
                                                 }
                                             }
-                                            C.suddenDeath = new SuddenDeath(suddenDeathPlayers,5,4);
+                                            C.suddenDeath = new SuddenDeath(suddenDeathPlayers,5,4,false);
                                             C.suddenDeath.start();
                                             break;
                                     }

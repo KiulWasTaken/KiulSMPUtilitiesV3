@@ -31,6 +31,9 @@ import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class C {
+
+    public static boolean PAT_MODE = false;
+
     private static final Pattern HEX_PATTERN = Pattern.compile("&#(\\w{5}[0-9a-fA-F])");
     public static String t(String textToTranslate) {
         Matcher matcher = HEX_PATTERN.matcher(textToTranslate);
@@ -50,6 +53,10 @@ public class C {
     public static String YELLOW = C.t("&#b59a4e");
     public static String ICE_BLUE = C.t("&#a8caff");
     public static String LIGHT_ICE_BLUE = C.t("&#c7ddff");
+    public static String LAVENDER_PURPLE = C.t("&#c8a8ff");
+    public static String LIGHT_LAVENDER_PURPLE = C.t("&#ddc7ff");
+    public static String PASTEL_PINK = C.t("&#ffa8df");
+    public static String LIGHT_PASTEL_PINK = C.t("&#ffc7eb");
     //5493f6
     public static String BLUE = C.t("&#658bb5"); //old &#5f95ed
     public static String GRAY = C.t("&#787878");
@@ -91,7 +98,7 @@ public class C {
     public static ArrayList<Player> logoutTimer = new ArrayList<>();
 
     /* Configurable */
-    public static int BLOCK_REGEN_SECONDS = 5;
+    public static int BLOCK_REGEN_SECONDS = 120;
     public static int NPC_DESPAWN_SECONDS = 45;
     public static int ACCESSORY_COOLDOWN_MINUTES = 0;
     public static int CONNECTION_ISSUE_PROTECTION_SECONDS = 15;
@@ -146,6 +153,17 @@ public class C {
         }
         return net.md_5.bungee.api.ChatColor.WHITE;}
 
+    public static Double getHighestBlockY(Location loc) {
+        loc = loc.getWorld().getHighestBlockAt(loc).getLocation();
+        for (int i = 0; i <= 32; i++) {
+            Material blockType = loc.clone().add(0, -i, 0).getBlock().getType();
+            if (blockType.isOccluding() || Tag.STAIRS.isTagged(blockType) || Tag.SLABS.isTagged(blockType)) {
+                return loc.getY() - i;
+            }
+        }
+        return loc.getY();
+    }
+
     public static String componentToString(Component input1) {
 
         String input = MiniMessage.miniMessage().serialize(input1);
@@ -182,6 +200,32 @@ public class C {
         head.setItemMeta(meta);
 
         return head;
+    }
+
+    public static int numOnlineTeammates (Team team) {
+        int onlineTeammates = 1;
+        for (String playerName : team.getEntries()) {
+            if (Bukkit.getPlayer(playerName) != null) {
+                if (Bukkit.getPlayer(playerName).isOnline()) {
+                    onlineTeammates++;
+                }
+            }
+        }
+        if (onlineTeammates > 6) {
+            onlineTeammates = 6;
+        }
+        return onlineTeammates;
+    }
+
+    public static String getNumTeammatesDivSymbol (int num) {
+        return switch (num) {
+            case 2 -> "½";
+            case 3 -> "⅓";
+            case 4 -> "¼";
+            case 5 -> "⅕";
+            case 6 -> "⅙";
+            default -> "";
+        };
     }
 
     public static ItemStack createHead (String itemName, Material material, int amount, String[] lore, String localizedName, URL URL,String displayName) {
@@ -263,7 +307,7 @@ public class C {
             return null;
         }
         for (Team team : sb.getTeams()) {
-            if (team.hasEntry(p.getDisplayName())) {
+            if (team.hasEntry(p.getName())) {
                 return team;
             }
         }

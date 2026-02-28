@@ -1,7 +1,7 @@
 name: Kiul-SMP-Utilities-V3
 version: '${project.version}'
 main: kiul.kiulsmputilitiesv3.KiulSMPUtilitiesV3
-api-version: '1.21.4'
+api-version: '1.21.11'
 softdepend:
   - PattyEssentialsV3
 commands:
@@ -13,11 +13,14 @@ commands:
     aliases:
       - equip
   give-accessory:
+  debug-augment:
   toggle-sounds:
   test-crate:
   populate-crate:
   translate:
   give-ingredient:
+  debug-waypoints:
+  locator_bar:
   recaps:
   kmenu:
   spawn-crate:

@@ -5,10 +5,15 @@ import kiul.kiulsmputilitiesv3.combattag.RecapInventory;
 import kiul.kiulsmputilitiesv3.config.*;
 import kiul.kiulsmputilitiesv3.crates.CrateMethods;
 import kiul.kiulsmputilitiesv3.crates.CrateTypeEnum;
+import kiul.kiulsmputilitiesv3.locatorbar.LocatorBar;
+import kiul.kiulsmputilitiesv3.locatorbar.LocatorConfigInventory;
+import kiul.kiulsmputilitiesv3.locatorbar.Waypoint;
 import kiul.kiulsmputilitiesv3.server_events.CloseEndDimension;
 import kiul.kiulsmputilitiesv3.featuretoggle.FeatureInventory;
 import kiul.kiulsmputilitiesv3.server_events.FinalFight;
 import kiul.kiulsmputilitiesv3.server_events.SuddenDeath;
+import kiul.kiulsmputilitiesv3.towns.Town;
+import kiul.kiulsmputilitiesv3.towns.augments.AugmentEnum;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
@@ -99,6 +104,9 @@ public class Commands implements TabExecutor {
         }
 
         switch (label) {
+            case "locator_bar":
+                LocatorConfigInventory.open(p);
+                break;
             case "close-end":
                 CloseEndDimension.deleteEndPortalBlocks(p.getWorld());
                 break;
@@ -189,14 +197,18 @@ public class Commands implements TabExecutor {
                             CloseEndDimension.deleteEndPortalBlocks(Bukkit.getWorld("world"));
                             CloseEndDimension.increaseEndBorder();
                             break;
+
                         case "final_fight":
-                            FinalFight.beginShrinkWorldBorder(3600,150);
+                            FinalFight.beginShrinkWorldBorder(20,150);
                             // final fight method 😨
                             break;
                         case "border_closed":
                             WorldData.get().set("border_closed",true);
                             WorldData.save();
                             for (OfflinePlayer offlinePlayer : Bukkit.getOfflinePlayers()) {
+                                if (p.isOnline()) {
+                                    Bukkit.getPlayer(offlinePlayer.getName()).sendMessage(C.LIGHT_PASTEL_PINK+"\uD83D\uDD31 " + C.PASTEL_PINK + ChatColor.BOLD+ "BORDER CLOSED! " + C.LIGHT_PASTEL_PINK + "Late joiners will die and logouts will be punished! Fight to the death!");
+                                }
                                 PersistentData.get().set(offlinePlayer.getUniqueId().toString()+".final_fight.time_quit",System.currentTimeMillis());
                             }
                             break;
@@ -207,7 +219,7 @@ public class Commands implements TabExecutor {
                                     suddenDeathPlayers.add(onlinePlayer);
                                 }
                             }
-                            C.suddenDeath = new SuddenDeath(suddenDeathPlayers,5,2);
+                            C.suddenDeath = new SuddenDeath(suddenDeathPlayers,1,2,true);
                             C.suddenDeath.start();
                             break;
                         case "reset":
@@ -238,6 +250,28 @@ public class Commands implements TabExecutor {
                 if (p.hasPermission("kiulsmp.debug")) {
                     CrateTypeEnum crateType = CrateMethods.getCrate(args[0]);
                     CrateMethods.populateCrate(crateType, null, p);
+                }
+                break;
+            case "debug-waypoints":
+                if (p.hasPermission("kiulsmp.debug")) {
+                    for (Waypoint w : LocatorBar.playerLocatorBar.get(p.getUniqueId()).getWaypoints()) {
+                        p.sendMessage(w.getName());
+                    }
+
+                }
+                break;
+            case "debug-augment":
+                if (p.hasPermission("kiulsmp.debug")) {
+                    Town town = null;
+                    for (Town towns : Town.townsList) {
+                        if (towns.protectedAreaContains(p.getLocation())) {
+                            town = towns;
+                        }
+                    }
+                    if (town == null) {
+                        p.sendMessage(C.failPrefix+"need to be in a town");
+                    }
+                    AugmentEnum.augmentItem(p.getInventory().getItemInMainHand(),town,AugmentEnum.getAugment(args[0]));
                 }
                 break;
             case "recaps":
@@ -282,6 +316,11 @@ public class Commands implements TabExecutor {
                 for (String event : ScheduleConfig.get().getConfigurationSection("event").getKeys(false)) {
                     argsList.add(event);
                     argsList.add("reset");
+                }
+                return argsList;
+            case "debug-augment":
+                for (AugmentEnum augmentEnum : AugmentEnum.values()) {
+                    argsList.add(augmentEnum.getLocalName());
                 }
                 return argsList;
         }

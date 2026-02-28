@@ -10,12 +10,16 @@ import org.bukkit.Sound;
 import org.bukkit.block.*;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.entity.*;
+import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
+import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
+import org.bukkit.event.entity.EntityPlaceEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.event.vehicle.VehicleDamageEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -40,6 +44,44 @@ public class ProtectedBlocks implements Listener {
                 // Store in the map when the TNT entity is actually created
                 entityOwner.put(tnt, player);
             });// No extra action needed here, TNT spawning handled inline
+        }
+    }
+
+    @EventHandler
+    public void playerPlaceEntity (EntityPlaceEvent e) {
+        Player p = e.getPlayer();
+        if (e.getEntity() instanceof ExplosiveMinecart cart) {
+            entityOwner.put(cart,p);
+        }
+    }
+
+
+    @EventHandler
+    public void onEntityDamageByEntity(VehicleDamageEvent event) {
+        // Check if the damaged entity is a minecart
+        if (event.getVehicle() instanceof ExplosiveMinecart) {
+            // Check if the damaging entity is a player
+            Player attacker;
+            ExplosiveMinecart minecart = (ExplosiveMinecart) event.getVehicle();
+            if (event.getAttacker() instanceof Player p) {
+                attacker = p;
+            } else if (event.getAttacker() instanceof Projectile arrow) {
+                if (arrow.getShooter() instanceof Player) {
+                    attacker = (Player) arrow.getShooter();
+                } else return;
+            } else return;
+            // Handle the event, for example, you can send a message when the player punches the minecart
+            entityOwner.put(minecart, attacker);
+        }
+    }
+    @EventHandler
+    public void playerHitMinecart (EntityCombustByEntityEvent e) {
+        if (e.getCombuster() instanceof Projectile arrow && e.getEntity() instanceof ExplosiveMinecart cart) {
+            Player attacker;
+            if (arrow.getShooter() instanceof Player) {
+                attacker = (Player) arrow.getShooter();
+            } else return;
+            entityOwner.put(cart, attacker);
         }
     }
 
@@ -87,7 +129,7 @@ public class ProtectedBlocks implements Listener {
                 e.setDropItems(false);
                 scheduleBlockRespawn(e.getBlock(), System.currentTimeMillis() + (1000L * C.BLOCK_REGEN_SECONDS), e.getBlock().getType(),false,containerInventoryContents,e.getBlock().getBlockData(),town,false,e.getPlayer());
             }
-            town.damageTownShield(1, true,e.getPlayer(),e.getBlock().getLocation());
+
         }
     }
 
@@ -191,6 +233,9 @@ public class ProtectedBlocks implements Listener {
 
         boolean isInsideProtectedZone = false;
 
+        if (e.getEntity() instanceof WindCharge) {
+            return;
+        }
         Town town = null;
         for (Town allTowns : Town.townsList) {
             if (allTowns.protectedAreaContains(e.getLocation())) {
@@ -201,10 +246,10 @@ public class ProtectedBlocks implements Listener {
         }
 
 
-
+        boolean doDamage = true;
         if (town == null) {return;}
         if ((entityOwner.get(e.getEntity()) != null &&  C.getPlayerTeam(entityOwner.get(e.getEntity())) == town.getOwningTeam())) {
-            return;
+            doDamage = false;
         }
         if (town.isDisabled()) {
             for (Block explodedBlock : e.blockList()) {
@@ -242,8 +287,9 @@ public class ProtectedBlocks implements Listener {
                 block.setType(Material.AIR, false); // break without XP
             });
             // deal damage to town hp
-            town.damageTownShield(e.blockList().size(), true,entityOwner.get(e.getEntity()),e.getLocation());
-            e.setCancelled(true);
+            if (doDamage) {
+                town.damageTownShield(e.blockList().size(), true, entityOwner.get(e.getEntity()), e.getLocation());
+            }
         }
     }
 
@@ -364,6 +410,9 @@ public class ProtectedBlocks implements Listener {
         regeneratingBlocks.add(block);
         regeneratingBlockFinalTypeHash.put(block,finalType);
         ProtectedEntities.disableNearbyEntities(block);
+        if (!isPlacedBlock && !isExplosion) {
+            town.damageTownShield(1,false,attacker,block.getLocation());
+        }
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -379,11 +428,12 @@ public class ProtectedBlocks implements Listener {
                     for (Entity entity : nearbyEntities) {
                         if (entity instanceof Player) {
                             nearbyPlayer = true;
-                            for (Entity nonPlayer : block.getLocation().getNearbyEntities(1,1,1)) {
-                                nonPlayer.teleport(getNextAirPocket(nonPlayer.getLocation()));
-                            }
                             break;
                         }
+                    }
+                    for (Entity nonPlayer : block.getLocation().getNearbyEntities(1,1,1)) {
+                        if (nonPlayer instanceof Player) return;
+                        nonPlayer.teleport(getNextAirPocket(nonPlayer.getLocation()));
                     }
 
                     if (!nearbyPlayer) {

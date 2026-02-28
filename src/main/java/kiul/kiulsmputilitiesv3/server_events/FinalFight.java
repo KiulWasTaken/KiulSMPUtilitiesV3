@@ -5,6 +5,7 @@ import kiul.kiulsmputilitiesv3.config.PersistentData;
 import kiul.kiulsmputilitiesv3.config.ScheduleConfig;
 import kiul.kiulsmputilitiesv3.config.WorldData;
 import org.bukkit.*;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.damage.DamageSource;
 import org.bukkit.damage.DamageType;
 import org.bukkit.entity.AbstractArrow;
@@ -12,11 +13,9 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
 import org.bukkit.event.Listener;
-import org.bukkit.event.entity.EntityDamageByEntityEvent;
-import org.bukkit.event.entity.EntityPlaceEvent;
-import org.bukkit.event.entity.EntityPortalEnterEvent;
-import org.bukkit.event.entity.PlayerDeathEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerMoveEvent;
 import org.bukkit.event.player.PlayerPortalEvent;
@@ -55,7 +54,7 @@ public class FinalFight implements Listener {
         }
     }
 
-    @EventHandler
+    @EventHandler (priority = EventPriority.LOWEST)
     public void suddenDeathListener (EntityDamageByEntityEvent e) {
         if (C.suddenDeath != null) {
             SuddenDeath suddenDeath = C.suddenDeath;
@@ -65,11 +64,13 @@ public class FinalFight implements Listener {
                     if (entityOwner.get(cart) != null) {
                         Player damager = entityOwner.get(cart);
                         playerDamager = damager;
+                        if (e.getEntity() == playerDamager) return;
                     }
                 }
                 if (e.getDamager() instanceof AbstractArrow arrow) {
                     if (arrow.getShooter() instanceof Player) {
                         playerDamager = (Player) arrow.getShooter();
+                        if (e.getEntity() == playerDamager) return;
                     }
                 }
                 if (e.getDamager() instanceof Player) {
@@ -81,16 +82,32 @@ public class FinalFight implements Listener {
                     return;
                 }
                 if (C.getPlayerTeam(playerDamager) != null && C.getPlayerTeam(playerHurt) != null) {
-                    if ((C.getPlayerTeam(playerDamager).getName() == C.getPlayerTeam(playerHurt).getName())) {
+                    if ((C.getPlayerTeam(playerDamager).getName().equals(C.getPlayerTeam(playerHurt).getName()))) {
                         return;
                     }
                 }
-
-                suddenDeath.livingPlayersDamageMap.put(playerDamager,e.getDamage());
+                if (!suddenDeath.livingPlayersDamageMap.containsKey(playerDamager)) {
+                    suddenDeath.livingPlayersDamageMap.put(playerDamager, e.getDamage());
+                } else {
+                    suddenDeath.livingPlayersDamageMap.put(playerDamager,suddenDeath.livingPlayersDamageMap.get(playerDamager)+e.getDamage());
+                }
                 if (playerHurt.getHealth() <= e.getFinalDamage() && playerHurt.getInventory().getItemInMainHand().getType() != Material.TOTEM_OF_UNDYING && playerHurt.getInventory().getItemInOffHand().getType() != Material.TOTEM_OF_UNDYING) {
                     // dead
-                    suddenDeath.livingPlayersDamageMap.remove(playerHurt);
-                    suddenDeath.graceTime = System.currentTimeMillis()+2*60*1000; // pause the suddenDeath for two minutes
+                    suddenDeath.removePlayer(playerHurt);
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void suddenDeathNaturalDeathListener (EntityDamageEvent e) {
+        if (e.getEntity() instanceof Player p) {
+            if (C.suddenDeath != null) {
+                SuddenDeath suddenDeath = C.suddenDeath;
+                if (suddenDeath.livingPlayersDamageMap.containsKey(p)) {
+                    if (p.getHealth() <= e.getFinalDamage() && p.getInventory().getItemInMainHand().getType() != Material.TOTEM_OF_UNDYING && p.getInventory().getItemInOffHand().getType() != Material.TOTEM_OF_UNDYING) {
+                        suddenDeath.removePlayer(p);
+                    }
                 }
             }
         }
@@ -101,6 +118,7 @@ public class FinalFight implements Listener {
     @EventHandler
     public void worldBorderCheeseListener(PlayerMoveEvent e) {
         Player p = e.getPlayer();
+        if (C.PAT_MODE) return;
         if (p.getGameMode().equals(GameMode.SURVIVAL)) {
             World world = p.getWorld();
             double size = world.getWorldBorder().getSize();
@@ -119,9 +137,9 @@ public class FinalFight implements Listener {
                 if (p.getVehicle() != null) p.getVehicle().removePassenger(p);
                 // Check the cooldown before applying damage and velocity
                 Long lastDamageTime = outsideBorderDamageCooldown.get(p);
-                if (lastDamageTime == null || System.currentTimeMillis() - lastDamageTime > 500) {
+                if (lastDamageTime == null || System.currentTimeMillis() - lastDamageTime > 2000) {
                     // Apply damage to the player
-                    p.damage(16, DamageSource.builder(DamageType.OUTSIDE_BORDER).build());
+                    p.damage(1, DamageSource.builder(DamageType.OUTSIDE_BORDER).build());
 
                     // Push the player back toward the center of the world border
                     Vector directionToCenter = center.toVector().subtract(p.getLocation().toVector()).normalize().multiply(0.5f);
@@ -145,7 +163,15 @@ public class FinalFight implements Listener {
     }
 
     @EventHandler
+    public void playerJoinLowMaxHealth (PlayerJoinEvent e) {
+        if (C.suddenDeath == null || C.suddenDeath.involvedPlayers.contains(e.getPlayer()) && e.getPlayer().getAttribute(Attribute.MAX_HEALTH).getValue() < 20) {
+            e.getPlayer().getAttribute(Attribute.MAX_HEALTH).setBaseValue(20);
+        }
+    }
+
+    @EventHandler
     public void joinOutsideBorderWhilstStillClosing (PlayerJoinEvent e) {
+        if (C.PAT_MODE) return;
         Player p = e.getPlayer();
         World world = Bukkit.getWorld("world");
         double size = world.getWorldBorder().getSize();
@@ -181,14 +207,13 @@ public class FinalFight implements Listener {
             } else return;
 
 
-            if ((totalTimeQuit > (long) maximumTimeLoggedOutMinutes * 60 * 1000)
-                    || ScheduleConfig.get().getLong("start_time") + (long) ScheduleConfig.get().getInt("event.sudden_death.time") * 60 * 60 * 1000 < System.currentTimeMillis()) {
+            if ((totalTimeQuit > (long) maximumTimeLoggedOutMinutes * 60 * 1000)) {
                 int[] loggedOutTimestamps = C.splitTimestampManual(System.currentTimeMillis(), System.currentTimeMillis() + totalTimeQuit);
                 new BukkitRunnable() {
                     @Override
                     public void run() {
-                        p.sendMessage(C.failPrefix + " you were logged out for " + loggedOutTimestamps[1] + " minute(s) and " + loggedOutTimestamps[2] + "second(s) and violated the maximum " +
-                                "logout time of " + maximumTimeLoggedOutMinutes + " minute(s) during this event." + C.LIGHT_RED + "You have been disqualified and killed as a result of this.");
+                        p.sendMessage(C.failPrefix + " you were logged out for " + loggedOutTimestamps[1] + " minute(s) and " + loggedOutTimestamps[2] + " second(s) and violated the maximum " +
+                                "logout time of " + maximumTimeLoggedOutMinutes + " minute(s) during this event." + C.LIGHT_RED + " You have been disqualified and killed as a result of this.");
                     }
                 }.runTaskLater(C.plugin,20);
 
@@ -218,7 +243,7 @@ public class FinalFight implements Listener {
     public static void beginShrinkWorldBorder (long borderClosedTime, int borderSize) {
         World overworld = Bukkit.getWorld("world");
         World nether = Bukkit.getWorld("world_nether");
-        World end = Bukkit.getWorld("world_end");
+        World end = Bukkit.getWorld("world_the_end");
         overworld.getWorldBorder().setSize(borderSize,borderClosedTime);
 
         overworld.setGameRule(GameRule.DO_MOB_SPAWNING,false);
@@ -226,9 +251,11 @@ public class FinalFight implements Listener {
         overworld.setGameRule(GameRule.DO_TRADER_SPAWNING, false);
         overworld.setGameRule(GameRule.SPECTATORS_GENERATE_CHUNKS, false);
         overworld.setGameRule(GameRule.RANDOM_TICK_SPEED, 0);
+        overworld.getWorldBorder().setDamageAmount(0);
 
         for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
             onlinePlayer.playSound(onlinePlayer, Sound.ENTITY_ELDER_GUARDIAN_CURSE,1,0.8f);
+            onlinePlayer.sendMessage(C.LIGHT_LAVENDER_PURPLE+"\uD83D\uDDE1 "+C.LAVENDER_PURPLE+ChatColor.BOLD+"FINAL FIGHT! " +C.LIGHT_LAVENDER_PURPLE+"The border is closing and End and Nether have been disabled! Get ready and move towards spawn!");
             if (onlinePlayer.getWorld().equals(nether) || onlinePlayer.getWorld().equals(end)) {
                 if (onlinePlayer.getRespawnLocation() != null) {
                     onlinePlayer.teleport(onlinePlayer.getRespawnLocation());

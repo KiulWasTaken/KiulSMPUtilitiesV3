@@ -1,8 +1,13 @@
 package kiul.kiulsmputilitiesv3.server_events;
 
 import kiul.kiulsmputilitiesv3.C;
+import org.bukkit.Bukkit;
+import org.bukkit.GameMode;
+import org.bukkit.OfflinePlayer;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.damage.DamageSource;
+import org.bukkit.damage.DamageType;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -10,7 +15,8 @@ import org.bukkit.scheduler.BukkitTask;
 import java.util.*;
 
 public class SuddenDeath {
-
+    boolean debug;
+    List<OfflinePlayer> involvedPlayers;
     int startingSize; // the starting number of players to base percentage
     int minimumPlayers; // after the player amount reaches this, the threshold will no longer exclude players.
     int maximumPlayersAlive; // decreases over time. cannot go below minimumPlayers.
@@ -22,8 +28,12 @@ public class SuddenDeath {
     HashMap<Player,Double> livingPlayersDamageMap;
 
 
-    public SuddenDeath(List<Player> involvedPlayers, int timeBetweenTicksMinutes, int minimumPlayers) {
+    public SuddenDeath(List<Player> involvedPlayers, int timeBetweenTicksMinutes, int minimumPlayers, boolean debug) {
 
+        this.involvedPlayers = new ArrayList<>();
+        for (Player p : involvedPlayers) {
+            this.involvedPlayers.add(Bukkit.getOfflinePlayer(p.getUniqueId()));
+        }
         this.startingSize = involvedPlayers.size();
         this.minimumPlayers = minimumPlayers;
         this.livingPlayersDamageMap = new HashMap<>();
@@ -33,8 +43,12 @@ public class SuddenDeath {
             aboveThreshold.put(involvedPlayer,true);
             livingPlayersDamageMap.put(involvedPlayer,0.0);
         }
-        this.graceTime = System.currentTimeMillis()+(1*60*1000); // starts after 5 minutes
+        this.graceTime = System.currentTimeMillis()+(10*60*1000);// starts after 5 minutes
+        if (debug) {
+            graceTime = System.currentTimeMillis();
+        }
         this.timeBetweenTicksMinutes = timeBetweenTicksMinutes;
+        this.debug = debug;
     }
 
     public HashMap<Player, Double> getLivingPlayersDamageMap() {
@@ -42,8 +56,9 @@ public class SuddenDeath {
     }
 
     public void start() {
+        C.suddenDeath = this;
         for (Player p : livingPlayersDamageMap.keySet()) {
-            p.sendMessage(C.t(C.ICE_BLUE + "❄ " + C.LIGHT_ICE_BLUE + "You feel the cold down to your bones"));
+            p.sendMessage(C.t(C.LIGHT_ICE_BLUE + "❄ " + C.ICE_BLUE + "&lSUDDEN DEATH!&r" + C.LIGHT_ICE_BLUE + " Deal damage to avoid certain doom!"));
         }
 
         runnable = new BukkitRunnable() {
@@ -71,13 +86,34 @@ public class SuddenDeath {
                         maximumPlayersAlive -= 1 + (stageTick);
                         if (maximumPlayersAlive < minimumPlayers) maximumPlayersAlive = minimumPlayers;
                         tickMinutes = 0;
-                    }
-                    List<Player> playersArranged = sortHashMapByValue(livingPlayersDamageMap);
-                    if (playersArranged.size() > maximumPlayersAlive) {
-                        damageTick++;
-                        Double thresholdDamage = 0.0;
-                        thresholdDamage = livingPlayersDamageMap.get(playersArranged.get(maximumPlayersAlive-1));
 
+                    }
+                }
+                List<Player> playersArranged = sortHashMapByValue(livingPlayersDamageMap);
+                if (debug) {
+                    Bukkit.getLogger().info("----- active suddendeath debug info -----");
+                    Bukkit.getLogger().info("max. alive: " + maximumPlayersAlive);
+                    Bukkit.getLogger().info("min. alive: " + minimumPlayers);
+                    Bukkit.getLogger().info("next. alive: " + (maximumPlayersAlive - (1 + stageTick)));
+                    Bukkit.getLogger().info("current tick: " + tickMinutes + "m, " + tickSeconds + "s out of " + timeBetweenTicksMinutes + "m");
+                    Bukkit.getLogger().info("damage tick: " + damageTick);
+                    Bukkit.getLogger().info("---------- damage map ----------");
+
+                    for (int i = 0; i < playersArranged.size(); i++) {
+                        Player arranged = playersArranged.get(i);
+                        Bukkit.getLogger().info(arranged.getName() + "-> " + livingPlayersDamageMap.get(arranged));
+                        if ((maximumPlayersAlive-1) < livingPlayersDamageMap.size()-1) {
+                            if (Objects.equals(livingPlayersDamageMap.get(playersArranged.get(maximumPlayersAlive - 1)), livingPlayersDamageMap.get(arranged))) {
+                                Bukkit.getLogger().info("===== Threshold =====");
+                            }
+                        }
+                    }
+
+                    Double thresholdDamage = 0.0;
+
+                    damageTick++;
+                    if (playersArranged.size() > maximumPlayersAlive) {
+                        thresholdDamage = livingPlayersDamageMap.get(playersArranged.get(maximumPlayersAlive - 1));
                         for (Player player : playersArranged) {
                             if (player == null) continue;
                             aboveThreshold.put(player, true);
@@ -86,34 +122,67 @@ public class SuddenDeath {
                             if (playersArranged.get(j) == null) continue;
                             aboveThreshold.put(playersArranged.get(j), false);
                         }
+                    } else {
+                        for (Player player : playersArranged) {
+                            aboveThreshold.put(player, true);
+                        }
+                    }
 
-                        for (Player p : aboveThreshold.keySet()) {
-                            if (p == null) continue;
-                            if (aboveThreshold.get(p)) {
-                                if (damageTick >= 10) {
-                                    p.sendMessage(C.t( C.RED+"\uD83D\uDD25 " + C.LIGHT_RED + C.twoPointDecimal.format(livingPlayersDamageMap.get(p) - thresholdDamage) + " damage above threshold"));
-                                    if (p.getAttribute(Attribute.MAX_HEALTH).getBaseValue() < 20) {
-                                        p.getAttribute(Attribute.MAX_HEALTH).setBaseValue(p.getAttribute(Attribute.MAX_HEALTH).getBaseValue() + 1);
-                                    }
-                                }
-                            } else {
-                                if (damageTick >= 10) {
-                                    p.sendMessage(C.t(C.ICE_BLUE+ "❄ " +C.LIGHT_ICE_BLUE + C.twoPointDecimal.format(thresholdDamage - livingPlayersDamageMap.get(p)) + " damage below threshold"));
-                                    if (p.getAttribute(Attribute.MAX_HEALTH).getBaseValue() > 1) {
-                                        p.setFreezeTicks(80);
-                                        p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE,1f,1f);
-                                        p.getAttribute(Attribute.MAX_HEALTH).setBaseValue(p.getAttribute(Attribute.MAX_HEALTH).getBaseValue() - 1);
-                                    }
-                                }
+                    ArrayList<Player> removedPlayers = new ArrayList<>();
+                    for (Player p : aboveThreshold.keySet()) {
+                        if (p.getGameMode() != GameMode.SURVIVAL) {
+                            removedPlayers.add(p);
+                            p.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20);
+                            continue;
+                        }
+                        if (livingPlayersDamageMap.get(p) == null) {
+                            removedPlayers.add(p);
+                        }
+                    }
+                    for (Player p : removedPlayers) {
+                        removePlayer(p);
+                    }
 
+                    for (Player p : aboveThreshold.keySet()) {
+                        if (p == null) continue;
+                        double visualThreshold = thresholdDamage;
+
+                        if ((livingPlayersDamageMap.get(p) - thresholdDamage) == 0 && playersArranged.size() > maximumPlayersAlive) {
+                            visualThreshold = livingPlayersDamageMap.get(playersArranged.get(maximumPlayersAlive));
+                        }
+                        if (aboveThreshold.get(p)) {
+
+                            if (damageTick >= 10) {
+                                p.sendMessage(C.t(C.RED + "\uD83D\uDD25 " + C.LIGHT_RED + C.twoPointDecimal.format(livingPlayersDamageMap.get(p) - visualThreshold) + " damage above threshold"));
+                                if (p.getAttribute(Attribute.MAX_HEALTH).getBaseValue() < 20) {
+                                    p.getAttribute(Attribute.MAX_HEALTH).setBaseValue(p.getAttribute(Attribute.MAX_HEALTH).getBaseValue() + 1);
+                                }
                             }
-
-
+                        } else {
+                            if (damageTick >= 10) {
+                                p.sendMessage(C.t(C.ICE_BLUE + "❄ " + C.LIGHT_ICE_BLUE + C.twoPointDecimal.format(visualThreshold - livingPlayersDamageMap.get(p)) + " damage below threshold"));
+                                if (p.getAttribute(Attribute.MAX_HEALTH).getBaseValue() > 1 && playersArranged.size() > maximumPlayersAlive) {
+                                    p.setFreezeTicks(60);
+                                    p.playSound(p.getLocation(), Sound.ENTITY_PLAYER_HURT_FREEZE, 1f, 1f);
+                                    p.getAttribute(Attribute.MAX_HEALTH).setBaseValue(p.getAttribute(Attribute.MAX_HEALTH).getBaseValue() - 1);
+                                }
+                            }
                         }
-                        if (damageTick >= 10) {
-                            damageTick = 0;
-                        }
 
+
+                    }
+                    if (damageTick >= 10) {
+                        damageTick = 0;
+                    }
+                    if (livingPlayersDamageMap.size() <= minimumPlayers) {
+                        for (Player lastPlayers : livingPlayersDamageMap.keySet()) {
+                            lastPlayers.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20);
+                            for (Player p : livingPlayersDamageMap.keySet()) {
+                                p.sendMessage(C.t(C.LIGHT_RED + "❄ " + C.RED + "&lSUDDEN DEATH OVER!&r" + C.LIGHT_RED + " Fight to the death!"));
+                            }
+                        }
+                        cancel();
+                        return;
                     }
                 }
             }
@@ -135,6 +204,20 @@ public class SuddenDeath {
         return sortedList;
     }
     public void stop() {
+        for (OfflinePlayer p : involvedPlayers) {
+            if (p.getPlayer() != null) {
+                p.getPlayer().getAttribute(Attribute.MAX_HEALTH).setBaseValue(20);
+            }
+        }
         runnable.cancel();
+    }
+    public void removePlayer(Player p) {
+        aboveThreshold.remove(p);
+        livingPlayersDamageMap.remove(p);
+        p.getAttribute(Attribute.MAX_HEALTH).setBaseValue(20);
+    }
+
+    public boolean isDebug() {
+        return debug;
     }
 }
