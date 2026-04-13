@@ -104,6 +104,9 @@ public class Commands implements TabExecutor {
         }
 
         switch (label) {
+            case "debug_town_name":
+
+                break;
             case "locator_bar":
                 LocatorConfigInventory.open(p);
                 break;

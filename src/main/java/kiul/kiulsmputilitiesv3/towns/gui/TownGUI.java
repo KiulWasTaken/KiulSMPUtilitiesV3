@@ -1,10 +1,12 @@
-package kiul.kiulsmputilitiesv3.towns.listeners;
+package kiul.kiulsmputilitiesv3.towns.gui;
 
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.towns.Town;
 import kiul.kiulsmputilitiesv3.towns.augments.AugmentEnum;
 import net.wesjd.anvilgui.AnvilGUI;
 import org.bukkit.*;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Item;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -18,7 +20,6 @@ import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.scheduler.BukkitRunnable;
-import org.pat.pattyEssentialsV3.Methods.ItemstackMethods;
 
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -27,6 +28,9 @@ public class TownGUI implements Listener {
 
     HashMap<Player, Long> interactCooldown = new HashMap<>();
     HashMap<Player, Integer> interactTimes = new HashMap<>();
+
+
+    String bountyPrefix = C.GOLD+ChatColor.BOLD+"BOUNTY CLAIMED! " + ChatColor.GRAY;
 
     @EventHandler
     public void openTownGUI(PlayerInteractEvent e) {
@@ -41,7 +45,12 @@ public class TownGUI implements Listener {
                 }
             }
         }
+
         if (!e.getAction().equals(Action.RIGHT_CLICK_BLOCK)) return;
+        e.setCancelled(true);
+        if (town == null) {
+            return;
+        }
         if (!town.getOwningTeam().equals(C.getPlayerTeam(p))) return;
 
         if (e.getPlayer().isSneaking() && !town.isDisabled()) {
@@ -57,7 +66,7 @@ public class TownGUI implements Listener {
                             public void run() {
                                 String name = C.t(stateSnapshot.getOutputItem().getItemMeta().getDisplayName());
                                 finalTown.setTownNameString(name);
-                                finalTown.getTownNameStand().setCustomName(finalTown.getOwningTeam().getPrefix() + name);
+                                finalTown.updateTownTextDisplay();
                             }
                         }.runTask(C.plugin);
                         return AnvilGUI.Response.close();
@@ -79,13 +88,132 @@ public class TownGUI implements Listener {
         }
 
         if (p.getInventory().getItemInMainHand().getType().equals(Material.PLAYER_HEAD)) {
+            e.setCancelled(true);
             ItemStack playerHead = p.getInventory().getItemInMainHand();
             SkullMeta skullMeta = (SkullMeta) playerHead.getItemMeta();
+            boolean worthless = true;
+            int delay = 1;
+            Town finalTown = town;
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    p.getWorld().playSound(finalTown.getTownCenter().clone().add(0.5, 2, 0.5),Sound.BLOCK_VAULT_OPEN_SHUTTER,1,1);
+                }
+            }.runTaskLater(C.plugin,delay*20);
+            delay++;
+            if (skullMeta.getPersistentDataContainer().has(new NamespacedKey(C.plugin,"gold_bounty"))) {
+                int goldBounty = skullMeta.getPersistentDataContainer().get(new NamespacedKey(C.plugin,"gold_bounty"),PersistentDataType.INTEGER);
+                if (goldBounty > 0) {
+                    if (goldBounty > 9) {
+                        int goldIngots = (goldBounty % 9)-1;
+                        int goldBlocks = (goldBounty / 9)-1;
+
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                p.getWorld().dropItemNaturally(finalTown.getTownCenter().clone().add(0.5, 2, 0.5), new ItemStack(Material.GOLD_INGOT, goldIngots));
+                                p.getWorld().playSound(finalTown.getTownCenter().clone().add(0.5, 2, 0.5),Sound.BLOCK_VAULT_EJECT_ITEM,1,1);
+                            }
+                        }.runTaskLater(C.plugin,delay*20);
+
+
+                        delay++;
+
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                p.getWorld().dropItemNaturally(finalTown.getTownCenter().clone().add(0.5, 2, 0.5), new ItemStack(Material.GOLD_BLOCK, goldBlocks));
+                                p.getWorld().playSound(finalTown.getTownCenter().clone().add(0.5, 2, 0.5),Sound.BLOCK_VAULT_EJECT_ITEM,1,1);
+                            }
+                        }.runTaskLater(C.plugin,delay*20);
+                        delay++;
+
+                        worthless = false;
+                    } else {
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                p.getWorld().dropItemNaturally(finalTown.getTownCenter().clone().add(0.5, 2, 0.5), new ItemStack(Material.GOLD_INGOT, goldBounty));
+                                p.getWorld().playSound(finalTown.getTownCenter().clone().add(0.5, 2, 0.5),Sound.BLOCK_VAULT_EJECT_ITEM,1,1);
+                            }
+                        }.runTaskLater(C.plugin,delay*20);
+
+
+                        delay++;
+                    }
+                }
+            }
+            if (skullMeta.getPersistentDataContainer().has(new NamespacedKey(C.plugin,"emerald_bounty"))) {
+                int emeraldBounty = skullMeta.getPersistentDataContainer().get(new NamespacedKey(C.plugin,"emerald_bounty"),PersistentDataType.INTEGER);
+                if (emeraldBounty > 0) {
+                    if (emeraldBounty > 9) {
+                        int emeraldIngots = (emeraldBounty % 9)-1;
+                        int emeraldBlocks = (emeraldBounty / 9)-1;
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                p.getWorld().dropItemNaturally(finalTown.getTownCenter().clone().add(0.5, 2, 0.5), new ItemStack(Material.EMERALD, emeraldIngots));
+                                p.getWorld().playSound(finalTown.getTownCenter().clone().add(0.5, 2, 0.5),Sound.BLOCK_VAULT_EJECT_ITEM,1,1);
+                            }
+                        }.runTaskLater(C.plugin,delay*20);
+                        delay++;
+
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                p.getWorld().dropItemNaturally(finalTown.getTownCenter().clone().add(0.5, 2, 0.5), new ItemStack(Material.EMERALD_BLOCK, emeraldBlocks));
+                                p.getWorld().playSound(finalTown.getTownCenter().clone().add(0.5, 2, 0.5),Sound.BLOCK_VAULT_EJECT_ITEM,1,1);
+                            }
+                        }.runTaskLater(C.plugin,delay*20);
+                        delay++;
+
+                        worthless = false;
+                    } else {
+                        new BukkitRunnable() {
+                            @Override
+                            public void run() {
+                                p.getWorld().dropItemNaturally(finalTown.getTownCenter().clone().add(0.5, 2, 0.5), new ItemStack(Material.EMERALD, emeraldBounty));
+                                p.getWorld().playSound(finalTown.getTownCenter().clone().add(0.5, 2, 0.5),Sound.BLOCK_VAULT_EJECT_ITEM,1,1);
+                            }
+                        }.runTaskLater(C.plugin,delay*20);
+                        delay++;
+                    }
+                }
+            }
+            if (skullMeta.getPersistentDataContainer().has(new NamespacedKey(C.plugin,"scrap_bounty"))) {
+                int scrapBounty = skullMeta.getPersistentDataContainer().get(new NamespacedKey(C.plugin,"scrap_bounty"),PersistentDataType.INTEGER);
+                if (scrapBounty > 0) {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            p.getWorld().dropItemNaturally(finalTown.getTownCenter().clone().add(0, 3, 0), new ItemStack(Material.NETHERITE_SCRAP, scrapBounty));
+                            p.getWorld().playSound(finalTown.getTownCenter().clone().add(0.5, 2, 0.5),Sound.BLOCK_VAULT_EJECT_ITEM,1,1);
+                        }
+                    }.runTaskLater(C.plugin,delay*20);
+                    delay++;
+                    worthless = false;
+                }
+            }
+            new BukkitRunnable() {
+                @Override
+                public void run() {
+                    p.getWorld().playSound(finalTown.getTownCenter().clone().add(0.5, 2, 0.5),Sound.BLOCK_VAULT_CLOSE_SHUTTER,1,1);
+                }
+            }.runTaskLater(C.plugin,delay*20);
+
+            p.getInventory().getItemInMainHand().setAmount(0);
             if (!town.getCollectedSkulls().contains(skullMeta.getOwningPlayer().getUniqueId().toString())) {
                 town.increaseTownCharge(3);
                 town.setTownMaxHealth(town.getTownMaxHealth() + 500);
                 town.getCollectedSkulls().add(skullMeta.getOwningPlayer().getUniqueId().toString());
-                p.getInventory().getItemInMainHand().setAmount(p.getInventory().getItemInMainHand().getAmount() - 1);
+                p.sendMessage(bountyPrefix+"Town charge and maximum health have been increased");
+            } else {
+                if (!worthless) {
+                    town.increaseTownCharge(1);
+                    p.sendMessage(bountyPrefix+"You have already turned in this skull.. Find unique player skulls to increase maximum town hp and get more charge");
+                } else {
+                    p.sendMessage(bountyPrefix+"But it was worthless...");
+                }
             }
             return;
         }
@@ -225,7 +353,7 @@ public class TownGUI implements Listener {
                         town.setTownHealth((Town.DEFAULT_TOWN_MAX_HEALTH / 10) * 4);
                         town.announceSiegeStage(2,true);
                         p.playSound(town.getTownCenter(), Sound.BLOCK_RESPAWN_ANCHOR_SET_SPAWN, 50f, 1.2f);
-                        town.updateTownStatus();
+                        town.updateTownTextDisplay();
                         p.closeInventory();
                         break;
                     case "no":
@@ -253,7 +381,7 @@ public class TownGUI implements Listener {
                         }
                         Town town = Town.getTownForPlayer(p);
                         town.reinstate();
-                        town.updateTownStatus();
+                        town.updateTownTextDisplay();
                         p.playSound(town.getTownCenter(), Sound.BLOCK_RESPAWN_ANCHOR_SET_SPAWN, 50f, 1.2f);
                         p.closeInventory();
                         break;
@@ -342,13 +470,13 @@ public class TownGUI implements Listener {
                 String localName = e.getCurrentItem().getPersistentDataContainer().get(new NamespacedKey(C.plugin, "local"), PersistentDataType.STRING);
                 town.setSelectedAugment(AugmentEnum.getAugment(localName));
                 p.closeInventory();
-                town.getTownChargeStand().setCustomName(C.YELLOW+"Drop " + town.getSelectedAugment().getRequiredType().name());
+//                town.getTownChargeStand().setCustomName(C.YELLOW+"Drop " + town.getSelectedAugment().getRequiredType().name());
                 Town finalTown = town;
                 new BukkitRunnable() {
                     @Override
                     public void run() {
                         if (!finalTown.isAugmenting()) {
-                            finalTown.updateTownCharge();
+//                            finalTown.updateTownCharge();
                         }
                     }
                 }.runTaskLater(C.plugin,80);

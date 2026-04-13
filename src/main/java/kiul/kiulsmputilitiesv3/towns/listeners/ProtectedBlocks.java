@@ -18,8 +18,10 @@ import org.bukkit.event.entity.EntityCombustByEntityEvent;
 import org.bukkit.event.entity.EntityExplodeEvent;
 import org.bukkit.event.entity.EntityPlaceEvent;
 import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
+import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.inventory.Inventory;
 import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
@@ -46,6 +48,7 @@ public class ProtectedBlocks implements Listener {
             });// No extra action needed here, TNT spawning handled inline
         }
     }
+
 
     @EventHandler
     public void playerPlaceEntity (EntityPlaceEvent e) {
@@ -89,10 +92,7 @@ public class ProtectedBlocks implements Listener {
     public void protectedBlockBreakEvent (BlockBreakEvent e) {
         if (!e.getBlock().hasMetadata("unauth")) { // if the broken block is an unauthorised placed block, cancel this method so that the block broken will drop and not regenerate.
             Block block = e.getBlock();
-            if (block.getType().equals(Material.RESPAWN_ANCHOR)) {
-                e.setCancelled(true);
-                return;
-            }
+
             Player p = e.getPlayer();
             boolean isInsideProtectedZone = false;
             boolean isOnOwningTeam = false;
@@ -113,6 +113,10 @@ public class ProtectedBlocks implements Listener {
                 }
             }
             if (town == null) {return;}
+            if (block.getType().equals(Material.RESPAWN_ANCHOR)) {
+                e.setCancelled(true);
+                return;
+            }
             if (town.isDisabled()) {
                 town.breakBlockInDisabledTownArea(e.getBlock().getLocation(),e.getBlock().getType());
                 return;
@@ -186,6 +190,50 @@ public class ProtectedBlocks implements Listener {
     }
 
     @EventHandler
+    public void protectedFluidPlaceEvent (PlayerBucketEmptyEvent e) {
+        Block block = e.getBlockClicked().getRelative(e.getBlockFace());
+        Player p = e.getPlayer();
+
+        boolean isInsideProtectedZone = false;
+        boolean isOnOwningTeam = false;
+
+        Town town = null;
+        for (Town allTowns : Town.townsList) {
+            if (allTowns.protectedAreaContains(block.getLocation())) {
+                town = allTowns;
+                isInsideProtectedZone = true;
+                if (allTowns.getOwningTeam() != null) {
+                    isOnOwningTeam = allTowns.getOwningTeam().equals(C.getPlayerTeam(p));
+                }
+                break;
+            }
+        }
+        if (town == null) {return;}
+        if (town.isDisabled()) {
+            Block oldBlock = e.getBlockClicked().getRelative(e.getBlockFace());
+            town.breakBlockInDisabledTownArea(e.getBlock().getLocation(),oldBlock.getType());
+            return;
+        }
+        if (isOnOwningTeam) {
+            if (block.hasMetadata("unbreakable")) {
+                e.getBlock().setMetadata("unauth",new FixedMetadataValue(C.plugin,"block"));
+                scheduleBlockRespawn(e.getBlock(), System.currentTimeMillis() + (1000L * C.BLOCK_REGEN_SECONDS), Material.AIR,false,null,null,town,false, e.getPlayer());
+            }
+            return;
+        } // return early if the player is on the owning team, because if this check is run it means they are inside a protected zone they own and therefore no more resources should be wasted.
+
+        if (BANNED_PLACE_IN_TOWN.contains(e.getBlock().getType())) {
+            e.setCancelled(true);
+            return;
+        }
+
+        if (isInsideProtectedZone) {
+            e.getBlock().setMetadata("unauth",new FixedMetadataValue(C.plugin,"block"));
+            scheduleBlockRespawn(e.getBlock(),System.currentTimeMillis() + (1000L * C.BLOCK_REGEN_SECONDS),Material.AIR,true,null,null,town,false, e.getPlayer());
+        }
+    }
+
+    @EventHandler
     public void protectedBlockExplodeByBlockEvent (BlockExplodeEvent e) {
         Block block = e.getBlock();
         boolean isInsideProtectedZone = false;
@@ -224,7 +272,7 @@ public class ProtectedBlocks implements Listener {
                 scheduleBlockRespawn(explodedBlock, System.currentTimeMillis() + (1000L * C.BLOCK_REGEN_SECONDS), explodedBlock.getType(), false, containerInventoryContents, explodedBlock.getBlockData(),town,true,null);
             }
             // deal damage to town hp
-            town.damageTownShield(e.blockList().size(), true,null,e.getBlock().getLocation());
+            town.damageTownShield(e.blockList().size(), true,null,e.getBlock().getLocation(),0);
         }
     }
 
@@ -287,13 +335,27 @@ public class ProtectedBlocks implements Listener {
                 block.setType(Material.AIR, false); // break without XP
             });
             // deal damage to town hp
+            double originDistance = 0;
+            if (e.getEntity().getOrigin() != null) {
+                originDistance = e.getEntity().getOrigin().distance(e.getEntity().getLocation());
+            }
             if (doDamage) {
-                town.damageTownShield(e.blockList().size(), true, entityOwner.get(e.getEntity()), e.getLocation());
+                town.damageTownShield(e.blockList().size(), true, entityOwner.get(e.getEntity()), e.getLocation(),originDistance);
             }
         }
     }
 
     private static final Set<Material> RESTRICTED_BLOCKS = Set.of(
+            Material.ACACIA_SAPLING,
+            Material.BAMBOO_SAPLING,
+            Material.BIRCH_SAPLING,
+            Material.CHERRY_SAPLING,
+            Material.OAK_SAPLING,
+            Material.DARK_OAK_SAPLING,
+            Material.JUNGLE_SAPLING,
+            Material.PALE_OAK_SAPLING,
+            Material.SPRUCE_SAPLING,
+
             Material.STONE_BUTTON,
             Material.OAK_BUTTON,
             Material.ACACIA_BUTTON,
@@ -411,7 +473,7 @@ public class ProtectedBlocks implements Listener {
         regeneratingBlockFinalTypeHash.put(block,finalType);
         ProtectedEntities.disableNearbyEntities(block);
         if (!isPlacedBlock && !isExplosion) {
-            town.damageTownShield(1,false,attacker,block.getLocation());
+            town.damageTownShield(1,false,attacker,block.getLocation(),0);
         }
         new BukkitRunnable() {
             @Override
@@ -438,7 +500,9 @@ public class ProtectedBlocks implements Listener {
 
                     if (!nearbyPlayer) {
                         block.setType(finalType);
-                        block.setBlockData(blockData);
+                        if (blockData != null) {
+                            block.setBlockData(blockData);
+                        }
                         regeneratingBlocks.remove(block);
                         regeneratingBlockFinalTypeHash.remove(block);
 
@@ -501,4 +565,31 @@ public class ProtectedBlocks implements Listener {
             }
         }.runTaskTimer(C.plugin, 10, 20);
     }
+
+
+    @EventHandler
+    public void growTree (StructureGrowEvent e) {
+
+            for (Town towns : Town.townsList) {
+                if (towns.protectedAreaContains(e.getLocation())) {
+                    if (C.getPlayerTeam(e.getPlayer()) != null) {
+                        if (towns.getOwningTeam() != C.getPlayerTeam(e.getPlayer())) {
+                            e.setCancelled(true);
+                        }
+                    } else {
+                        e.setCancelled(true);
+                    }
+            }
+        }
+    }
+
+    @EventHandler
+    public void preventIllegalBlockPhysicsEvent (BlockFromToEvent e) {
+        if (e.getBlock().hasMetadata("unauth")) {
+            e.setCancelled(true);
+
+        }
+    }
 }
+
+

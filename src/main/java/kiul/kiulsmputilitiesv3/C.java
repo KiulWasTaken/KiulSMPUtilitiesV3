@@ -2,6 +2,7 @@ package kiul.kiulsmputilitiesv3;
 
 import kiul.kiulsmputilitiesv3.combattag.FightManager;
 import kiul.kiulsmputilitiesv3.server_events.SuddenDeath;
+import kiul.kiulsmputilitiesv3.towns.Town;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import org.bukkit.*;
@@ -202,11 +203,11 @@ public class C {
         return head;
     }
 
-    public static int numOnlineTeammates (Team team) {
+    public static int numOnlineTeammates (Team team, Town town) {
         int onlineTeammates = 1;
         for (String playerName : team.getEntries()) {
             if (Bukkit.getPlayer(playerName) != null) {
-                if (Bukkit.getPlayer(playerName).isOnline()) {
+                if (Bukkit.getPlayer(playerName).isOnline() && town.protectedAreaContains(Bukkit.getPlayer(playerName).getLocation())) {
                     onlineTeammates++;
                 }
             }
@@ -279,9 +280,9 @@ public class C {
         }
 
         i.setItemMeta(iM);
+
         return i;
     }
-
     public static String getPlayerTeamPrefix (Player p ) {
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         String teamName = "";

@@ -7,9 +7,9 @@ import com.sk89q.worldedit.world.block.BaseBlock;
 import com.sk89q.worldedit.world.block.BlockTypes;
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.locatorbar.LocatorBar;
-import kiul.kiulsmputilitiesv3.locatorbar.LocatorBarJoinEvent;
 import kiul.kiulsmputilitiesv3.locatorbar.Waypoint;
 import kiul.kiulsmputilitiesv3.towns.augments.AugmentEnum;
+import kiul.kiulsmputilitiesv3.towns.augments.AugmentEvent;
 import net.kyori.adventure.bossbar.BossBar;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.format.NamedTextColor;
@@ -23,9 +23,8 @@ import org.bukkit.block.BlockState;
 import org.bukkit.block.data.type.RespawnAnchor;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.file.FileConfiguration;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.EntityType;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
+import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.metadata.FixedMetadataValue;
@@ -40,7 +39,6 @@ import java.awt.Color;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.format.TextStyle;
-import java.time.temporal.TemporalField;
 import java.util.*;
 import java.util.List;
 
@@ -49,6 +47,7 @@ import static kiul.kiulsmputilitiesv3.C.getHighestBlockY;
 public class Town {
 
     public static Set<Town> townsList = new HashSet<>();
+    public static HashMap<Player,Long> townPlaceCooldown = new HashMap<>();
     public static float DEFAULT_TOWN_MAX_HEALTH = 12000f;
 
     public static Town getTownForPlayer(Player p) {
@@ -66,9 +65,7 @@ public class Town {
     private String townNameString;
     private Color townColour;
     private Team owningTeam;
-    private final ArmorStand townNameStand;
-    private final ArmorStand townStatusStand;
-    private final ArmorStand townChargeStand;
+    private final TextDisplay townTextDisplay;
     private BukkitTask areaCheck;
 
     // variables related to the protected area of the town
@@ -145,36 +142,14 @@ public class Town {
       } else {
           this.bountySkull = null;
       }
-        ArmorStand stand = (ArmorStand) townCenter.getWorld().spawnEntity(townCenter.clone().add(0.5, 1.4, 0.5), EntityType.ARMOR_STAND);
-        owningTeam.addEntity(stand);
-        stand.getAttribute(Attribute.WAYPOINT_TRANSMIT_RANGE).setBaseValue(10000);
-        stand.setPersistent(true);
-        stand.setMetadata("core", new FixedMetadataValue(C.plugin, true));
-        stand.setCustomNameVisible(true);
-        stand.customName(owningTeam.prefix().append(townName));
-        stand.setInvisible(true);
-        stand.setGravity(false);
-        stand.setMarker(true);
-        this.townNameStand = stand;
 
-        ArmorStand chargeStand = (ArmorStand) townCenter.getWorld().spawnEntity(townCenter.clone().add(0.5, 0.8, 0.5), EntityType.ARMOR_STAND);
-        chargeStand.setPersistent(true);
-        chargeStand.setMetadata("core", new FixedMetadataValue(C.plugin, true));
-        chargeStand.setCustomNameVisible(true);
-        chargeStand.setCustomName(C.t(C.GOLD+"⚡ "+C.YELLOW+ townCharge +ChatColor.GRAY+"/"+C.GOLD+"12"));
-        chargeStand.setInvisible(true);
-        chargeStand.setGravity(false);
-        chargeStand.setMarker(true);
-        this.townChargeStand = chargeStand;
-
-        ArmorStand statusStand = (ArmorStand) townCenter.getWorld().spawnEntity(townCenter.clone().add(0.5, 1.1, 0.5), EntityType.ARMOR_STAND);
-        statusStand.setPersistent(true);
-        statusStand.setCustomNameVisible(true);
-        statusStand.setCustomName(getTownStatus());
-        statusStand.setInvisible(true);
-        statusStand.setGravity(false);
-        statusStand.setMarker(true);
-        this.townStatusStand = statusStand;
+        this.townTextDisplay = (TextDisplay) townCenter.getWorld().spawnEntity(townCenter.clone().add(0.5, 1.4, 0.5), EntityType.TEXT_DISPLAY);
+        townTextDisplay.setText(owningTeam.getPrefix() + townNameString + "\n" + (townCharge < 12 ? C.t(C.GOLD + "⚡ " + C.YELLOW + townCharge + ChatColor.GRAY + "/" + C.GOLD + "12") : C.t(C.GOLD + "⚡ " + C.YELLOW + townCharge + ChatColor.GRAY + "/" + C.GOLD + "12" + ChatColor.DARK_GRAY + " (Right-Click)")) + "\n" +
+                getTownStatus());
+        townTextDisplay.setVisibleByDefault(true);
+        townTextDisplay.setSeeThrough(true);
+        townTextDisplay.setShadowed(true);
+        townTextDisplay.setBillboard(Display.Billboard.VERTICAL);
 
         Location firstLocation = new Location(townCenter.getWorld(), townCenter.getBlockX() + townProtectedRadius, 320, townCenter.getBlockZ() + townProtectedRadius);
         Location secondLocation = new Location(townCenter.getWorld(), townCenter.getBlockX() - townProtectedRadius, -64, townCenter.getBlockZ() - townProtectedRadius);
@@ -203,7 +178,7 @@ public class Town {
         }
     }
 
-    public Town(Location townCenter, String townUUID, Component townName, ArrayList collectedSkulls, float townHealth, float townMaxHealth, long disabledUntil, long invulnerableUntil, boolean isRegenerating, UUID bountySkull, long bountyUntil, boolean isActive, HashMap<Location,Material> reinstateBlocks) { // from config
+    public Town(Location townCenter, String townUUID, Component townName,String townNameString, ArrayList collectedSkulls, float townHealth, float townMaxHealth, long disabledUntil, long invulnerableUntil, boolean isRegenerating, UUID bountySkull, long bountyUntil, boolean isActive, HashMap<Location,Material> reinstateBlocks, Team attackingTeam) { // from config
         this.townCenter = townCenter;
         townCenter.getBlock().setType(Material.RESPAWN_ANCHOR);
         this.selectedAugment = null;
@@ -230,41 +205,25 @@ public class Town {
         this.isRegenerating = isRegenerating;
         this.bountySkull = bountySkull;
         this.bountyUntil = bountyUntil;
-        this.attackingTeam = null;
+        this.attackingTeam = attackingTeam;
         this.isActive = isActive;
         this.timeSinceLastDamage = System.currentTimeMillis();
         this.reinstateBlocks = reinstateBlocks;
+        this.townNameString = townNameString;
 
-        ArmorStand stand = (ArmorStand) townCenter.getWorld().spawnEntity(townCenter.clone().add(0.5, 1.4, 0.5), EntityType.ARMOR_STAND);
-        owningTeam.addEntity(stand);
-        stand.getAttribute(Attribute.WAYPOINT_TRANSMIT_RANGE).setBaseValue(10000);
-        stand.setPersistent(true);
-        stand.setMetadata("core", new FixedMetadataValue(C.plugin, true));
-        stand.setCustomNameVisible(true);
-        stand.customName(owningTeam.prefix().append(townName));
-        stand.setInvisible(true);
-        stand.setGravity(false);
-        stand.setMarker(true);
-        this.townNameStand = stand;
+        for (Entity textEntity : townCenter.getNearbyEntities(3,3,3)) {
+            if (textEntity instanceof TextDisplay) {
+                textEntity.remove();
+            }
+        }
 
-        ArmorStand chargeStand = (ArmorStand) townCenter.getWorld().spawnEntity(townCenter.clone().add(0.5, 0.8, 0.5), EntityType.ARMOR_STAND);
-        chargeStand.setPersistent(true);
-        chargeStand.setMetadata("core", new FixedMetadataValue(C.plugin, true));
-        chargeStand.setCustomNameVisible(true);
-        chargeStand.setCustomName(C.t(C.GOLD+"⚡ "+C.YELLOW+ townCharge +ChatColor.GRAY+"/"+C.GOLD+"12"));
-        chargeStand.setInvisible(true);
-        chargeStand.setGravity(false);
-        chargeStand.setMarker(true);
-        this.townChargeStand = chargeStand;
-
-        ArmorStand statusStand = (ArmorStand) townCenter.getWorld().spawnEntity(townCenter.clone().add(0.5, 1.1, 0.5), EntityType.ARMOR_STAND);
-        statusStand.setPersistent(true);
-        statusStand.setCustomNameVisible(true);
-        statusStand.setCustomName(getTownStatus());
-        statusStand.setInvisible(true);
-        statusStand.setGravity(false);
-        statusStand.setMarker(true);
-        this.townStatusStand = statusStand;
+        this.townTextDisplay = (TextDisplay) townCenter.getWorld().spawnEntity(townCenter.clone().add(0.5, 1.4, 0.5), EntityType.TEXT_DISPLAY);
+        townTextDisplay.setText(owningTeam.getPrefix() + townNameString + "\n" + (townCharge < 12 ? C.t(C.GOLD + "⚡ " + C.YELLOW + townCharge + ChatColor.GRAY + "/" + C.GOLD + "12") : C.t(C.GOLD + "⚡ " + C.YELLOW + townCharge + ChatColor.GRAY + "/" + C.GOLD + "12" + ChatColor.DARK_GRAY + " (Right-Click)")) + "\n" +
+                getTownStatus());
+        townTextDisplay.setVisibleByDefault(true);
+        townTextDisplay.setSeeThrough(true);
+        townTextDisplay.setShadowed(true);
+        townTextDisplay.setBillboard(Display.Billboard.VERTICAL);
 
         Location firstLocation = new Location(townCenter.getWorld(), townCenter.getBlockX() + townProtectedRadius, 320, townCenter.getBlockZ() + townProtectedRadius);
         Location secondLocation = new Location(townCenter.getWorld(), townCenter.getBlockX() - townProtectedRadius, -64, townCenter.getBlockZ() - townProtectedRadius);
@@ -293,7 +252,7 @@ public class Town {
     }
 
     public boolean protectedAreaContains(Location location) {
-        return location.toVector().isInAABB(minimum, maximum);
+        return location.toVector().isInAABB(minimum, maximum) && location.getWorld() == townCenter.getWorld();
 
     }
 
@@ -337,16 +296,11 @@ public class Town {
         return C.PURPLE+"\uD83D\uDEE1 "+C.LIGHT_PURPLE+"Shielded "+ChatColor.DARK_GRAY+"("+String.format("%.1f",percentage) +"%)";
     }
 
-    public void updateTownStatus() {
-        townStatusStand.setCustomName(getTownStatus());
+    public void updateTownTextDisplay() {
+        townTextDisplay.setText(owningTeam.getPrefix() + townNameString + "\n" + (townCharge < 12 ? C.t(C.GOLD + "⚡ " + C.YELLOW + townCharge + ChatColor.GRAY + "/" + C.GOLD + "12") : C.t(C.GOLD + "⚡ " + C.YELLOW + townCharge + ChatColor.GRAY + "/" + C.GOLD + "12" + ChatColor.DARK_GRAY + " (Right-Click)")) + "\n" +
+                getTownStatus());
     }
-    public void updateTownCharge() {
-        if (townCharge < 12) {
-            townChargeStand.setCustomName(C.t(C.GOLD + "⚡ " + C.YELLOW + townCharge + ChatColor.GRAY + "/" + C.GOLD + "12"));
-        } else {
-            townChargeStand.setCustomName(C.t(C.GOLD + "⚡ " + C.YELLOW + townCharge + ChatColor.GRAY + "/" + C.GOLD + "12" + ChatColor.DARK_GRAY + " (Right-Click)"));
-        }
-    }
+
 
     public int getTownCharge() {
         return townCharge;
@@ -359,6 +313,7 @@ public class Town {
     public int numMembersInsideTown() {
         int membersInsideTown = 0;
         for (Player p : playersInsideTown.keySet()) {
+            if (C.getPlayerTeam(p) == null) continue;
             if (C.getPlayerTeam(p).getName().equalsIgnoreCase(townUUID)) {
                 membersInsideTown++;
             }
@@ -380,7 +335,7 @@ public class Town {
             state.update(true);
         }
         getTownCenter().getWorld().playSound(getTownCenter(),Sound.BLOCK_RESPAWN_ANCHOR_CHARGE,1,1.1f-((float)0.1*chargeAmount));
-        updateTownCharge();
+        updateTownTextDisplay();
     }
 
     static List<Material> DO_NOT_REINSTATE = new ArrayList<>() {{
@@ -415,10 +370,10 @@ public class Town {
         reinstateBlocks.put(blockLocation,initialBlockType);
     }
 
-    public void damageTownShield(float damage, boolean isExplosion,Player attacker,Location damageLocation) {
+    public void damageTownShield(float damage, boolean isExplosion,Player attacker,Location damageLocation,double originDistance) {
         if (isDisabled()) return;
         if (isInvulnerable()) return;
-        float multiplier = (float) (1-(numMembersInsideTown()*0.1));
+        float multiplier = (float) numMembersInsideTown() > 0 ? (float) 1 /numMembersInsideTown() : 1;
         if (isExplosion) multiplier = 0.2f;
         damage = damage*multiplier;
         double coreDistanceMultiplier = -Math.log(((1.39)*this.townCenter.distance(damageLocation))+1)+5;
@@ -428,13 +383,17 @@ public class Town {
         // c = multiplier at 0 distance to core
         // b = dont touch, it controls the asymptote
         damage = (float) (damage*coreDistanceMultiplier);
-        damage = damage/C.numOnlineTeammates(C.getPlayerTeam(attacker));
-
+        double originDistanceDamageMultiplier = 1-(0.01*originDistance);
+        damage = (float) (damage*Math.max(originDistanceDamageMultiplier,0));
         if (((townHealth-damage)/townMaxHealth)*100 <= 95) {
+            displayHealthBar();
             if (attackingTeam == null && attacker != null) {
                 attackingTeam = C.getPlayerTeam(attacker);
+                if (C.getPlayerTeam(attacker) == null) {
+                    attackingTeam = Bukkit.getScoreboardManager().getNewScoreboard().registerNewTeam(attacker.getUniqueId()+ "");
+                    attackingTeam.setPrefix(attacker.getName()+" ");
+                }
                 announceSiegeStage(0,true);
-                displayHealthBar();
             }
         }
 
@@ -466,12 +425,16 @@ public class Town {
         }
         if (isRegenerating && townHealth-damage <= 0) {
             isActive = false;
-            disabledUntil = System.currentTimeMillis()+1000*60*60*24;
+            disabledUntil = System.currentTimeMillis()+1000*60;
             townHealth = 0;
-            updateTownStatus();
+            updateTownTextDisplay();
             // announce attackers WON
             if (attacker != null) {
                 attackingTeam = C.getPlayerTeam(attacker);
+                if (C.getPlayerTeam(attacker) == null) {
+                    attackingTeam = Bukkit.getScoreboardManager().getNewScoreboard().registerNewTeam(attacker.getUniqueId()+ "");
+                    attackingTeam.setPrefix(attacker.getName()+" ");
+                }
                 announceSiegeStage(3,true);
             }
 
@@ -481,7 +444,7 @@ public class Town {
 
         timeSinceLastDamage = System.currentTimeMillis();
         townHealth -= damage;
-        updateTownStatus();
+        updateTownTextDisplay();
 
     }
 
@@ -564,7 +527,7 @@ public class Town {
                 as.setInvisible(true);
                 as.setGravity(true);
                 as.setSmall(true);
-                as.customName(Component.empty().append(Component.text(C.getNumTeammatesDivSymbol(C.numOnlineTeammates(C.getPlayerTeam(attacker))) + " ").color(NamedTextColor.DARK_GRAY)).append(Component.text(String.format("-%.1f", finalDamage)).color(color)));
+                as.customName(Component.empty().append(Component.text(C.getNumTeammatesDivSymbol(numMembersInsideTown()) + " ").color(NamedTextColor.DARK_GRAY)).append(Component.text(String.format("-%.1f", finalDamage)).color(color)));
                 as.setCustomNameVisible(true); // required so name actually exists
                 as.setCollidable(false);
             });
@@ -589,16 +552,24 @@ public class Town {
 
         if (townHealth+amount > townMaxHealth) {
             townHealth = townMaxHealth;
-            updateTownStatus();
+            updateTownTextDisplay();
             return;
         }
 
         townHealth += amount;
-        updateTownStatus();
+        updateTownTextDisplay();
     }
 
-
+    String destroy = C.LAVENDER_PURPLE + ChatColor.BOLD+ "TOWN DISBANDED! " + ChatColor.GRAY;
     public void destroy() {
+        for (String entry : this.getOwningTeam().getEntries()) {
+            Player p = Bukkit.getPlayer(entry);
+            if (p != null) {
+                Town.townPlaceCooldown.put(p,System.currentTimeMillis()+(1000*60*60*24));
+            }
+        }
+
+        Bukkit.broadcastMessage(destroy+this.getOwningTeam().getPrefix()+ChatColor.GRAY+"has disbanded the town core for " + this.getTownNameString() + ChatColor.GRAY + " at coordinates " + ChatColor.WHITE + townCenter.x() +", " + townCenter.y() + ", " + townCenter.z());
         C.plugin.getLogger().info(townsList.toString());
         List<String> lore = new ArrayList<>();
         ItemStack townCore = new ItemStack(Material.RESPAWN_ANCHOR);
@@ -608,9 +579,7 @@ public class Town {
         townCoreMeta.setDisplayName(C.t("&eTown Core"));
         townCoreMeta.getPersistentDataContainer().set(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING,"towncore");
         townCore.setItemMeta(townCoreMeta);
-        getTownNameStand().remove();
-        getTownStatusStand().remove();
-        getTownChargeStand().remove();
+        getTownTextDisplay().remove();
         C.plugin.getLogger().info("-------------------------");
         FileConfiguration config = C.plugin.getConfig();
         townCenter.getBlock().setType(Material.AIR);
@@ -646,11 +615,10 @@ public class Town {
                 editSession.setBlock(loc2.getBlockX(), loc2.getBlockY() + 1, loc2.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
             }
         }
+
+
     }
 
-    public ArmorStand getTownChargeStand() {
-        return townChargeStand;
-    }
 
     public BukkitTask initializeAreaCheck() {
 
@@ -677,7 +645,8 @@ public class Town {
                     attackingTeam = null;
                     announceSiegeStage(3,false);
                 }
-                updateTownStatus();
+
+                updateTownTextDisplay();
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     if (!playersInsideTown.containsKey(p) && protectedAreaContains(p.getLocation())) {
                         playersInsideTown.put(p, 0);
@@ -771,7 +740,6 @@ public class Town {
             assert attackingTeam != null;
 
             float progress = ((float) townHealth / (float) townMaxHealth);
-            Component extra = Component.text("");
 
             if (progress > 1) {
                 progress = 1;
@@ -850,12 +818,14 @@ public class Town {
 
         // Save location
         Location loc = town.getTownCenter();
+        config.set("towns."+ uuid + ".loc.world",loc.getWorld().getName());
         config.set("towns." + uuid + ".loc.x", loc.getX());
         config.set("towns." + uuid + ".loc.y", loc.getY());
         config.set("towns." + uuid + ".loc.z", loc.getZ());
 
         // Save name
         config.set("towns." + uuid + ".name", MiniMessage.miniMessage().serialize(town.getTownName()));
+        config.set("towns." + uuid + ".namestring", town.getTownNameString());
 
         // Save basic stats
         config.set("towns." + uuid + ".maxhealth", town.getTownMaxHealth());
@@ -864,7 +834,11 @@ public class Town {
         config.set("towns." + uuid + ".invulnerableuntil", town.getInvulnerableUntil());
         config.set("towns." + uuid + ".regenerating", town.isRegenerating());
         config.set("towns." + uuid + ".active", town.isActive());
-
+        if (town.attackingTeam != null) {
+            config.set("towns." + uuid + ".attackingteam", town.attackingTeam.getName());
+        } else {
+            config.set("towns." + uuid + ".attackingteam", null);
+        }
         // Save bounty
         if (town.getBountySkull() != null) {
             config.set("towns." + uuid + ".bountyuuid", town.getBountySkull().toString());
@@ -872,7 +846,6 @@ public class Town {
         }
         // Save collected skulls
         config.set("towns." + uuid + ".collectedskulls", town.getCollectedSkulls());
-
         // Save reinstate blocks
         HashMap<Location, Material> blocks = town.getReinstateBlocks();
         ConfigurationSection reinstateSection = config.createSection("towns." + uuid + ".reinstate_data");
@@ -881,28 +854,28 @@ public class Town {
             String key = blockLoc.getBlockX() + "," + blockLoc.getBlockY() + "," + blockLoc.getBlockZ();
             reinstateSection.set(key, entry.getValue().name());
         }
-
+// Remove holograms
+        if (town.getTownTextDisplay() != null) town.getTownTextDisplay().remove();
         C.plugin.saveConfig();
 
-        // Remove holograms
-        if (town.getTownNameStand() != null) town.getTownNameStand().remove();
-        if (town.getTownStatusStand() != null) town.getTownStatusStand().remove();
-        if (town.getTownChargeStand() != null) town.getTownChargeStand().remove();
+
     }
 
     public static Town loadFromConfig(String townUUID) {
+
         FileConfiguration config = C.plugin.getConfig();
         ConfigurationSection townSection = config.getConfigurationSection("towns." + townUUID);
         if (townSection == null) return null;
 
         // Load location
-        Location loc = new Location(Bukkit.getWorld("world"),
+        Location loc = new Location(Bukkit.getWorld(townSection.getString("loc.world")),
                 townSection.getDouble("loc.x"),
                 townSection.getDouble("loc.y"),
                 townSection.getDouble("loc.z"));
-
+        loc.getChunk().load();
         // Load name
         Component townName = MiniMessage.miniMessage().deserialize(townSection.getString("name"));
+        String townNameString = townSection.getString("namestring");
 
         // Load basic stats
         int maxHealth = townSection.getInt("maxhealth");
@@ -912,6 +885,10 @@ public class Town {
         boolean regenerating = townSection.getBoolean("regenerating");
         boolean isActive = townSection.getBoolean("active");
 
+        Team attackingTeam = null;
+        if ((String)townSection.get("attackingteam") != null) {
+             attackingTeam = Bukkit.getScoreboardManager().getMainScoreboard().getTeam((String) townSection.get("attackingteam"));
+        }
         // Load bounty
         UUID bountyUUID = UUID.fromString(townSection.getString("bountyuuid", UUID.randomUUID().toString()));
         long bountyUntil = townSection.getLong("bountyuntil");
@@ -937,8 +914,8 @@ public class Town {
             }
         }
 
-        return new Town(loc, townUUID, townName, new ArrayList<>(collectedSkulls), health, maxHealth,
-                disabledUntil, invulnerableUntil, regenerating, bountyUUID, bountyUntil, isActive, reinstateBlocks);
+        return new Town(loc, townUUID, townName,townNameString, new ArrayList<>(collectedSkulls), health, maxHealth,
+                disabledUntil, invulnerableUntil, regenerating, bountyUUID, bountyUntil, isActive, reinstateBlocks,attackingTeam);
     }
 
     public Component getTownName() {
@@ -947,14 +924,6 @@ public class Town {
 
     public void setTownHealth(float townHealth) {
         this.townHealth = townHealth;
-    }
-
-    public ArmorStand getTownNameStand() {
-        return townNameStand;
-    }
-
-    public ArmorStand getTownStatusStand() {
-        return townStatusStand;
     }
 
     public HashMap<Location, Material> getReinstateBlocks() {
@@ -1059,5 +1028,9 @@ public class Town {
 
     public void setTownNameString(String townNameString) {
         this.townNameString = townNameString;
+    }
+
+    public TextDisplay getTownTextDisplay() {
+        return townTextDisplay;
     }
 }

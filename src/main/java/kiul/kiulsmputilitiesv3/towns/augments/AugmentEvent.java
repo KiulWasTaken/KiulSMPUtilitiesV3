@@ -1,8 +1,7 @@
-package kiul.kiulsmputilitiesv3.towns;
+package kiul.kiulsmputilitiesv3.towns.augments;
 
-import io.papermc.paper.event.player.AsyncChatCommandDecorateEvent;
 import kiul.kiulsmputilitiesv3.C;
-import kiul.kiulsmputilitiesv3.towns.augments.AugmentEnum;
+import kiul.kiulsmputilitiesv3.towns.Town;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.Location;
@@ -10,8 +9,6 @@ import org.bukkit.Particle;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Item;
-import org.bukkit.entity.Player;
-import org.bukkit.event.Listener;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
@@ -62,9 +59,6 @@ public class AugmentEvent {
         timerStand.setInvisible(true);
         timerStand.setGravity(false);
         timerStand.setMarker(true);
-        town.getTownNameStand().teleport(town.getTownNameStand().getLocation().clone().add(0,0.9,0));
-        town.getTownStatusStand().teleport(town.getTownNameStand().getLocation().clone().add(0,-0.3,0));
-        town.getTownChargeStand().setCustomNameVisible(false);
 
 
         this.runnable = new BukkitRunnable() {
@@ -129,8 +123,6 @@ public class AugmentEvent {
     public void abort() { // in case of shutdown or whatever
         town.setAugmenting(false);
         town.setAugmentEvent(null);
-        town.getTownNameStand().teleport(town.getTownNameStand().getLocation().clone().add(0,-0.9,0));
-        town.getTownStatusStand().teleport(town.getTownNameStand().getLocation().clone().add(0,-0.3,0));
         timerStand.remove();
         town.setAugmenting(false);
         inputItem.setCanPlayerPickup(true);
@@ -143,8 +135,6 @@ public class AugmentEvent {
         town.setAugmenting(false);
         town.setAugmentEvent(null);
         timerStand.remove();
-        town.getTownNameStand().setCustomNameVisible(false);
-        town.getTownStatusStand().setCustomNameVisible(false);
         // flashy effects
 
         inputItem.setCanPlayerPickup(true);
@@ -156,11 +146,6 @@ public class AugmentEvent {
             @Override
             public void run() {
                 if (inputItem == null || inputItem.isDead()) {
-                    town.getTownNameStand().setCustomNameVisible(true);
-                    town.getTownStatusStand().setCustomNameVisible(true);
-                    town.getTownChargeStand().setCustomNameVisible(true);
-                    town.getTownNameStand().teleport(town.getTownNameStand().getLocation().clone().add(0,-0.9,0));
-                    town.getTownStatusStand().teleport(town.getTownNameStand().getLocation().clone().add(0,-0.3,0));
                     cancel();
                 }
             }

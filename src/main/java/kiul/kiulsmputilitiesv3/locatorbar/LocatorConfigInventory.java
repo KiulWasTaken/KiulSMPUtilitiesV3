@@ -2,10 +2,7 @@ package kiul.kiulsmputilitiesv3.locatorbar;
 
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.config.PersistentData;
-import kiul.kiulsmputilitiesv3.towns.Town;
-import kiul.kiulsmputilitiesv3.towns.listeners.TownGUIEnum;
 import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
 import org.bukkit.Material;
 import org.bukkit.NamespacedKey;
 import org.bukkit.entity.Player;

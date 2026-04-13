@@ -83,6 +83,37 @@ public class ProtectedEntities implements Listener {
 
                 }
             }
+        } else {
+            boolean isInsideProtectedZone = false;
+            Town town = null;
+            for (Town allTowns : Town.townsList) {
+                if (allTowns.protectedAreaContains(e.getEntity().getLocation())) {
+                    town = allTowns;
+                    isInsideProtectedZone = true;
+                    break;
+                }
+            }
+            if (isInsideProtectedZone) {
+                e.setDamage(0);
+            }
+        }
+
+    }
+
+    @EventHandler
+    public void entityHurtSuffocationExplosionsFire (EntityDamageEvent e) {
+        if (!protectedEntityTypes.contains(e.getEntity().getType())) return;
+        boolean isInsideProtectedZone = false;
+        Town town = null;
+        for (Town allTowns : Town.townsList) {
+            if (allTowns.protectedAreaContains(e.getEntity().getLocation())) {
+                town = allTowns;
+                isInsideProtectedZone = true;
+                break;
+            }
+        }
+        if (isInsideProtectedZone) {
+            e.setDamage(0);
         }
 
     }
@@ -136,8 +167,11 @@ public class ProtectedEntities implements Listener {
             @Override
             public void run() {
                 for (Block regeneratingBlocks : ProtectedBlocks.regeneratingBlocks) {
-                    if (regeneratingBlocks.getLocation().distance(disabledEntity.getLocation()) < 3) {
-                        return;
+                    if (regeneratingBlocks.getWorld() == disabledEntity.getWorld()) {
+
+                        if (regeneratingBlocks.getLocation().distance(disabledEntity.getLocation()) < 3) {
+                            return;
+                        }
                     }
                 }
 

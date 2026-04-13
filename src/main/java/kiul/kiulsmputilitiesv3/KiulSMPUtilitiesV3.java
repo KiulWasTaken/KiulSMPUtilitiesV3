@@ -23,9 +23,14 @@ import kiul.kiulsmputilitiesv3.stats.StatDBListeners;
 import kiul.kiulsmputilitiesv3.teamcure.CureListener;
 import kiul.kiulsmputilitiesv3.towns.Town;
 import kiul.kiulsmputilitiesv3.towns.augments.ModifyItemListeners;
+import kiul.kiulsmputilitiesv3.towns.augments.StartAugment;
+import kiul.kiulsmputilitiesv3.towns.bounty.ItemConsumeListener;
+import kiul.kiulsmputilitiesv3.towns.bounty.KillBountiedListener;
+import kiul.kiulsmputilitiesv3.towns.gui.TownGUI;
 import kiul.kiulsmputilitiesv3.towns.listeners.*;
 import org.bukkit.*;
 import org.bukkit.block.Block;
+import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -79,6 +84,8 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new ProtectedBlocks(),this);
         getServer().getPluginManager().registerEvents(new ProtectedEntities(),this);
         getServer().getPluginManager().registerEvents(new LocatorBarJoinEvent(),this);
+        getServer().getPluginManager().registerEvents(new KillBountiedListener(),this);
+        getServer().getPluginManager().registerEvents(new ItemConsumeListener(),this);
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
             if ((accessoryItem.getLocalName().contains("ring") || accessoryItem.getLocalName().contains("tome")) && accessoryItem.getLocalName().contains("base")) {
@@ -148,6 +155,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getCommand("debug-augment").setExecutor(new Commands());
         getCommand("debug-augment").setTabCompleter(new Commands());
         getCommand("debug-waypoints").setExecutor(new Commands());
+        getCommand("debug_town_name").setExecutor(new Commands());
         // Config
         ConfigData.setup();
         if (ConfigData.get().get("scheduler") == null) {
@@ -172,6 +180,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
             WorldData.save();
         }
         RecapData.setup();
+        BountyData.setup();
         ScheduleConfig.setup();
         SMPScheduler.initializeScheduleConfig();
         if (ConfigData.get().getBoolean("scheduler")) {
@@ -196,11 +205,6 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         new BukkitRunnable() {
             @Override
             public void run() {
-                Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
-                for (Team team : sb.getTeams()) {
-                    C.plugin.getLogger().warning(team.getName());
-                    continue;
-                }
                 if (C.plugin.getConfig().getConfigurationSection("towns") != null) {
                     for (String key : C.plugin.getConfig().getConfigurationSection("towns").getKeys(false)) {
                         Town.townsList.add(Town.loadFromConfig(key));

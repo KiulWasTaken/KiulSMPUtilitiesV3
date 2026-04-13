@@ -25,3 +25,4 @@ commands:
   kmenu:
   spawn-crate:
   close-end:
+  debug_town_name:

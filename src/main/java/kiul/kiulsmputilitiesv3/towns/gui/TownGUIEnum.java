@@ -1,4 +1,4 @@
-package kiul.kiulsmputilitiesv3.towns.listeners;
+package kiul.kiulsmputilitiesv3.towns.gui;
 
 import kiul.kiulsmputilitiesv3.C;
 import org.bukkit.ChatColor;

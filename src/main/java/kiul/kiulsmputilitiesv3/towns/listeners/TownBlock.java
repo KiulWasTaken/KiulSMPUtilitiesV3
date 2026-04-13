@@ -12,6 +12,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.BlockBreakEvent;
+import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.inventory.InventoryClickEvent;
 import org.bukkit.event.inventory.InventoryType;
@@ -34,15 +35,41 @@ public class TownBlock implements Listener {
     public void placeTown (BlockPlaceEvent e) {
         if (!e.getItemInHand().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) return;
         if (e.getItemInHand().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING).equalsIgnoreCase("towncore")) {
+
+            if (Town.townPlaceCooldown.get(e.getPlayer()) != null) {
+                if (System.currentTimeMillis() < Town.townPlaceCooldown.get(e.getPlayer())) {
+                    e.setCancelled(true);
+                    return;
+                }
+            }
+
             if (C.getPlayerTeam(e.getPlayer()) == null || C.getPlayerTeam(e.getPlayer()).getEntries().size() < 1) {
-                e.getPlayer().sendMessage(C.failPrefix+" cannot place a town core without a team that has at least 1 members!");
+                e.getPlayer().sendMessage(C.failPrefix+" cannot place a town core without a team that has at least 2 members!");
                 e.setCancelled(true);
                 return;
             }
+
+            if (C.getPlayerTeam(e.getPlayer()) != null) {
+                for (Town towns : Town.townsList) {
+                    if (towns.getOwningTeam().equals(C.getPlayerTeam(e.getPlayer()))) {
+                        e.getPlayer().sendMessage(C.failPrefix+" you cannot place more than one town per team!");
+                        e.setCancelled(true);
+                        return;
+                    }
+                }
+            }
+
             if (e.getBlockPlaced().getLocation().y() > 100 || e.getBlockPlaced().getLocation().y() < 60) {
                 e.getPlayer().sendMessage(C.failPrefix+" town cores can only be placed between y60-100");
                 e.setCancelled(true);
                 return;
+            }
+            if (e.getBlockPlaced().getLocation().getWorld().getEnvironment().equals(World.Environment.THE_END)) {
+                if (e.getBlockPlaced().getLocation().distance(new Location(e.getBlockPlaced().getWorld(),0,0,0)) < 500) {
+                    e.getPlayer().sendMessage(C.failPrefix+" cannot place town cores close to end spawn");
+                    e.setCancelled(true);
+                    return;
+                }
             }
             for (Town town : Town.townsList) {
                 if (town.getTownCenter().distance(e.getBlockPlaced().getLocation()) < 500) {
@@ -87,14 +114,14 @@ public class TownBlock implements Listener {
     public void breakTown (BlockBreakEvent e) {
         if (e.getBlock().getType().equals(Material.RESPAWN_ANCHOR)) {
             for (Town town : Town.townsList) {
-                if (town.getTownCenter().distance(e.getBlock().getLocation()) <= 1) {
+                if (e.getBlock().getLocation().equals(town.getTownCenter())) {
                     if (town.getOwningTeam().equals(C.getPlayerTeam(e.getPlayer()))) {
                         // gui to confirm destroy town
                         confirmDestroyTown(e.getPlayer());
                         e.setCancelled(true);
                     } else {
                         e.setCancelled(true);
-                        town.damageTownShield(5, false,e.getPlayer(),e.getBlock().getLocation().clone().add(0,1,0));
+                        town.damageTownShield(20, false,e.getPlayer(),e.getBlock().getLocation().clone().add(0,1,0),0);
                     }
 
                     return;
@@ -115,7 +142,9 @@ public class TownBlock implements Listener {
 
         List<String> lore = new ArrayList<>();
         lore.add(ChatColor.GRAY+"This will remove your town and all");
-        lore.add(ChatColor.GRAY+"protections will be immediately voided");
+        lore.add(ChatColor.GRAY+"protections will be immediately voided.");
+        lore.add("");
+        lore.add(ChatColor.GRAY+"you cannot replace your town core for 24h after doing this.");
         ItemStack yesItem = C.createItemStack(C.successPrefix+"Confirm Destroy",Material.LIME_WOOL,1,lore.toArray(String[]::new),null,null,"yes",null);
 
 
@@ -153,6 +182,17 @@ public class TownBlock implements Listener {
                     case "no":
                         p.closeInventory();
                         break;
+                }
+            }
+        }
+    }
+
+    @EventHandler
+    public void dispenseGlowstoneIntoCore (BlockDispenseEvent e) {
+        if (e.getItem().getType().equals(Material.GLOWSTONE)) {
+            for (Town towns : Town.townsList) {
+                if (towns.protectedAreaContains(e.getBlock().getLocation())) {
+                    e.setCancelled(true);
                 }
             }
         }

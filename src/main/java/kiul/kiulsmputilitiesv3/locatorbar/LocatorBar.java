@@ -24,10 +24,10 @@ public class LocatorBar {
     public static ArrayList<Player> disable_show_towns = new ArrayList<>();
 
     private int barLength;
-    private List<Waypoint> waypoints;
+    private HashSet<Waypoint> waypoints;
     private Player ownerPlayer;
 
-    LocatorBar(List<Waypoint> waypoints, int barLength) {
+    LocatorBar(HashSet<Waypoint> waypoints, int barLength) {
         this.barLength = barLength;
         this.waypoints = waypoints;
         for (Town town : Town.townsList) {
@@ -37,7 +37,7 @@ public class LocatorBar {
 
     public LocatorBar(int barLength, Player ownerPlayer) {
         this.barLength = barLength;
-        this.waypoints = new ArrayList<>();
+        this.waypoints = new HashSet<>();
         this.ownerPlayer = ownerPlayer;
         for (Town town : Town.townsList) {
             waypoints.add(town.getWaypoint());
@@ -69,16 +69,24 @@ public class LocatorBar {
         String leftColour = ChatColor.WHITE+"";
         String rightColour = ChatColor.WHITE+"";
         for (Waypoint w : waypoints) {
+            if (w == null) {
+                continue;
+            }
             if (!w.isPlayer()) {
                 if (disable_show_towns.contains(ownerPlayer)) continue;
             }
             if (Bukkit.getPlayer(w.getName()) != null) {
                 Player playerWaypoint = Bukkit.getPlayer(w.getName());
-                if (disable_show_self.contains(playerWaypoint) && C.getPlayerTeam(playerWaypoint) == C.getPlayerTeam(ownerPlayer)) continue;
-                if (disable_show_teammates.contains(ownerPlayer) && C.getPlayerTeam(playerWaypoint) == C.getPlayerTeam(ownerPlayer)) continue;
+                if (C.getPlayerTeam(playerWaypoint) != null) {
+                    if (disable_show_self.contains(playerWaypoint) && C.getPlayerTeam(playerWaypoint) == C.getPlayerTeam(ownerPlayer))
+                        continue;
+                    if (disable_show_teammates.contains(ownerPlayer) && C.getPlayerTeam(playerWaypoint) == C.getPlayerTeam(ownerPlayer))
+                        continue;
+                }
                 if (playerWaypoint == null || !playerWaypoint.isOnline()) continue;
                 if (playerLocatorBar.get(playerWaypoint.getUniqueId()) == this) continue;
                 if (playerWaypoint.getGameMode() != GameMode.SURVIVAL) continue;
+                if (playerWaypoint.isSneaking()) continue;
             }
             double distance =  w.getLocation().distance(barCenterLocation.toVector());
             String dot = "";
@@ -164,13 +172,16 @@ public class LocatorBar {
         return finalBar.toString();
     }
 
-    public List<Waypoint> getWaypoints() {
+    public HashSet<Waypoint> getWaypoints() {
         return waypoints;
     }
 
     public boolean barContains(Waypoint waypoint) {
         if (waypoint == null) return false;
         for (Waypoint w : waypoints) {
+            if (w == null) {
+                continue;
+            }
             if (w.getName().equals(waypoint.getName())) {
                 return true;
             }

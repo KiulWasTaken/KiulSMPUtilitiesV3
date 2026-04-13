@@ -7,10 +7,7 @@ import kiul.kiulsmputilitiesv3.locatorbar.Waypoint;
 import kiul.kiulsmputilitiesv3.stats.StatDB;
 import net.kyori.adventure.text.minimessage.MiniMessage;
 import net.md_5.bungee.api.ChatMessageType;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.World;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -24,6 +21,7 @@ public class FightMethods {
 
     static HashMap<FightObject,Long> timeAllSneaking = new HashMap<>();
     static long waitingUntil;
+    public static int fightRadius = 250;
     public static void startDistanceCheck (Player p,FightObject fight) {
 
 
@@ -43,6 +41,9 @@ public class FightMethods {
                             fight.getOfflineParticipants().add(fightParticipantUUID);
                             continue;
                         }
+                        if (fightParticipant.getGameMode() != GameMode.SURVIVAL) {
+                            fight.removeParticipant(p.getUniqueId(),false);
+                        }
                         if (fightParticipant != p) {
                             if (p.getWorld() != fightParticipant.getWorld()) {
                                 switch (p.getWorld().getEnvironment()) {
@@ -51,7 +52,7 @@ public class FightMethods {
                                             case NORMAL:
                                                 Location pLocation = new Location(p.getWorld(),p.getX(),0,p.getZ());
                                                 Location fLocation = new Location(p.getWorld(),fightParticipant.getX()/8,0,fightParticipant.getZ()/8);
-                                                if (pLocation.distance(fLocation) < 500) {
+                                                if (pLocation.distance(fLocation) < fightRadius) {
                                                     nearby = true;
                                                 }
                                                 break;
@@ -68,7 +69,7 @@ public class FightMethods {
                                             case NETHER:
                                                 Location pLocation = new Location(p.getWorld(),p.getX()/8,0,p.getZ()/8);
                                                 Location fLocation = new Location(p.getWorld(),fightParticipant.getX(),0,fightParticipant.getZ());
-                                                if (pLocation.distance(fLocation) < 500) {
+                                                if (pLocation.distance(fLocation) < fightRadius) {
                                                     nearby = true;
                                                 }
                                                 break;
@@ -80,7 +81,7 @@ public class FightMethods {
                                         break;
                                 }
                             } else {
-                                if (p.getLocation().distance(fightParticipant.getLocation()) < 500) {
+                                if (p.getLocation().distance(fightParticipant.getLocation()) < fightRadius) {
                                     nearby = true;
                                 }
                             }

@@ -1,7 +1,6 @@
-package kiul.kiulsmputilitiesv3.towns.listeners;
+package kiul.kiulsmputilitiesv3.towns.augments;
 
 import kiul.kiulsmputilitiesv3.C;
-import kiul.kiulsmputilitiesv3.towns.AugmentEvent;
 import kiul.kiulsmputilitiesv3.towns.Town;
 import org.bukkit.Material;
 import org.bukkit.entity.Item;
@@ -36,12 +35,12 @@ public class StartAugment implements Listener {
                 }
                 if (finalTown.getTownCenter().distance(e.getItemDrop().getLocation()) < 5 && itemEntity.getLocation().getBlock().getType() == Material.RESPAWN_ANCHOR || itemEntity.getLocation().add(0,-1,0).getBlock().getType() == Material.RESPAWN_ANCHOR) {
                     if (finalTown.getSelectedAugment() == null) {
-                        finalTown.getTownChargeStand().setCustomName(C.RED+"Select Augment");
+//                        finalTown.getTownChargeStand().setCustomName(C.RED+"Select Augment");
                         new BukkitRunnable() {
                             @Override
                             public void run() {
                                 if (!finalTown.isAugmenting()) {
-                                    finalTown.updateTownCharge();
+//                                    finalTown.updateTownCharge();
                                 }
                             }
                         }.runTaskLater(C.plugin,80);
@@ -50,12 +49,12 @@ public class StartAugment implements Listener {
                     }
                     if (finalTown.getTownHealth()/finalTown.getTownMaxHealth() < 0.9) {
                         if (finalTown.getSelectedAugment() == null) {
-                            finalTown.getTownChargeStand().setCustomName(C.RED+"Regen to >90% first!");
+//                            finalTown.getTownChargeStand().setCustomName(C.RED+"Regen to >90% first!");
                             new BukkitRunnable() {
                                 @Override
                                 public void run() {
                                     if (!finalTown.isAugmenting()) {
-                                        finalTown.updateTownCharge();
+//                                        finalTown.updateTownCharge();
                                     }
                                 }
                             }.runTaskLater(C.plugin,80);

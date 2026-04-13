@@ -75,7 +75,7 @@ public class Waypoint {
         TreeMap<Integer,String> textures = new TreeMap<>() {{
             put(0,"⏺");
             put(100,"●");
-            put(400,"•");
+            put(200,"•");
             put(1000,"·");
 
 
@@ -121,21 +121,26 @@ public class Waypoint {
                             while (iter.hasNext()) {
                                 Waypoint waypoint = iter.next();
                                 if (waypoint.isPlayer()) {
-                                    locatorBar.removeWaypoint(waypoint);
+                                    iter.remove();
                                 }
                             }
                         } else {
                             while (iter.hasNext()) { // if they DO have a team, remove all player waypoints from their locator bar that aren't their teammates.
                                 Waypoint waypoint = iter.next();
+                                if (waypoint == null)  {
+                                    iter.remove();
+                                    continue;
+                                }
                                 if (!waypoint.isPlayer()) continue;
+                                if (waypoint.getTeam() == null) continue;
                                 if (!waypoint.getTeam().equals(C.getPlayerTeam(onlinePlayer))) {
-                                    locatorBar.removeWaypoint(waypoint);
+                                    iter.remove();
                                 }
                             }
                             // whilst we're at it, might as well make it so they get all their teammates added if they're missing.
                             for (String entry : C.getPlayerTeam(onlinePlayer).getEntries()) {
                                 Player p = Bukkit.getPlayer(entry);
-
+                                if (p == null) continue;
                                 if (locatorBar.barContains(Waypoint.waypoints.get(p.getName()))) continue;
                                 if (p != null && p != onlinePlayer && p.isOnline()) {
                                     LocatorBar.playerLocatorBar.get(p.getUniqueId()).addWaypoint(Waypoint.waypoints.get(p.getName()));
