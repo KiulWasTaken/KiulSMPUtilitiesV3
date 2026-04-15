@@ -32,10 +32,14 @@ public class Waypoint {
         this.team = team;
         this.isPlayer = isPlayer;
         waypoints.put(name,this);
-        if (isPlayer) {
-            this.colour = DetermineColourFromIGN.getDisplayNameRGBValue(team.getColor(),name);
+        if (team != null) {
+            if (isPlayer) {
+                this.colour = DetermineColourFromIGN.getDisplayNameRGBValue(team.getColor(), name);
+            } else {
+                this.colour = team.getColor().asBungee();
+            }
         } else {
-            this.colour = team.getColor().asBungee();
+            this.colour = DetermineColourFromIGN.getDisplayNameRGBValue(org.bukkit.ChatColor.WHITE, name);
         }
     }
 

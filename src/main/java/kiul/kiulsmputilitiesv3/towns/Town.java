@@ -186,9 +186,8 @@ public class Town {
         this.townUUID = townUUID;
         Scoreboard sb = Bukkit.getScoreboardManager().getMainScoreboard();
         C.plugin.getLogger().warning(townUUID);
-
+        this.owningTeam = null;
         for (Team team : sb.getTeams()) {
-            C.plugin.getLogger().warning(team.getName());
             if (team.getName().equalsIgnoreCase(townUUID)) {
                 this.owningTeam = team;
                 break;
@@ -562,19 +561,36 @@ public class Town {
 
     String destroy = C.LAVENDER_PURPLE + ChatColor.BOLD+ "TOWN DISBANDED! " + ChatColor.GRAY;
     public void destroy() {
-        for (String entry : this.getOwningTeam().getEntries()) {
-            Player p = Bukkit.getPlayer(entry);
-            if (p != null) {
-                Town.townPlaceCooldown.put(p,System.currentTimeMillis()+(1000*60*60*24));
+        townCenter.getBlock().setType(Material.AIR);
+        boolean teamExists = false;
+        for (Team team : Bukkit.getScoreboardManager().getMainScoreboard().getTeams()) {
+            if (team.getName().equalsIgnoreCase(townUUID)) {
+                teamExists = true;
+                for (String entry : team.getEntries()) {
+                    Player p = Bukkit.getPlayer(entry);
+                    if (p != null) {
+                        Town.townPlaceCooldown.put(p, System.currentTimeMillis() + (1000 * 60 * 60 * 24));
+                    }
+                }
             }
         }
 
-        Bukkit.broadcastMessage(destroy+this.getOwningTeam().getPrefix()+ChatColor.GRAY+"has disbanded the town core for " + this.getTownNameString() + ChatColor.GRAY + " at coordinates " + ChatColor.WHITE + townCenter.x() +", " + townCenter.y() + ", " + townCenter.z());
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            LocatorBar.playerLocatorBar.get(onlinePlayer.getUniqueId()).removeWaypoint(waypoint);
+        }
+
+        if (teamExists) {
+            Bukkit.broadcastMessage(destroy+this.getOwningTeam().getPrefix()+ChatColor.GRAY+"has disbanded the town core for "+ ChatColor.WHITE + this.getTownNameString() + ChatColor.GRAY + " at coordinates " + ChatColor.WHITE + townCenter.x() +", " + townCenter.y() + ", " + townCenter.z());
+        } else {
+            Bukkit.broadcastMessage(destroy+"town core for "+ ChatColor.WHITE + this.getTownNameString() + ChatColor.GRAY + " has been disbanded at coordinates " + ChatColor.WHITE + townCenter.x() + ", " + townCenter.y() + ", " + townCenter.z());
+        }
         C.plugin.getLogger().info(townsList.toString());
         List<String> lore = new ArrayList<>();
         ItemStack townCore = new ItemStack(Material.RESPAWN_ANCHOR);
         ItemMeta townCoreMeta = townCore.getItemMeta();
         lore.add(ChatColor.GRAY+"Can be placed to create a safe zone for your team.");
+        lore.add(ChatColor.GRAY+"You cannot move your town core for 24h if you pick it up,");
+        lore.add(ChatColor.GRAY+"make sure you place it in the right spot");
         townCoreMeta.setLore(lore);
         townCoreMeta.setDisplayName(C.t("&eTown Core"));
         townCoreMeta.getPersistentDataContainer().set(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING,"towncore");
@@ -808,6 +824,8 @@ public class Town {
                     if (notInvoledBossbar != null)
                         notInvoledBossbar.addViewer(p);
                 }
+            } else {
+                this.destroy();
             }
         }
     }

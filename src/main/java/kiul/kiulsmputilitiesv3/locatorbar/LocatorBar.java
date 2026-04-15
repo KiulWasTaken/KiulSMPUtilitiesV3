@@ -8,6 +8,7 @@ import org.bukkit.ChatColor;
 import org.bukkit.GameMode;
 import org.bukkit.Location;
 import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.util.Vector;
@@ -87,7 +88,9 @@ public class LocatorBar {
                 if (playerLocatorBar.get(playerWaypoint.getUniqueId()) == this) continue;
                 if (playerWaypoint.getGameMode() != GameMode.SURVIVAL) continue;
                 if (playerWaypoint.isSneaking()) continue;
+                if (playerWaypoint.hasPotionEffect(PotionEffectType.INVISIBILITY)) continue;
             }
+
             double distance =  w.getLocation().distance(barCenterLocation.toVector());
             String dot = "";
 

@@ -454,9 +454,7 @@ public class FightLogicListeners implements Listener {
     public void preventStartGlidingOnCooldown (EntityToggleGlideEvent e) {
         if (e.getEntity() instanceof Player p) {
             if (C.fightManager.playerIsInFight(p)) {
-                if (p.isGliding()) {
-                    p.setGliding(false);
-                    ItemStack chestplate = p.getInventory().getChestplate();
+                ItemStack chestplate = p.getInventory().getChestplate();
                     if (chestplate == null || chestplate.getType() != Material.ELYTRA) {
                         for (ItemStack item : p.getInventory().getContents()) {
                             if (item == null) continue;
@@ -472,7 +470,6 @@ public class FightLogicListeners implements Listener {
 
                     elytra.setDamage(432);
                     chestplate.setItemMeta(elytra);
-                }
             }
         }
     }
@@ -548,13 +545,13 @@ public class FightLogicListeners implements Listener {
             if (damager != null) {
                 if (damager.getInventory().getItemInMainHand().getType().equals(Material.MACE) && damager.getFallDistance() > 1.5) {
                     if (e.getFinalDamage() > 0.0) {
-                        damager.setCooldown(Material.WIND_CHARGE, 0);
+//                        damager.setCooldown(Material.WIND_CHARGE, 0);
                         damager.setCooldown(Material.FIREWORK_ROCKET, 0);
                         fireworkUses.put(damager, 1);
                         return;
                     }
                     if (e.getFinalDamage() <= 0.0 && !((Player) e.getEntity()).isBlocking()) {
-                        damager.setCooldown(Material.WIND_CHARGE, 0);
+//                        damager.setCooldown(Material.WIND_CHARGE, 0);
                         damager.setCooldown(Material.FIREWORK_ROCKET, 0);
                         fireworkUses.put(damager, 1);
                         return;

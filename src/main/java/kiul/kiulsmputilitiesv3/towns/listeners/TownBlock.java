@@ -39,12 +39,14 @@ public class TownBlock implements Listener {
             if (Town.townPlaceCooldown.get(e.getPlayer()) != null) {
                 if (System.currentTimeMillis() < Town.townPlaceCooldown.get(e.getPlayer())) {
                     e.setCancelled(true);
+                    int[] timestamp = C.splitTimestamp(Town.townPlaceCooldown.get(e.getPlayer()));
+                    e.getPlayer().sendMessage(C.failPrefix+"you are on town place cooldown for another " + timestamp[0] + " hours and " + timestamp[1] + " minutes"  );
                     return;
                 }
             }
 
             if (C.getPlayerTeam(e.getPlayer()) == null || C.getPlayerTeam(e.getPlayer()).getEntries().size() < 1) {
-                e.getPlayer().sendMessage(C.failPrefix+" cannot place a town core without a team that has at least 2 members!");
+                e.getPlayer().sendMessage(C.failPrefix+" cannot place a town core without a team that has at least 3 members!");
                 e.setCancelled(true);
                 return;
             }
@@ -107,6 +109,13 @@ public class TownBlock implements Listener {
                         editSession.setBlock(loc2.getBlockX(), loc2.getBlockY() + 1, loc2.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
                     }
                 }
+        } else {
+            if (e.getItemInHand().getType().equals(Material.RESPAWN_ANCHOR)) {
+                if (e.getPlayer().getWorld().getEnvironment() != World.Environment.NETHER) {
+                    e.setCancelled(true);
+                    e.getPlayer().sendMessage(C.failPrefix+"Respawn anchors are disabled outside the nether! Towns are crafted with 8 crying obsidian and 1 gold block in the middle.");
+                }
+            }
         }
     }
 

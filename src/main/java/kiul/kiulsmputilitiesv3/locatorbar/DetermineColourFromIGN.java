@@ -51,14 +51,14 @@ public class DetermineColourFromIGN {
 
     public static net.md_5.bungee.api.ChatColor getDisplayNameRGBValue (ChatColor teamColor, String displayName) {
         Color teamColour = getRGBFromChatColor(teamColor);
-        Bukkit.broadcastMessage("teamcolour: " + teamColour.getRed() + " " + teamColour.getBlue()+ " " +teamColour.getGreen());
-        int[] finalRGB = new int[]{teamColour.getRed(),teamColour.getBlue(),teamColour.getGreen()};
+        Bukkit.broadcastMessage("teamcolour: " + teamColour.getRed() + " " + teamColour.getGreen()+ " " +teamColour.getBlue());
+        int[] finalRGB = new int[]{teamColour.getRed(),teamColour.getGreen(),teamColour.getBlue()};
 
         for (int i = 0; i < displayName.length(); i++) {
             int[] letterRGB = letterRGBValue.get(displayName.toLowerCase().charAt(i));
-            finalRGB[0] += letterRGB[0]*3;
-            finalRGB[1] += letterRGB[1]*3;
-            finalRGB[2] += letterRGB[2]*3;
+            finalRGB[0] += letterRGB[0]*5;
+            finalRGB[1] += letterRGB[1]*5;
+            finalRGB[2] += letterRGB[2]*5;
         }
         for (int i = 0; i < finalRGB.length; i++) {
             if (finalRGB[i] > 255) {

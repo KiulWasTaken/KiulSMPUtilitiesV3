@@ -86,6 +86,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getServer().getPluginManager().registerEvents(new LocatorBarJoinEvent(),this);
         getServer().getPluginManager().registerEvents(new KillBountiedListener(),this);
         getServer().getPluginManager().registerEvents(new ItemConsumeListener(),this);
+        getServer().getPluginManager().registerEvents(new TeamDisband(),this);
         // Recipes
         for (AccessoryItemEnum accessoryItem : AccessoryItemEnum.values()) {
             if ((accessoryItem.getLocalName().contains("ring") || accessoryItem.getLocalName().contains("tome")) && accessoryItem.getLocalName().contains("base")) {
@@ -118,6 +119,8 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         ItemStack townCore = new ItemStack(Material.RESPAWN_ANCHOR);
         ItemMeta townCoreMeta = townCore.getItemMeta();
         lore.add(ChatColor.GRAY+"Can be placed to create a safe zone for your team.");
+        lore.add(ChatColor.GRAY+"You cannot move your town core for 24h if you pick it up,");
+        lore.add(ChatColor.GRAY+"make sure you place it in the right spot");
         townCoreMeta.setLore(lore);
         townCoreMeta.setDisplayName(C.t("&eTown Core"));
         townCoreMeta.getPersistentDataContainer().set(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING,"towncore");
@@ -190,11 +193,12 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         if (ConfigData.get().getBoolean("crates")) {
             CrateMethods.startRandomCrates(getServer().getWorld("world"));
         }
-        Waypoint.initializePlayerWaypointManager();
-        LocatorBar.sendLocatorBars();
+
         new BukkitRunnable() {
             @Override
             public void run() {
+                Waypoint.initializePlayerWaypointManager();
+                LocatorBar.sendLocatorBars();
                 for (Player p : Bukkit.getOnlinePlayers()) {
                     new LocatorBar(45,p);
                 }
@@ -207,7 +211,11 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
             public void run() {
                 if (C.plugin.getConfig().getConfigurationSection("towns") != null) {
                     for (String key : C.plugin.getConfig().getConfigurationSection("towns").getKeys(false)) {
-                        Town.townsList.add(Town.loadFromConfig(key));
+                        Town town = Town.loadFromConfig(key);
+                        Town.townsList.add(town);
+                        if (town.getOwningTeam() == null) {
+                            town.destroy();
+                        }
                     }
                 }
             }
