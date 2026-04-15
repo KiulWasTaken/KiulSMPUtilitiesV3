@@ -14,10 +14,7 @@ import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.*;
-import org.bukkit.event.entity.EntityCombustByEntityEvent;
-import org.bukkit.event.entity.EntityExplodeEvent;
-import org.bukkit.event.entity.EntityPlaceEvent;
-import org.bukkit.event.entity.EntitySpawnEvent;
+import org.bukkit.event.entity.*;
 import org.bukkit.event.player.PlayerBucketEmptyEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.vehicle.VehicleDamageEvent;
@@ -623,6 +620,17 @@ public class ProtectedBlocks implements Listener {
                     e.setCancelled(true);
                     break;
                 }
+            }
+        }
+    }
+
+    @EventHandler
+    private void onSandFall(EntityChangeBlockEvent event){
+        if(event.getEntityType()==EntityType.FALLING_BLOCK && event.getTo()==Material.AIR){
+            if(event.getBlock().hasMetadata("unauth")){
+                event.setCancelled(true);
+                //Update the block to fix a visual client bug, but don't apply physics
+                event.getBlock().getState().update(false, false);
             }
         }
     }

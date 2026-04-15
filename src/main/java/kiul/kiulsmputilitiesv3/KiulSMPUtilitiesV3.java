@@ -159,6 +159,7 @@ public final class KiulSMPUtilitiesV3 extends JavaPlugin {
         getCommand("debug-augment").setTabCompleter(new Commands());
         getCommand("debug-waypoints").setExecutor(new Commands());
         getCommand("debug_town_name").setExecutor(new Commands());
+        getCommand("destroy-town").setExecutor(new Commands());
         // Config
         ConfigData.setup();
         if (ConfigData.get().get("scheduler") == null) {

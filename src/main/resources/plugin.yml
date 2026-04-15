@@ -26,3 +26,4 @@ commands:
   spawn-crate:
   close-end:
   debug_town_name:
+  destroy-town:

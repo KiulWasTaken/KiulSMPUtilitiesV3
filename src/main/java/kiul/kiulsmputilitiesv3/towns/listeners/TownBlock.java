@@ -33,7 +33,16 @@ public class TownBlock implements Listener {
 
     @EventHandler
     public void placeTown (BlockPlaceEvent e) {
-        if (!e.getItemInHand().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) return;
+
+        if (!e.getItemInHand().getItemMeta().getPersistentDataContainer().has(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING)) {
+            if (e.getItemInHand().getType().equals(Material.RESPAWN_ANCHOR)) {
+                if (e.getPlayer().getWorld().getEnvironment() != World.Environment.NETHER) {
+                    e.setCancelled(true);
+                    e.getPlayer().sendMessage(C.failPrefix+"Respawn anchors are disabled outside the nether! Towns are crafted with 8 crying obsidian and 1 gold block in the middle.");
+                }
+            }
+            return;
+        }
         if (e.getItemInHand().getItemMeta().getPersistentDataContainer().get(new NamespacedKey(C.plugin,"local"), PersistentDataType.STRING).equalsIgnoreCase("towncore")) {
 
             if (Town.townPlaceCooldown.get(e.getPlayer()) != null) {
@@ -109,13 +118,6 @@ public class TownBlock implements Listener {
                         editSession.setBlock(loc2.getBlockX(), loc2.getBlockY() + 1, loc2.getBlockZ(), new BaseBlock(BlockTypes.AIR.getDefaultState()));
                     }
                 }
-        } else {
-            if (e.getItemInHand().getType().equals(Material.RESPAWN_ANCHOR)) {
-                if (e.getPlayer().getWorld().getEnvironment() != World.Environment.NETHER) {
-                    e.setCancelled(true);
-                    e.getPlayer().sendMessage(C.failPrefix+"Respawn anchors are disabled outside the nether! Towns are crafted with 8 crying obsidian and 1 gold block in the middle.");
-                }
-            }
         }
     }
 

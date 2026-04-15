@@ -19,10 +19,7 @@ import net.kyori.adventure.text.format.NamedTextColor;
 import net.kyori.adventure.text.format.TextDecoration;
 import net.md_5.bungee.api.ChatMessageType;
 import net.md_5.bungee.api.chat.TextComponent;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.GameMode;
-import org.bukkit.OfflinePlayer;
+import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -112,6 +109,16 @@ public class Commands implements TabExecutor {
                 break;
             case "close-end":
                 CloseEndDimension.deleteEndPortalBlocks(p.getWorld());
+                break;
+            case "destroy-town":
+                if (p.isOp()) {
+                    if (!p.getTargetBlockExact(5).getType().equals(Material.RESPAWN_ANCHOR)) break;
+                    for (Town towns : Town.townsList) {
+                        if (towns.getTownCenter().getBlock().equals(p.getTargetBlockExact(5))) {
+                            towns.destroy();
+                        }
+                    }
+                }
                 break;
             case "give-accessory":
                 if (p.hasPermission("kiulsmp.debug")) {

@@ -476,6 +476,7 @@ public class Town {
                             .atZone(ZoneId.systemDefault());
                     Bukkit.broadcastMessage(siegePrefix + attackingTeam.getPrefix() + ChatColor.GRAY + "have successfully weakened " + owningTeam.getPrefix() + townNameString + ChatColor.GRAY  + "'s core. It is invulnerable until defense phase is activated at any time by defenders before " + ChatColor.DARK_GRAY + formatter.format(calendar) + " " + ZoneId.systemDefault().getDisplayName(TextStyle.SHORT,Locale.ENGLISH));
                 } else {
+
                     Bukkit.broadcastMessage(siegePrefix + attackingTeam.getPrefix() + ChatColor.GRAY + "have been repelled from " + owningTeam.getPrefix() + townNameString + ChatColor.GRAY  + " and failed to initiate a siege.");
                 }
                 break;
@@ -637,13 +638,15 @@ public class Town {
 
 
     public BukkitTask initializeAreaCheck() {
-
+        Town town = this;
         return new BukkitRunnable() {
             @Override
             public void run() {
                 regenerateTownHealth();
 
                 if (attackingTeam != null && System.currentTimeMillis()-timeSinceLastDamage >= 1000*60*5) {
+
+                    town.setTownHealth(town.getTownMaxHealth());
                     announceSiegeStage(1,false);
                     attackingTeam = null;
                     for (Player player : Bukkit.getOnlinePlayers()) {
