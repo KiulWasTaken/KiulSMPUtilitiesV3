@@ -102,7 +102,7 @@ public class LocatorBar {
 
             String color = ChatColor.WHITE+"";
             if (w.getTeam() != null) {
-                color =  w.getTeam().getColor() + "";
+                color =  w.getColour()+"";
             }
 
 

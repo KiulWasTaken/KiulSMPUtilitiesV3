@@ -4,7 +4,10 @@ import com.destroystokyo.paper.entity.villager.Reputation;
 import com.destroystokyo.paper.entity.villager.ReputationType;
 import kiul.kiulsmputilitiesv3.C;
 import kiul.kiulsmputilitiesv3.config.ConfigData;
+import net.kyori.adventure.key.Key;
+import net.kyori.adventure.sound.SoundStop;
 import org.bukkit.*;
+import org.bukkit.enchantments.Enchantment;
 import org.bukkit.entity.*;
 import org.bukkit.entity.minecart.ExplosiveMinecart;
 import org.bukkit.event.EventHandler;
@@ -320,20 +323,20 @@ public class FightLogicListeners implements Listener {
 //        }
 //    }
 
-    @EventHandler
-    public void pearlSlowDown (ProjectileLaunchEvent e) {
-        if (!ConfigData.get().getBoolean("combattag")) {return;}
-            if (e.getEntity() instanceof EnderPearl && e.getEntity().getShooter() instanceof Player p) {
-                if (C.fightManager.playerIsInFight(p)) {
-                    new BukkitRunnable() {
-                        @Override
-                        public void run() {
-                            p.setCooldown(Material.ENDER_PEARL, 300);
-                        }
-                    }.runTaskLater(C.plugin, 0);
-            }
-        }
-    }
+//    @EventHandler
+//    public void pearlSlowDown (ProjectileLaunchEvent e) {
+//        if (!ConfigData.get().getBoolean("combattag")) {return;}
+//            if (e.getEntity() instanceof EnderPearl && e.getEntity().getShooter() instanceof Player p) {
+//                if (C.fightManager.playerIsInFight(p)) {
+//                    new BukkitRunnable() {
+//                        @Override
+//                        public void run() {
+//                            p.setCooldown(Material.ENDER_PEARL, 300);
+//                        }
+//                    }.runTaskLater(C.plugin, 0);
+//            }
+//        }
+//    }
 
     @EventHandler
     public void useTridentCoolDown (PlayerRiptideEvent e) {
@@ -450,11 +453,51 @@ public class FightLogicListeners implements Listener {
     @EventHandler
     public void preventStartGlidingOnCooldown (EntityToggleGlideEvent e) {
         if (e.getEntity() instanceof Player p) {
-            if (p.getCooldown(Material.ELYTRA) > 0) {
-                p.setGliding(false);
-                e.setCancelled(true);
+            if (C.fightManager.playerIsInFight(p)) {
+                if (p.isGliding()) {
+                    p.setGliding(false);
+                    ItemStack chestplate = p.getInventory().getChestplate();
+                    if (chestplate == null || chestplate.getType() != Material.ELYTRA) {
+                        for (ItemStack item : p.getInventory().getContents()) {
+                            if (item == null) continue;
+                            if (item.getType().equals(Material.ELYTRA)) {
+                                Damageable itemMeta = (Damageable) item.getItemMeta();
+                                if (!itemMeta.hasDamage() || itemMeta.getDamage() < 432) {
+                                    chestplate = item;
+                                }
+                            }
+                        }
+                    }
+                    Damageable elytra = (Damageable) chestplate.getItemMeta();
+
+                    elytra.setDamage(432);
+                    chestplate.setItemMeta(elytra);
+                }
             }
         }
+    }
+
+    @EventHandler
+    public void spearLungeGlobalNoise (PlayerInteractEvent e) {
+        if (e.getAction().isLeftClick()) {
+            if (e.getItem() == null) return;
+            if (Tag.ITEMS_SPEARS.isTagged(e.getItem().getType()) && e.getPlayer().getFoodLevel() > 6) {
+                if (e.getItem().getEnchantments().containsKey(Enchantment.LUNGE)) {
+                    new BukkitRunnable() {
+                        @Override
+                        public void run() {
+                            e.getPlayer().getWorld().stopSound(net.kyori.adventure.sound.Sound.sound(Key.key("minecraft:item.spear.lunge_1"),net.kyori.adventure.sound.Sound.Source.PLAYER,1,1));
+                            e.getPlayer().getWorld().stopSound(net.kyori.adventure.sound.Sound.sound(Key.key("minecraft:item.spear.lunge_2"),net.kyori.adventure.sound.Sound.Source.PLAYER,1,1));
+                            e.getPlayer().getWorld().stopSound(net.kyori.adventure.sound.Sound.sound(Key.key("minecraft:item.spear.lunge_3"),net.kyori.adventure.sound.Sound.Source.PLAYER,1,1));
+                            e.getPlayer().getWorld().playSound(e.getPlayer().getLocation(),Sound.ITEM_SPEAR_LUNGE_3,15,1);
+                        }
+                    }.runTaskLater(C.plugin,1);
+
+                }
+
+            }
+        }
+
     }
 
     @EventHandler (priority = EventPriority.HIGHEST)

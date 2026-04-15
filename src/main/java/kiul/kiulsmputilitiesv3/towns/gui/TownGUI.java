@@ -232,7 +232,7 @@ public class TownGUI implements Listener {
             }
 
             if (interactTimes.get(p) >= 3) {
-                openTownInventory(p, town);
+//                openTownInventory(p, town);
                 interactTimes.put(p,0);
             }
         } else {
@@ -247,10 +247,10 @@ public class TownGUI implements Listener {
             tipsList.add(ChatColor.GRAY + C.t("&oDouble click to open the town gui for bounties, augments and more"));
             tipsList.add(ChatColor.GRAY + C.t("&oWhen charge is full, right-click anchor to collect rewards"));
             tipsList.add(ChatColor.GRAY + C.t("&oPut player skulls into the town core to increase its max health, and get &r" + C.GOLD + "charge" + C.YELLOW + " ⚡"));
-            tipsList.add(ChatColor.GRAY + C.t("&oEvery team member that logs in each day gives your anchor a small amount of &r" + C.GOLD + "charge" + C.YELLOW + " ⚡"));
+//            tipsList.add(ChatColor.GRAY + C.t("&oEvery team member that logs in each day gives your anchor a small amount of &r" + C.GOLD + "charge" + C.YELLOW + " ⚡"));
             tipsList.add(ChatColor.GRAY + C.t("&oWhen charge is full, right-click anchor to collect rewards"));
             tipsList.add(ChatColor.GRAY + C.t("&oOnly &nunique &r&7&oplayer skulls will give you rewards when put into the town core"));
-            tipsList.add(ChatColor.GRAY + C.t("&oPlacing beacons or elder guardians inside your town will spread the effect to the entire protected radius"));
+            tipsList.add(ChatColor.GRAY + C.t("&oPlacing beacons inside your town will spread the effect to the entire protected radius"));
             tipsList.add(ChatColor.GRAY + C.t("&oBlocks and containers broken inside a town by enemy players will regenerate after a short while"));
 //                    tipsList.add(ChatColor.GRAY+C.t("&oYou can only get " +C.FUCHSIA+"&o★ Rare &r&7Enchantments from fully charged anchor loot, or from crates."));
 //                    tipsList.add(ChatColor.GRAY+C.t("&oApply " +C.FUCHSIA+"&o★ Rare &r&7Enchantments by dropping them onto the anchor with the item you want to apply it to"));

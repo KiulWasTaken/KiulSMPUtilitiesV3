@@ -374,7 +374,7 @@ public class Town {
         if (isDisabled()) return;
         if (isInvulnerable()) return;
         float multiplier = (float) numMembersInsideTown() > 0 ? (float) 1 /numMembersInsideTown() : 1;
-        if (isExplosion) multiplier = 0.2f;
+        if (isExplosion) multiplier = 0.05f;
         damage = damage*multiplier;
         double coreDistanceMultiplier = -Math.log(((1.39)*this.townCenter.distance(damageLocation))+1)+5;
         // -ln(ax+b)+c

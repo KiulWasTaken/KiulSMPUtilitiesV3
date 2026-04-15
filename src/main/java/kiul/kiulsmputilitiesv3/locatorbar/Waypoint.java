@@ -1,7 +1,7 @@
 package kiul.kiulsmputilitiesv3.locatorbar;
 
 import kiul.kiulsmputilitiesv3.C;
-import kiul.kiulsmputilitiesv3.combattag.FightManager;
+import net.md_5.bungee.api.ChatColor;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -22,6 +22,7 @@ public class Waypoint {
     private Team team;
     private World world;
     private boolean isPlayer;
+    private ChatColor colour;
 
     public Waypoint(String name, Location location, TreeMap<Integer, String> textures, Team team, boolean isPlayer) {
         this.name = name;
@@ -31,6 +32,15 @@ public class Waypoint {
         this.team = team;
         this.isPlayer = isPlayer;
         waypoints.put(name,this);
+        if (isPlayer) {
+            this.colour = DetermineColourFromIGN.getDisplayNameRGBValue(team.getColor(),name);
+        } else {
+            this.colour = team.getColor().asBungee();
+        }
+    }
+
+    public ChatColor getColour() {
+        return colour;
     }
 
     public void delete() {
