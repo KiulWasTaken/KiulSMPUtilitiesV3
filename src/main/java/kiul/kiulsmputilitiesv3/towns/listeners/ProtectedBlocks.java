@@ -24,6 +24,7 @@ import org.bukkit.inventory.InventoryHolder;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.metadata.FixedMetadataValue;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.pat.pattyEssentialsV3.PattyEssentialsV3;
 
 import java.io.IOException;
 import java.util.*;
@@ -238,9 +239,62 @@ public class ProtectedBlocks implements Listener {
             for (Block pushedBlocks : e.getBlocks()) {
                 if (towns.protectedAreaContains(pushedBlocks.getLocation())) {
                     town = towns;
-                    if (!pushedBlocks.hasMetadata("unauth")) {
+                    if (towns.protectedAreaContains(pushedBlocks.getRelative(e.getDirection()).getLocation()) && !towns.protectedAreaContains(e.getBlock().getLocation())) {
                         e.setCancelled(true);
                         return;
+                    } else if (towns.protectedAreaContains(e.getBlock().getLocation())) {
+                        if (e.getBlock().hasMetadata("unauth")) {
+                            e.setCancelled(true);
+                            return;
+                        } else {
+                            if (pushedBlocks.hasMetadata("unauth")) {
+                                e.setCancelled(true);
+                                return;
+                            } else {
+                                return;
+                            }
+                        }
+                    }
+                    break;
+                }
+            }
+        }
+
+        if (town != null && !e.isCancelled()) {
+            for (Block pushedBlocks : e.getBlocks()) {
+                if (town.protectedAreaContains(pushedBlocks.getRelative(e.getDirection()).getLocation())) {
+                    Block nextLocation = pushedBlocks.getRelative(e.getDirection());
+                    nextLocation.setMetadata("unauth",new FixedMetadataValue(C.plugin,"block"));
+                    scheduleBlockRespawn(nextLocation,System.currentTimeMillis() + (1000L * C.BLOCK_REGEN_SECONDS),Material.AIR,true,null,null,town,false, null);
+                }
+            }
+        }
+
+    }
+
+    @EventHandler
+    public void pistonRetractProtectedBlock (BlockPistonRetractEvent e) {
+        Town town = null;
+
+        for (Town towns : Town.townsList) {
+            for (Block pushedBlocks : e.getBlocks()) {
+                if (towns.protectedAreaContains(pushedBlocks.getLocation())) {
+                    town = towns;
+                    if (towns.protectedAreaContains(pushedBlocks.getRelative(e.getDirection()).getLocation()) && !towns.protectedAreaContains(e.getBlock().getLocation())) {
+                        e.setCancelled(true);
+                        return;
+                    } else if (towns.protectedAreaContains(e.getBlock().getLocation())) {
+                        if (e.getBlock().hasMetadata("unauth")) {
+                            e.setCancelled(true);
+                            return;
+                        } else {
+                            if (pushedBlocks.hasMetadata("unauth")) {
+                                e.setCancelled(true);
+                                return;
+                            } else {
+                                return;
+                            }
+                        }
                     }
                     break;
                 }

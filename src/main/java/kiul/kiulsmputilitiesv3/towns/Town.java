@@ -34,7 +34,9 @@ import org.bukkit.scheduler.BukkitTask;
 import org.bukkit.scoreboard.Scoreboard;
 import org.bukkit.scoreboard.Team;
 import org.bukkit.util.Vector;
-
+import org.pat.pattyEssentialsV3.Enums.MenuEnum;
+import org.pat.pattyEssentialsV3.PattyEssentialsV3;
+import org.pat.pattyEssentialsV3.Utils;
 import java.awt.Color;
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -42,6 +44,7 @@ import java.time.format.TextStyle;
 import java.util.*;
 import java.util.List;
 
+import static kiul.kiulsmputilitiesv3.C.GREEN;
 import static kiul.kiulsmputilitiesv3.C.getHighestBlockY;
 
 public class Town {
@@ -370,6 +373,31 @@ public class Town {
     }
 
     public void damageTownShield(float damage, boolean isExplosion,Player attacker,Location damageLocation,double originDistance) {
+        if (Utils.plugin.getConfig().getBoolean(MenuEnum.grace.getPath() + MenuEnum.isEnabled)) {
+            if (attacker != null) {
+                ArmorStand stand = damageLocation.getWorld().spawn(damageLocation.add(0.5,0.2,0.5), ArmorStand.class, as -> {
+                    as.setMarker(true);
+                    as.setInvisible(true);
+                    as.setGravity(true);
+                    as.setSmall(true);
+                    as.customName(Component.empty().append(Component.text("\uD83D\uDEE1 Grace").color(TextColor.color(39, 163, 58))));
+                    as.setCustomNameVisible(true); // required so name actually exists
+                    as.setCollidable(false);
+                });
+
+                // Make it jump upward slightly
+                stand.setVelocity(new Vector(0, 0.5, 0));
+
+                // Only show to attacker (Paper API 1.19+)
+                attacker.showEntity(C.plugin, stand);
+
+                // Schedule removal after 0.8s (16 ticks)
+                Bukkit.getScheduler().runTaskLater(C.plugin, () -> {
+                    stand.remove();
+                }, 16L);
+                return;
+            }
+        }
         if (isDisabled()) return;
         if (isInvulnerable()) return;
         float multiplier = (float) numMembersInsideTown() > 0 ? (float) 1 /numMembersInsideTown() : 1;

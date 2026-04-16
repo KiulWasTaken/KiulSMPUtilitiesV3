@@ -486,7 +486,7 @@ public class FightLogicListeners implements Listener {
                             e.getPlayer().getWorld().stopSound(net.kyori.adventure.sound.Sound.sound(Key.key("minecraft:item.spear.lunge_1"),net.kyori.adventure.sound.Sound.Source.PLAYER,1,1));
                             e.getPlayer().getWorld().stopSound(net.kyori.adventure.sound.Sound.sound(Key.key("minecraft:item.spear.lunge_2"),net.kyori.adventure.sound.Sound.Source.PLAYER,1,1));
                             e.getPlayer().getWorld().stopSound(net.kyori.adventure.sound.Sound.sound(Key.key("minecraft:item.spear.lunge_3"),net.kyori.adventure.sound.Sound.Source.PLAYER,1,1));
-                            e.getPlayer().getWorld().playSound(e.getPlayer().getLocation(),Sound.ITEM_SPEAR_LUNGE_3,15,1);
+                            e.getPlayer().getWorld().playSound(e.getPlayer().getLocation(),Sound.ITEM_SPEAR_LUNGE_3,5,1);
                         }
                     }.runTaskLater(C.plugin,1);
 
